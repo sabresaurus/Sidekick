@@ -1,6 +1,6 @@
-using System.Text;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using Sabresaurus.Sidekick.Requests;
+using System.IO;
 
 /*
    * GetHierarchy
@@ -15,91 +15,61 @@ namespace Sabresaurus.Sidekick
 {
     public static class SidekickRequestProcessor
     {
-        public static string Process(string request)
+        public static byte[] Process(byte[] input)
         {
-            string[] split = request.Split(' ');
+            string response;
 
-            string action = split[0];
+            string requestId;
+            string action;
 
-            if (action.Equals("GetHierarchy"))
+            using (MemoryStream ms = new MemoryStream(input))
             {
-                return GetHierarchy();
-            }
-            else if (action.Equals("GetGameObject"))
-            {
-                string path = split[1];
-
-                return GetGameObject(path);
-            }
-            else if (action.Equals("SetColor"))
-            {
-                Color color;
-                if (ColorUtility.TryParseHtmlString(split[1], out color))
+                using (BinaryReader br = new BinaryReader(ms))
                 {
-                    Camera.main.backgroundColor = color;
-                    return "Color applied";
-                }
-                else
-                {
-                    return "Unrecognised color string";
-                }
-            }
-            else
-            {
-                return "None Matched";
-            }
-        }
+                    requestId = br.ReadString();
+                    action = br.ReadString();
 
-        public static string GetHierarchy()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                Scene scene = SceneManager.GetSceneAt(i);
+                    if (action.Equals("GetHierarchy"))
+                    {
+                        response = new GetHierarchyRequest().Response;
+                    }
+                    else if (action.Equals("GetGameObject"))
+                    {
+                        string path = br.ReadString();
 
-                stringBuilder.AppendLine(scene.name);
-
-                var rootObjects = scene.GetRootGameObjects();
-                foreach (var item in rootObjects)
-                {
-                    RecurseHierarchy(stringBuilder, item.transform, 1);
+                        response = new GetGameObjectRequest(path).Response;
+                    }
+                    else if (action.Equals("SetColor"))
+                    {
+                        Color color;
+                        if (ColorUtility.TryParseHtmlString(br.ReadString(), out color))
+                        {
+                            Camera.main.backgroundColor = color;
+                            response = "Color applied";
+                        }
+                        else
+                        {
+                            response = "Unrecognised color string";
+                        }
+                    }
+                    else
+                    {
+                        response = "None Matched";
+                    }
                 }
             }
 
-            return stringBuilder.ToString();
-        }
-
-        public static string GetGameObject(string path)
-        {
-            Transform foundTransform = TransformHelper.GetFromPath(path);
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append("Found");
-            stringBuilder.AppendLine(foundTransform.name);
-                                     
-            Component[] components = foundTransform.GetComponents<Component>();
-            foreach (Component component in components)
+            byte[] bytes;
+            using (MemoryStream msout = new MemoryStream())
             {
-                stringBuilder.AppendLine(component.GetType().Name);
+                using (BinaryWriter bw = new BinaryWriter(msout))
+                {
+                    bw.Write(action);
+                    bw.Write(response);
+                }
+                bytes = msout.ToArray();
             }
-
-            return stringBuilder.ToString();
-
+            return bytes;
         }
-
-        private static void RecurseHierarchy(StringBuilder stringBuilder, Transform transform, int depth)
-        {
-            for (int i = 0; i < depth; i++)
-            {
-                stringBuilder.Append("-");
-            }
-
-            stringBuilder.AppendLine(transform.name);
-            foreach (Transform child in transform)
-            {
-                RecurseHierarchy(stringBuilder, child, depth + 1);
-            }
-        }
-
-
     }
 }

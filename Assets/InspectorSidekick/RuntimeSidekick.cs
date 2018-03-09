@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
@@ -53,10 +54,9 @@ namespace Sabresaurus.Sidekick
 
         private void OnMessageReceived(MessageEventArgs args)
         {
-            string decodedText = Encoding.ASCII.GetString(args.data);
+            byte[] response = SidekickRequestProcessor.Process(args.data);
+            PlayerConnection.instance.Send(kMsgSendPlayerToEditor, response);
 
-            string response = SidekickRequestProcessor.Process(decodedText);
-            PlayerConnection.instance.Send(kMsgSendPlayerToEditor, Encoding.ASCII.GetBytes(response));
         }
 
         public void Send()
