@@ -7,17 +7,14 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEngine.Networking.PlayerConnection;
 using UnityEditor.IMGUI.Controls;
 using System.IO;
+using Sabresaurus.Sidekick.Responses;
 
 namespace Sabresaurus.Sidekick
 {
     public class SidekickRemoteWindow : EditorWindow
     {
-        string lastMessage = "";
-
-        string customMessage = "";
-
         bool localDevMode = false;
-
+        string lastDebugText = "";
 
         [SerializeField] TreeViewState m_TreeViewState;
 
@@ -56,28 +53,49 @@ namespace Sabresaurus.Sidekick
 
         private void OnMessageEvent(MessageEventArgs args)
         {
-            using (MemoryStream ms = new MemoryStream(args.data))
-            {
-                using (BinaryReader br = new BinaryReader(ms))
-                {
-                    string action = br.ReadString();
-                    string remainder = br.ReadString();
+            BaseResponse response = SidekickResponseProcessor.Process(args.data);
 
-                    lastMessage = remainder;
-                    Debug.Log("Message from player: " + lastMessage);
-                    if (action == "GetHierarchy")
+            if (response is GetHierarchyResponse)
+            {
+                GetHierarchyResponse hierarchyResponse = (GetHierarchyResponse)response;
+                List<TreeViewItem> displays = new List<TreeViewItem>();
+                int index = 0;
+                foreach (var scene in hierarchyResponse.Scenes)
+                {
+                    displays.Add(new TreeViewItem { id = index, depth = 0, displayName = scene.SceneName });
+                    index++;
+
+                    foreach (var node in scene.HierarchyNodes)
                     {
-                        string[] split = remainder.Split('\n');
-                        List<TreeViewItem> displays = new List<TreeViewItem>(split.Length);
-                        for (int i = 0; i < split.Length; i++)
-                        {
-                            string trimmed = split[i].TrimStart('-');
-                            int trimDepth = split[i].Length - trimmed.Length;
-                            displays.Add(new TreeViewItem { id = i + 1, depth = trimDepth, displayName = trimmed });
-                        }
-                        m_TreeView.SetDisplays(displays);
+                        displays.Add(new TreeViewItem { id = index, depth = node.Depth + 1, displayName = node.ObjectName });
+                        index++;
                     }
                 }
+
+                m_TreeView.SetDisplays(displays);
+            }
+            else if (response is GetGameObjectResponse)
+            {
+                GetGameObjectResponse gameObjectResponse = (GetGameObjectResponse)response;
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine(gameObjectResponse.GameObjectName);
+                foreach (var component in gameObjectResponse.Components)
+                {
+                    stringBuilder.Append(" ");
+                    stringBuilder.AppendLine(component.TypeName);
+                    foreach (var field in component.Fields)
+                    {
+                        stringBuilder.Append("  ");
+                        stringBuilder.Append(field.VariableName);
+                        stringBuilder.Append(" ");
+                        stringBuilder.Append(field.DataType);
+                        stringBuilder.Append(" = ");
+                        stringBuilder.Append(field.Value);
+                        stringBuilder.AppendLine();
+                    }
+                }
+                Debug.Log(stringBuilder);
+                lastDebugText = stringBuilder.ToString();
             }
         }
 
@@ -86,11 +104,11 @@ namespace Sabresaurus.Sidekick
         {
             localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
 
-            var playerCount = EditorConnection.instance.ConnectedPlayers.Count;
+            int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
             StringBuilder builder = new StringBuilder();
             builder.AppendLine(string.Format("{0} players connected.", playerCount));
             int count = 0;
-            foreach (var p in EditorConnection.instance.ConnectedPlayers)
+            foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
             {
                 builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
             }
@@ -128,7 +146,7 @@ namespace Sabresaurus.Sidekick
                 //SendToPlayers(customMessage);
             }
 
-            EditorGUILayout.TextArea(lastMessage, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
+            EditorGUILayout.TextArea(lastDebugText, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
             DoToolbar();
             DoTreeView();
         }

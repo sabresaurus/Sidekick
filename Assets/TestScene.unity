@@ -113,6 +113,63 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &515967489
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 515967491}
+  - component: {fileID: 515967490}
+  m_Layer: 0
+  m_Name: DataTestScript
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &515967490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 515967489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d570fd7f90c464998bc4d2a8b942004b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testString: Hello World
+  testBool: 1
+  testInt: 2147483647
+  testLong: 12345678912345678
+  testFloat: 0.1234
+  testDouble: 0.1234000027179718
+  testVector2: {x: 1, y: 2}
+  testVector3: {x: 1, y: 2, z: 3}
+  testVector4: {x: 1, y: 2, z: 3, w: 4}
+  testQuaternion: {x: 0, y: 0, z: 0, w: 1}
+  testRect:
+    serializedVersion: 2
+    x: 10
+    y: 10
+    width: 100
+    height: 60
+  testColor: {r: 0, g: 0, b: 1, a: 1}
+--- !u!4 &515967491
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 515967489}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &886457525
 GameObject:
   m_ObjectHideFlags: 0

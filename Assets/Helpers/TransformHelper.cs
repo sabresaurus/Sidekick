@@ -28,7 +28,7 @@ namespace Sabresaurus.Sidekick
             }
 
             Scene scene = SceneManager.GetSceneByName(sceneName);
-            if(scene != null)
+            if(scene.IsValid())
             {
                 var rootGameObjects = scene.GetRootGameObjects();
                 for (int i = 0; i < rootGameObjects.Length; i++)

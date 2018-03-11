@@ -1,0 +1,20 @@
+using UnityEngine;
+using System.Collections;
+
+#pragma warning disable 0414
+public class DataTestScript : MonoBehaviour
+{
+    [SerializeField] string testString = "Hello World";
+    [SerializeField] bool testBool = true;
+    [SerializeField] int testInt =   2147483647;
+    [SerializeField] long testLong = 12345678912345678;
+    [SerializeField] float testFloat = 0.1234f;
+    [SerializeField] double testDouble = 0.1234f;
+    [SerializeField] Vector2 testVector2 = new Vector2(1, 2);
+    [SerializeField] Vector3 testVector3 = new Vector3(1, 2, 3);
+    [SerializeField] Vector4 testVector4 = new Vector4(1, 2, 3, 4);
+    [SerializeField] Quaternion testQuaternion = Quaternion.identity;
+    [SerializeField] Rect testRect = new Rect(10, 10, 100, 60);
+    [SerializeField] Color testColor = Color.blue;
+
+}
