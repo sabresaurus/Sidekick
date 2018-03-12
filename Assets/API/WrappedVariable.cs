@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using UnityEditor;
 using System.IO;
 using System;
 
@@ -66,6 +65,10 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return value;
+            }
+            set
+            {
+                this.value = value;
             }
         }
         #endregion

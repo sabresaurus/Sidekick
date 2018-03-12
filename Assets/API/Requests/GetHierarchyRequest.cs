@@ -31,6 +31,9 @@ namespace Sabresaurus.Sidekick.Requests
 
         private static void RecurseHierarchy(List<SceneHierarchyDescription.HierarchyNode> nodes, Transform transform, int depth)
         {
+            InstanceIDMap.AddObject(transform);
+            InstanceIDMap.AddObject(transform.gameObject);
+
             nodes.Add(new SceneHierarchyDescription.HierarchyNode()
             {
                 ObjectName = transform.name,

@@ -6,10 +6,11 @@ using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
-    enum APIRequest
+    public enum APIRequest
     {
         GetHierarchy,
         GetGameObject,
+        SetVariable
     }
 
     public static class SidekickRequestProcessor
@@ -26,7 +27,9 @@ namespace Sabresaurus.Sidekick
                 using (BinaryReader br = new BinaryReader(msIn))
                 {
                     requestId = br.ReadString();
-                    if(EnumHelper.TryParse(br.ReadString(), out apiRequest))
+                    string action = br.ReadString();
+                    //Debug.Log(action);
+                    if(EnumHelper.TryParse(action, out apiRequest))
                     {
 						if (apiRequest == APIRequest.GetHierarchy)
 						{
@@ -38,6 +41,13 @@ namespace Sabresaurus.Sidekick
 							
                             response = new GetGameObjectRequest(path).UncastResponse;
 						}
+                        else if (apiRequest == APIRequest.SetVariable)
+                        {
+                            int instanceID = br.ReadInt32();
+                            WrappedVariable wrappedVariable = WrappedVariable.Read(br);
+
+                            response = new SetVariableRequest(instanceID, wrappedVariable).UncastResponse;
+                        }
                     }
                 }
             }

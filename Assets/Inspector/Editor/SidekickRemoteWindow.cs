@@ -16,11 +16,14 @@ namespace Sabresaurus.Sidekick
         bool localDevMode = false;
         string lastDebugText = "";
 
+        Vector2 scrollPosition = Vector2.zero;
+
         [SerializeField] TreeViewState m_TreeViewState;
 
         SimpleTreeView m_TreeView;
         SearchField m_SearchField;
 
+        GetGameObjectResponse gameObjectResponse;
 
         [MenuItem("Sidekick/Remote Window")]
         static void Init()
@@ -38,9 +41,13 @@ namespace Sabresaurus.Sidekick
             // Check if we already had a serialized view state (state 
             // that survived assembly reloading)
             if (m_TreeViewState == null)
+            {
                 m_TreeViewState = new TreeViewState();
 
+            }
+
             m_TreeView = new SimpleTreeView(m_TreeViewState);
+            m_TreeView.OnSelectionChanged += OnHierarchySelectionChanged;
             m_SearchField = new SearchField();
             m_SearchField.downOrUpArrowKeyPressed += m_TreeView.SetFocusAndEnsureSelectedItem;
         }
@@ -49,6 +56,14 @@ namespace Sabresaurus.Sidekick
         {
             EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
             EditorConnection.instance.DisconnectAll();
+        }
+
+        void OnHierarchySelectionChanged(IList<int> selectedIds)
+        {
+            foreach (int id in selectedIds)
+            {
+                Debug.Log(id);
+            }
         }
 
         private void OnMessageEvent(MessageEventArgs args)
@@ -73,10 +88,11 @@ namespace Sabresaurus.Sidekick
                 }
 
                 m_TreeView.SetDisplays(displays);
+
             }
             else if (response is GetGameObjectResponse)
             {
-                GetGameObjectResponse gameObjectResponse = (GetGameObjectResponse)response;
+                gameObjectResponse = (GetGameObjectResponse)response;
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine(gameObjectResponse.GameObjectName);
                 foreach (var component in gameObjectResponse.Components)
@@ -91,6 +107,16 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.Append(field.DataType);
                         stringBuilder.Append(" = ");
                         stringBuilder.Append(field.Value);
+                        stringBuilder.AppendLine();
+                    }
+                    foreach (var property in component.Properties)
+                    {
+                        stringBuilder.Append("  ");
+                        stringBuilder.Append(property.VariableName);
+                        stringBuilder.Append(" ");
+                        stringBuilder.Append(property.DataType);
+                        stringBuilder.Append(" = ");
+                        stringBuilder.Append(property.Value);
                         stringBuilder.AppendLine();
                     }
                 }
@@ -116,7 +142,7 @@ namespace Sabresaurus.Sidekick
 
             if (GUILayout.Button("GetHierarchy"))
             {
-                SendToPlayers("GetHierarchy");
+                SendToPlayers(APIRequest.GetHierarchy);
             }
 
             if (GUILayout.Button("GetGameObject"))
@@ -132,23 +158,51 @@ namespace Sabresaurus.Sidekick
                             // Get the path of the selection
                             string path = GetPathForTreeViewItem(items[i]);
                             //Debug.Log(TransformHelper.GetFromPath(path).name);
-                            SendToPlayers("GetGameObject", path);
+                            SendToPlayers(APIRequest.GetGameObject, path);
                             break;
                         }
                     }
                 }
             }
 
-            //customMessage = EditorGUILayout.TextField("Custom", customMessage);
-
-            if (GUILayout.Button("Send"))
-            {
-                //SendToPlayers(customMessage);
-            }
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
             EditorGUILayout.TextArea(lastDebugText, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
             DoToolbar();
             DoTreeView();
+
+            if(gameObjectResponse != null)
+            {
+				foreach (var component in gameObjectResponse.Components)
+				{
+					GUILayout.Label(component.TypeName + " " + component.InstanceID, EditorStyles.boldLabel);
+					foreach (var field in component.Fields)
+					{
+						EditorGUI.BeginChangeCheck();
+						object newValue = TempVariableDrawer.Draw(field);
+						if (EditorGUI.EndChangeCheck())
+						{
+							field.Value = newValue;
+							SendToPlayers(APIRequest.SetVariable, component.InstanceID, field);
+							
+							//Debug.Log("Value changed in " + field.VariableName);
+						}
+					}
+					foreach (var property in component.Properties)
+					{
+						EditorGUI.BeginChangeCheck();
+						object newValue = TempVariableDrawer.Draw(property);
+						if (EditorGUI.EndChangeCheck())
+						{
+							property.Value = newValue;
+							SendToPlayers(APIRequest.SetVariable, component.InstanceID, property);
+							
+							//Debug.Log("Value changed in " + property.VariableName);
+						}
+					}
+				}
+            }
+            EditorGUILayout.EndScrollView();
         }
 
         static string GetPathForTreeViewItem(TreeViewItem item)
@@ -165,7 +219,7 @@ namespace Sabresaurus.Sidekick
             return path;
         }
 
-        void SendToPlayers(string action, params string[] args)
+        void SendToPlayers(APIRequest action, params object[] args)
         {
             byte[] bytes;
             using (MemoryStream ms = new MemoryStream())
@@ -174,10 +228,17 @@ namespace Sabresaurus.Sidekick
                 {
                     bw.Write("1");
 
-                    bw.Write(action);
+                    bw.Write(action.ToString());
                     foreach (var item in args)
                     {
-                        bw.Write(item);
+                        if (item is string)
+                            bw.Write((string)item);
+                        else if (item is int)
+                            bw.Write((int)item);
+                        else if (item is WrappedVariable)
+                            ((WrappedVariable)item).Write(bw);
+                        else
+                            throw new NotSupportedException();
                     }
                 }
                 bytes = ms.ToArray();
@@ -207,7 +268,7 @@ namespace Sabresaurus.Sidekick
 
         void DoTreeView()
         {
-            Rect rect = GUILayoutUtility.GetRect(0, 100000, 0, 100000);
+            Rect rect = GUILayoutUtility.GetRect(200, 300, 300, 300);
             m_TreeView.OnGUI(rect);
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 
@@ -7,6 +8,7 @@ namespace Sabresaurus.Sidekick
 	class SimpleTreeView : TreeView
 	{
         List<TreeViewItem> displays = new List<TreeViewItem>();
+        public Action<IList<int>> OnSelectionChanged;
 
         public SimpleTreeView(TreeViewState treeViewState)
 			: base(treeViewState)
@@ -54,6 +56,12 @@ namespace Sabresaurus.Sidekick
 			// Return root of the tree
 			return root;
 		}
+
+        protected override void SelectionChanged(IList<int> selectedIds)
+        {
+            base.SelectionChanged(selectedIds);
+            OnSelectionChanged(selectedIds);
+        }
 	}
 }
 

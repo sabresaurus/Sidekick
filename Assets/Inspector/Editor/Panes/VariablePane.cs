@@ -132,7 +132,7 @@ namespace Sabresaurus.Sidekick
 			return newValue;
 		}
 
-		static object DrawIndividualVariable(string fieldName, Type fieldType, object fieldValue)
+		public static object DrawIndividualVariable(string fieldName, Type fieldType, object fieldValue)
 		{
 			object newValue;
 			if (fieldType == typeof(int)
@@ -170,14 +170,14 @@ namespace Sabresaurus.Sidekick
 			}
 			else if (fieldType == typeof(Quaternion))
 			{
-				if(InspectorSidekick.Current.Settings.RotationsAsEuler)
-				{
-					Quaternion quaternion = (Quaternion)fieldValue;
-					Vector3 eulerAngles = quaternion.eulerAngles;
-					eulerAngles = EditorGUILayout.Vector3Field(fieldName, eulerAngles);
-					newValue = Quaternion.Euler(eulerAngles);
-				}
-				else
+				//if(InspectorSidekick.Current.Settings.RotationsAsEuler)
+				//{
+				//	Quaternion quaternion = (Quaternion)fieldValue;
+				//	Vector3 eulerAngles = quaternion.eulerAngles;
+				//	eulerAngles = EditorGUILayout.Vector3Field(fieldName, eulerAngles);
+				//	newValue = Quaternion.Euler(eulerAngles);
+				//}
+				//else
 				{
 					Quaternion quaternion = (Quaternion)fieldValue;
 					Vector4 vector = new Vector4(quaternion.x,quaternion.y,quaternion.z,quaternion.w);
