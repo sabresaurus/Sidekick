@@ -1,0 +1,11 @@
+<linker>
+	<assembly fullname="UnityEngine.CoreModule" preserve="all">
+		<type fullname="*" preserve="all"/>
+	</assembly>
+	<assembly fullname="UnityEngine.UIModule" preserve="all">
+		<type fullname="*" preserve="all"/>
+	</assembly>
+	<assembly fullname="UnityEngine" preserve="all">
+		<type fullname="*" preserve="all"/>
+	</assembly>
+</linker>

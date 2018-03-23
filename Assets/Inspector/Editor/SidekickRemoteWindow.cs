@@ -60,9 +60,20 @@ namespace Sabresaurus.Sidekick
 
         void OnHierarchySelectionChanged(IList<int> selectedIds)
         {
-            foreach (int id in selectedIds)
+            if (selectedIds.Count >= 1)
             {
-                Debug.Log(id);
+                IList<TreeViewItem> items = m_TreeView.GetRows();
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (items[i].id == selectedIds[0])
+                    {
+                        // Get the path of the selection
+                        string path = GetPathForTreeViewItem(items[i]);
+                        //Debug.Log(TransformHelper.GetFromPath(path).name);
+                        SendToPlayers(APIRequest.GetGameObject, path);
+                        break;
+                    }
+                }
             }
         }
 
@@ -128,6 +139,9 @@ namespace Sabresaurus.Sidekick
 
         void OnGUI()
         {
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical(GUILayout.Width(position.width/2f));
+
             localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
 
             int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
@@ -165,12 +179,13 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-            EditorGUILayout.TextArea(lastDebugText, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
+            //EditorGUILayout.TextArea(lastDebugText, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
             DoToolbar();
             DoTreeView();
-
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+			scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             if(gameObjectResponse != null)
             {
 				foreach (var component in gameObjectResponse.Components)
@@ -203,6 +218,9 @@ namespace Sabresaurus.Sidekick
 				}
             }
             EditorGUILayout.EndScrollView();
+
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
         }
 
         static string GetPathForTreeViewItem(TreeViewItem item)
