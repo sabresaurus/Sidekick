@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-using System.Text;
-using UnityEditor.Networking.PlayerConnection;
-using UnityEngine.Networking.PlayerConnection;
-using UnityEditor.IMGUI.Controls;
 using System.IO;
+using System.Text;
+using System.Xml.Serialization;
 using Sabresaurus.Sidekick.Responses;
+using UnityEditor;
+using UnityEditor.IMGUI.Controls;
+using UnityEditor.Networking.PlayerConnection;
+using UnityEngine;
+using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
@@ -153,36 +154,25 @@ namespace Sabresaurus.Sidekick
                 builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
             }
             EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
-
-            if (GUILayout.Button("GetHierarchy"))
+            if (GUILayout.Button("List Assemblies"))
+            {
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Debug.Log(assembly.FullName);
+                }
+                // Generate a link.xml
+                XmlSerializer a;
+            }
+            if (GUILayout.Button("Refresh Hierarchy"))
             {
                 SendToPlayers(APIRequest.GetHierarchy);
-            }
-
-            if (GUILayout.Button("GetGameObject"))
-            {
-                IList<int> selection = m_TreeView.GetSelection();
-                if (selection.Count >= 1)
-                {
-                    IList<TreeViewItem> items = m_TreeView.GetRows();
-                    for (int i = 0; i < items.Count; i++)
-                    {
-                        if (items[i].id == selection[0])
-                        {
-                            // Get the path of the selection
-                            string path = GetPathForTreeViewItem(items[i]);
-                            //Debug.Log(TransformHelper.GetFromPath(path).name);
-                            SendToPlayers(APIRequest.GetGameObject, path);
-                            break;
-                        }
-                    }
-                }
             }
 
 
             //EditorGUILayout.TextArea(lastDebugText, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
             DoToolbar();
             DoTreeView();
+                
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
 			scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
@@ -190,7 +180,14 @@ namespace Sabresaurus.Sidekick
             {
 				foreach (var component in gameObjectResponse.Components)
 				{
-					GUILayout.Label(component.TypeName + " " + component.InstanceID, EditorStyles.boldLabel);
+                    GUIStyle style = new GUIStyle(EditorStyles.foldout);
+                    style.fontStyle = FontStyle.Bold;
+
+                    Texture2D icon = IconLookup.GetIcon(component.TypeName);
+                    GUIContent content = new GUIContent(component.TypeName + " " + component.InstanceID, icon);
+
+                    EditorGUILayout.Foldout(true, content, style);
+
 					foreach (var field in component.Fields)
 					{
 						EditorGUI.BeginChangeCheck();
@@ -215,6 +212,13 @@ namespace Sabresaurus.Sidekick
 							//Debug.Log("Value changed in " + property.VariableName);
 						}
 					}
+
+                    Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
+                    rect.xMin -= 10;
+                    rect.xMax += 10;
+                    GUI.color = new Color(0.5f, 0.5f, 0.5f);
+                    GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
+                    GUI.color = Color.white;
 				}
             }
             EditorGUILayout.EndScrollView();

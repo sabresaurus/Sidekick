@@ -19,11 +19,8 @@ namespace Sabresaurus.Sidekick.Requests
 
             Component[] components = foundTransform.GetComponents<Component>();
             getGOResponse.Components = new List<ComponentDescription>(components.Length);
-            Debug.Log("a1");
             foreach (Component component in components)
             {
-                Debug.Log("a2 " + component.name);
-
                 InstanceIDMap.AddObject(component);
 
                 ComponentDescription description = new ComponentDescription();
@@ -35,7 +32,6 @@ namespace Sabresaurus.Sidekick.Requests
                 foreach (FieldInfo field in fields)
                 {
                     string fieldName = field.Name;
-                    Debug.Log("a3 " + field.Name);
 
                     object objectValue = field.GetValue(component);
                     WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, field.FieldType);
@@ -45,26 +41,24 @@ namespace Sabresaurus.Sidekick.Requests
                 PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
                 foreach (PropertyInfo property in properties)
                 {
-                    Debug.Log(" a4 " + property.Name);
-
                     if (property.DeclaringType == typeof(Component)
                     || property.DeclaringType == typeof(UnityEngine.Object))
                     {
                         continue;
                     }
                     string propertyName = property.Name;
+
                     MethodInfo getMethod = property.GetGetMethod(true);
                     MethodInfo setMethod = property.GetSetMethod(true);
-
-                    object objectValue = getMethod.Invoke(component, null);
-                    WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType);
-                    description.Properties.Add(wrappedVariable);
+                    if(getMethod != null && setMethod != null)
+                    {
+                        object objectValue = getMethod.Invoke(component, null);
+                        WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType);
+                        description.Properties.Add(wrappedVariable);
+                    }
                 }
 
-
                 getGOResponse.Components.Add(description);
-			
-                Debug.Log(" a5 ");
             }
             base.uncastResponse = getGOResponse;
         }
