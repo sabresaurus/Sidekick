@@ -14,17 +14,23 @@ namespace Sabresaurus.Sidekick
 {
     public class SidekickRemoteWindow : EditorWindow
     {
+        const float AUTO_REFRESH_FREQUENCY = 2f;
+
         bool localDevMode = false;
+		bool autoRefresh = false;
+  
         string lastDebugText = "";
 
         Vector2 scrollPosition = Vector2.zero;
 
-        [SerializeField] TreeViewState m_TreeViewState;
+        TreeViewState treeViewState;
 
-        SimpleTreeView m_TreeView;
-        SearchField m_SearchField;
+        SimpleTreeView treeView;
+        SearchField searchField;
 
         GetGameObjectResponse gameObjectResponse;
+
+        double timeLastRefreshed = 0;
 
         [MenuItem("Sidekick/Remote Window")]
         static void Init()
@@ -41,16 +47,16 @@ namespace Sabresaurus.Sidekick
 
             // Check if we already had a serialized view state (state 
             // that survived assembly reloading)
-            if (m_TreeViewState == null)
+            if (treeViewState == null)
             {
-                m_TreeViewState = new TreeViewState();
+                treeViewState = new TreeViewState();
 
             }
 
-            m_TreeView = new SimpleTreeView(m_TreeViewState);
-            m_TreeView.OnSelectionChanged += OnHierarchySelectionChanged;
-            m_SearchField = new SearchField();
-            m_SearchField.downOrUpArrowKeyPressed += m_TreeView.SetFocusAndEnsureSelectedItem;
+            treeView = new SimpleTreeView(treeViewState);
+            treeView.OnSelectionChanged += OnHierarchySelectionChanged;
+            searchField = new SearchField();
+            searchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
         }
 
         void OnDisable()
@@ -59,11 +65,12 @@ namespace Sabresaurus.Sidekick
             EditorConnection.instance.DisconnectAll();
         }
 
-        void OnHierarchySelectionChanged(IList<int> selectedIds)
+        void FetchSelectionComponents()
         {
+            IList<int> selectedIds = treeView.GetSelection();
             if (selectedIds.Count >= 1)
             {
-                IList<TreeViewItem> items = m_TreeView.GetRows();
+                IList<TreeViewItem> items = treeView.GetRows();
                 for (int i = 0; i < items.Count; i++)
                 {
                     if (items[i].id == selectedIds[0])
@@ -76,6 +83,11 @@ namespace Sabresaurus.Sidekick
                     }
                 }
             }
+        }
+
+        void OnHierarchySelectionChanged(IList<int> selectedIds)
+        {
+            FetchSelectionComponents();
         }
 
         private void OnMessageEvent(MessageEventArgs args)
@@ -99,7 +111,7 @@ namespace Sabresaurus.Sidekick
                     }
                 }
 
-                m_TreeView.SetDisplays(displays);
+                treeView.SetDisplays(displays);
 
             }
             else if (response is GetGameObjectResponse)
@@ -138,12 +150,29 @@ namespace Sabresaurus.Sidekick
         }
 
 
+
+        private void OnInspectorUpdate()
+        {
+            if(autoRefresh)
+            {
+                if(EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
+                {
+                    timeLastRefreshed = EditorApplication.timeSinceStartup;
+					SendToPlayers(APIRequest.GetHierarchy);
+                    FetchSelectionComponents();
+                }
+
+            }
+        }
+
+
         void OnGUI()
         {
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(position.width/2f));
 
             localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
+            autoRefresh = EditorGUILayout.Toggle("Auto Refresh", autoRefresh);
 
             int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
             StringBuilder builder = new StringBuilder();
@@ -284,14 +313,14 @@ namespace Sabresaurus.Sidekick
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Space(100);
             GUILayout.FlexibleSpace();
-            m_TreeView.searchString = m_SearchField.OnToolbarGUI(m_TreeView.searchString);
+            treeView.searchString = searchField.OnToolbarGUI(treeView.searchString);
             GUILayout.EndHorizontal();
         }
 
         void DoTreeView()
         {
             Rect rect = GUILayoutUtility.GetRect(200, 300, 300, 300);
-            m_TreeView.OnGUI(rect);
+            treeView.OnGUI(rect);
         }
     }
 }
