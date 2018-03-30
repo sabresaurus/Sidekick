@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Sabresaurus.Sidekick.Responses;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick.Requests
 {
@@ -17,9 +18,11 @@ namespace Sabresaurus.Sidekick.Requests
             Transform foundTransform = TransformHelper.GetFromPath(gameObjectPath);
             getGOResponse.GameObjectName = foundTransform.name;
 
-            Component[] components = foundTransform.GetComponents<Component>();
-            getGOResponse.Components = new List<ComponentDescription>(components.Length);
-            foreach (Component component in components)
+            List<Object> components = new List<Object>(foundTransform.GetComponents<Component>());
+            // Not technically a component, but include the GameObject
+            components.Insert(0, foundTransform.gameObject);
+            getGOResponse.Components = new List<ComponentDescription>(components.Count);
+            foreach (Object component in components)
             {
                 InstanceIDMap.AddObject(component);
 

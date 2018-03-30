@@ -9,6 +9,10 @@ namespace Sabresaurus.Sidekick
         public static Transform GetFromPath(string path)
         {
             int firstIndex = path.IndexOf('/');
+            if(firstIndex == -1)
+            {
+                return null;
+            }
             string sceneName = path.Substring(0, firstIndex);
 
             string pathInScene = path.Substring(firstIndex + 1);

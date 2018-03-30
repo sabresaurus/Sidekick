@@ -184,7 +184,7 @@ namespace Sabresaurus.Sidekick
                 builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
             }
             EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
-            if (GUILayout.Button("List Assemblies"))
+            if (GUILayout.Button("Generate Test link.xml"))
             {
                 LinkXMLFactory.Generate(new Type[]
                 {
@@ -209,6 +209,12 @@ namespace Sabresaurus.Sidekick
             DoTreeView();
 
             GUILayout.EndVertical();
+            Rect verticalLineRect = new Rect(position.width / 2f - 1, 0, 1, position.height);
+            GUI.color = new Color(0.5f, 0.5f, 0.5f);
+            GUI.DrawTexture(verticalLineRect, EditorGUIUtility.whiteTexture);
+            GUI.color = Color.white;
+
+
             GUILayout.BeginVertical();
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             if (gameObjectResponse != null)
