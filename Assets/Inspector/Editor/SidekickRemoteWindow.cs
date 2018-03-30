@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using Sabresaurus.Sidekick.Responses;
 using UnityEditor;
@@ -17,8 +18,8 @@ namespace Sabresaurus.Sidekick
         const float AUTO_REFRESH_FREQUENCY = 2f;
 
         bool localDevMode = false;
-		bool autoRefresh = false;
-  
+        bool autoRefresh = false;
+
         string lastDebugText = "";
 
         Vector2 scrollPosition = Vector2.zero;
@@ -153,12 +154,12 @@ namespace Sabresaurus.Sidekick
 
         private void OnInspectorUpdate()
         {
-            if(autoRefresh)
+            if (autoRefresh)
             {
-                if(EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
+                if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
                 {
                     timeLastRefreshed = EditorApplication.timeSinceStartup;
-					SendToPlayers(APIRequest.GetHierarchy);
+                    SendToPlayers(APIRequest.GetHierarchy);
                     FetchSelectionComponents();
                 }
 
@@ -169,7 +170,7 @@ namespace Sabresaurus.Sidekick
         void OnGUI()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(GUILayout.Width(position.width/2f));
+            GUILayout.BeginVertical(GUILayout.Width(position.width / 2f));
 
             localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
             autoRefresh = EditorGUILayout.Toggle("Auto Refresh", autoRefresh);
@@ -185,12 +186,17 @@ namespace Sabresaurus.Sidekick
             EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
             if (GUILayout.Button("List Assemblies"))
             {
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                LinkXMLFactory.Generate(new Type[]
                 {
-                    Debug.Log(assembly.FullName);
-                }
-                // Generate a link.xml
-                XmlSerializer a;
+					typeof(GameObject),
+                    typeof(Transform),
+                    typeof(Camera),
+                    typeof(Light),
+                    typeof(Animator),
+                    typeof(Animation),
+                    typeof(AudioClip),
+                    typeof(AudioSource),
+                });
             }
             if (GUILayout.Button("Refresh Hierarchy"))
             {
@@ -201,14 +207,14 @@ namespace Sabresaurus.Sidekick
             //EditorGUILayout.TextArea(lastDebugText, GUILayout.ExpandHeight(true), GUILayout.MinHeight(300));
             DoToolbar();
             DoTreeView();
-                
+
             GUILayout.EndVertical();
             GUILayout.BeginVertical();
-			scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            if(gameObjectResponse != null)
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            if (gameObjectResponse != null)
             {
-				foreach (var component in gameObjectResponse.Components)
-				{
+                foreach (var component in gameObjectResponse.Components)
+                {
                     GUIStyle style = new GUIStyle(EditorStyles.foldout);
                     style.fontStyle = FontStyle.Bold;
 
@@ -217,30 +223,30 @@ namespace Sabresaurus.Sidekick
 
                     EditorGUILayout.Foldout(true, content, style);
 
-					foreach (var field in component.Fields)
-					{
-						EditorGUI.BeginChangeCheck();
-						object newValue = TempVariableDrawer.Draw(field);
-						if (EditorGUI.EndChangeCheck())
-						{
-							field.Value = newValue;
-							SendToPlayers(APIRequest.SetVariable, component.InstanceID, field);
-							
-							//Debug.Log("Value changed in " + field.VariableName);
-						}
-					}
-					foreach (var property in component.Properties)
-					{
-						EditorGUI.BeginChangeCheck();
-						object newValue = TempVariableDrawer.Draw(property);
-						if (EditorGUI.EndChangeCheck())
-						{
-							property.Value = newValue;
-							SendToPlayers(APIRequest.SetVariable, component.InstanceID, property);
-							
-							//Debug.Log("Value changed in " + property.VariableName);
-						}
-					}
+                    foreach (var field in component.Fields)
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        object newValue = TempVariableDrawer.Draw(field);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            field.Value = newValue;
+                            SendToPlayers(APIRequest.SetVariable, component.InstanceID, field);
+
+                            //Debug.Log("Value changed in " + field.VariableName);
+                        }
+                    }
+                    foreach (var property in component.Properties)
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        object newValue = TempVariableDrawer.Draw(property);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            property.Value = newValue;
+                            SendToPlayers(APIRequest.SetVariable, component.InstanceID, property);
+
+                            //Debug.Log("Value changed in " + property.VariableName);
+                        }
+                    }
 
                     Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
                     rect.xMin -= 10;
@@ -248,7 +254,7 @@ namespace Sabresaurus.Sidekick
                     GUI.color = new Color(0.5f, 0.5f, 0.5f);
                     GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
                     GUI.color = Color.white;
-				}
+                }
             }
             EditorGUILayout.EndScrollView();
 
