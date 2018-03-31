@@ -10,7 +10,8 @@ namespace Sabresaurus.Sidekick
     {
         GetHierarchy,
         GetGameObject,
-        SetVariable
+        SetVariable,
+        InvokeMethod,
     }
 
     public static class SidekickRequestProcessor
@@ -37,9 +38,10 @@ namespace Sabresaurus.Sidekick
 						}
 						else if (apiRequest == APIRequest.GetGameObject)
 						{
-							string path = br.ReadString();
+                            string path = br.ReadString();
+                            int flags = br.ReadInt32();
 							
-                            response = new GetGameObjectRequest(path).UncastResponse;
+                            response = new GetGameObjectRequest(path, InfoFlags.Fields | InfoFlags.Properties | InfoFlags.Methods).UncastResponse;
 						}
                         else if (apiRequest == APIRequest.SetVariable)
                         {
@@ -47,6 +49,13 @@ namespace Sabresaurus.Sidekick
                             WrappedVariable wrappedVariable = WrappedVariable.Read(br);
 
                             response = new SetVariableRequest(instanceID, wrappedVariable).UncastResponse;
+                        }
+                        else if (apiRequest == APIRequest.InvokeMethod)
+                        {
+                            int instanceID = br.ReadInt32();
+                            string methodName = br.ReadString();
+
+                            response = new InvokeMethodRequest(instanceID, methodName).UncastResponse;
                         }
                     }
                 }

@@ -7,11 +7,20 @@ using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick.Requests
 {
+    [Flags]
+    public enum InfoFlags
+    {
+        None = 0,
+        Fields = 1,
+        Properties = 2,
+        Methods = 4,
+	}
+
     public class GetGameObjectRequest : BaseRequest
     {
         public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-        public GetGameObjectRequest(string gameObjectPath)
+        public GetGameObjectRequest(string gameObjectPath, InfoFlags flags)
         {
             GetGameObjectResponse getGOResponse = new GetGameObjectResponse();
 
@@ -31,33 +40,49 @@ namespace Sabresaurus.Sidekick.Requests
                 description.TypeName = componentType.Name;
                 description.InstanceID = component.GetInstanceID();
 
-                FieldInfo[] fields = componentType.GetFields(BINDING_FLAGS);
-                foreach (FieldInfo field in fields)
+                if((flags & InfoFlags.Fields) == InfoFlags.Fields)
                 {
-                    string fieldName = field.Name;
-
-                    object objectValue = field.GetValue(component);
-                    WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, field.FieldType);
-                    description.Fields.Add(wrappedVariable);
+					FieldInfo[] fields = componentType.GetFields(BINDING_FLAGS);
+					foreach (FieldInfo field in fields)
+					{
+						string fieldName = field.Name;
+						
+						object objectValue = field.GetValue(component);
+						WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, field.FieldType);
+						description.Fields.Add(wrappedVariable);
+					}
                 }
 
-                PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
-                foreach (PropertyInfo property in properties)
+                if ((flags & InfoFlags.Properties) == InfoFlags.Properties)
                 {
-                    if (property.DeclaringType == typeof(Component)
-                    || property.DeclaringType == typeof(UnityEngine.Object))
-                    {
-                        continue;
-                    }
-                    string propertyName = property.Name;
+					PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
+					foreach (PropertyInfo property in properties)
+					{
+						if (property.DeclaringType == typeof(Component)
+						    || property.DeclaringType == typeof(UnityEngine.Object))
+						{
+							continue;
+						}
+						string propertyName = property.Name;
+						
+						MethodInfo getMethod = property.GetGetMethod(true);
+						MethodInfo setMethod = property.GetSetMethod(true);
+						if(getMethod != null && setMethod != null)
+						{
+							object objectValue = getMethod.Invoke(component, null);
+							WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType);
+							description.Properties.Add(wrappedVariable);
+						}
+					}
+                }
 
-                    MethodInfo getMethod = property.GetGetMethod(true);
-                    MethodInfo setMethod = property.GetSetMethod(true);
-                    if(getMethod != null && setMethod != null)
+                if ((flags & InfoFlags.Methods) == InfoFlags.Methods)
+                {
+                    MethodInfo[] methods = componentType.GetMethods(BINDING_FLAGS);
+                    foreach (var method in methods)
                     {
-                        object objectValue = getMethod.Invoke(component, null);
-                        WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType);
-                        description.Properties.Add(wrappedVariable);
+                        WrappedMethod wrappedMethod = new WrappedMethod(method.Name, method.ReturnType);
+                        description.Methods.Add(wrappedMethod);
                     }
                 }
 

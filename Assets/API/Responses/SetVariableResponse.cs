@@ -1,11 +1,21 @@
 using UnityEngine;
 using System.Collections;
+using System.IO;
 
 namespace Sabresaurus.Sidekick.Responses
 {
 	public class SetVariableResponse : BaseResponse
     {
-        public override void Write(System.IO.BinaryWriter bw)
+        public SetVariableResponse()
+        {
+
+        }
+        public SetVariableResponse(BinaryReader br)
+            : base(br)
+        {
+        }
+
+        public override void Write(BinaryWriter bw)
         {
             
         }

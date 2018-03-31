@@ -24,9 +24,13 @@ namespace Sabresaurus.Sidekick
                         {
                             return new GetGameObjectResponse(br);
                         }
-                        else if(apiRequest == APIRequest.SetVariable)
+                        else if (apiRequest == APIRequest.SetVariable)
                         {
-                            return null;
+                            return new SetVariableResponse(br);
+                        }
+                        else if (apiRequest == APIRequest.InvokeMethod)
+                        {
+                            return new InvokeMethodResponse(br);
                         }
                         else
                         {

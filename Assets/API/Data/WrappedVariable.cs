@@ -8,6 +8,7 @@ namespace Sabresaurus.Sidekick
     public enum DataType : byte
     {
         // Array
+        None, // i.e. void
         String,
         Boolean,
         Integer, // Signed 32 bit
@@ -235,7 +236,7 @@ namespace Sabresaurus.Sidekick
             return wrappedVariable;
         }
 
-        private static DataType GetWrappedDataTypeFromSystemType(Type type)
+        public static DataType GetWrappedDataTypeFromSystemType(Type type)
         {
             //Debug.Log(type.Name);
             if (type == typeof(string))

@@ -10,6 +10,7 @@ namespace Sabresaurus.Sidekick
         int instanceID;
         List<WrappedVariable> fields = new List<WrappedVariable>();
         List<WrappedVariable> properties = new List<WrappedVariable>();
+        List<WrappedMethod> methods = new List<WrappedMethod>();
 
         public ComponentDescription()
         {
@@ -20,15 +21,23 @@ namespace Sabresaurus.Sidekick
         {
             typeName = br.ReadString();
             instanceID = br.ReadInt32();
+            // Fields
             int fieldCount = br.ReadInt32();
             for (int i = 0; i < fieldCount; i++)
             {
                 fields.Add(WrappedVariable.Read(br));
             }
+            // Properties
             int propertyCount = br.ReadInt32();
             for (int i = 0; i < propertyCount; i++)
             {
                 properties.Add(WrappedVariable.Read(br));
+            }
+            // Methods
+            int methodCount = br.ReadInt32();
+            for (int i = 0; i < methodCount; i++)
+            {
+                methods.Add(WrappedMethod.Read(br));
             }
         }
 
@@ -37,14 +46,22 @@ namespace Sabresaurus.Sidekick
             bw.Write(typeName);
             bw.Write(instanceID);
             bw.Write(fields.Count);
+            // Fields
             for (int i = 0; i < fields.Count; i++)
             {
                 fields[i].Write(bw);
             }
+            // Properties
             bw.Write(properties.Count);
             for (int i = 0; i < properties.Count; i++)
             {
                 properties[i].Write(bw);
+            }
+            // Methods
+            bw.Write(methods.Count);
+            for (int i = 0; i < methods.Count; i++)
+            {
+                methods[i].Write(bw);
             }
         }
 
@@ -97,6 +114,19 @@ namespace Sabresaurus.Sidekick
             set
             {
                 properties = value;
+            }
+        }
+
+        public List<WrappedMethod> Methods
+        {
+            get
+            {
+                return methods;
+            }
+
+            set
+            {
+                methods = value;
             }
         }
     }

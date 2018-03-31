@@ -79,7 +79,7 @@ namespace Sabresaurus.Sidekick
                         // Get the path of the selection
                         string path = GetPathForTreeViewItem(items[i]);
                         //Debug.Log(TransformHelper.GetFromPath(path).name);
-                        SendToPlayers(APIRequest.GetGameObject, path);
+                        SendToPlayers(APIRequest.GetGameObject, path, 0);
                         break;
                     }
                 }
@@ -142,6 +142,14 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.Append(property.DataType);
                         stringBuilder.Append(" = ");
                         stringBuilder.Append(property.Value);
+                        stringBuilder.AppendLine();
+                    }
+                    foreach (var method in component.Methods)
+                    {
+                        stringBuilder.Append("  ");
+                        stringBuilder.Append(method.MethodName);
+                        stringBuilder.Append(" ");
+                        stringBuilder.Append(method.ReturnType);
                         stringBuilder.AppendLine();
                     }
                 }
@@ -253,7 +261,13 @@ namespace Sabresaurus.Sidekick
                             //Debug.Log("Value changed in " + property.VariableName);
                         }
                     }
-
+                    foreach (var method in component.Methods)
+                    {
+                        if(GUILayout.Button(method.MethodName))
+                        {
+                            SendToPlayers(APIRequest.InvokeMethod, component.InstanceID, method.MethodName);
+                        }
+                    }
                     Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
                     rect.xMin -= 10;
                     rect.xMax += 10;

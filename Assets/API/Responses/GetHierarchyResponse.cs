@@ -6,11 +6,10 @@ namespace Sabresaurus.Sidekick.Responses
     public class GetHierarchyResponse : BaseResponse
     {
         List<SceneHierarchyDescription> scenes = new List<SceneHierarchyDescription>();
-
         public GetHierarchyResponse()
         {
-        }
 
+        }
         public GetHierarchyResponse(BinaryReader br)
             : base(br)
         {
