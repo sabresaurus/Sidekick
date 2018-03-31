@@ -37,7 +37,7 @@ namespace Sabresaurus.Sidekick.Requests
 
                 ComponentDescription description = new ComponentDescription();
                 Type componentType = component.GetType();
-                description.TypeName = componentType.Name;
+                description.TypeName = componentType.FullName;
                 description.InstanceID = component.GetInstanceID();
 
                 if((flags & InfoFlags.Fields) == InfoFlags.Fields)

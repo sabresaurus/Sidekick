@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
+using Sabresaurus.Sidekick.Requests;
 using Sabresaurus.Sidekick.Responses;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -23,6 +22,8 @@ namespace Sabresaurus.Sidekick
         string lastDebugText = "";
 
         Vector2 scrollPosition = Vector2.zero;
+
+        InfoFlags getGameObjectFlags = InfoFlags.Fields | InfoFlags.Properties;
 
         TreeViewState treeViewState;
 
@@ -79,7 +80,7 @@ namespace Sabresaurus.Sidekick
                         // Get the path of the selection
                         string path = GetPathForTreeViewItem(items[i]);
                         //Debug.Log(TransformHelper.GetFromPath(path).name);
-                        SendToPlayers(APIRequest.GetGameObject, path, 0);
+                        SendToPlayers(APIRequest.GetGameObject, path, getGameObjectFlags);
                         break;
                     }
                 }
@@ -232,10 +233,14 @@ namespace Sabresaurus.Sidekick
                     GUIStyle style = new GUIStyle(EditorStyles.foldout);
                     style.fontStyle = FontStyle.Bold;
 
-                    Texture2D icon = IconLookup.GetIcon(component.TypeName);
-                    GUIContent content = new GUIContent(component.TypeName + " " + component.InstanceID, icon);
-
+                    Texture icon = IconLookup.GetIcon(component.TypeName);
+                    GUIContent content = new GUIContent(component.TypeName, icon, "Instance ID: " + component.InstanceID.ToString());
+                    float labelWidth = EditorGUIUtility.labelWidth; // Cache label width
+                    // Temporarily set the label width to full width so the icon is not squashed with long strings
+                    EditorGUIUtility.labelWidth = position.width / 2f;
                     EditorGUILayout.Foldout(true, content, style);
+
+                    EditorGUIUtility.labelWidth = labelWidth; // Restore label width
 
                     foreach (var field in component.Fields)
                     {
@@ -311,6 +316,8 @@ namespace Sabresaurus.Sidekick
                         if (item is string)
                             bw.Write((string)item);
                         else if (item is int)
+                            bw.Write((int)item);
+                        else if(item is Enum)
                             bw.Write((int)item);
                         else if (item is WrappedVariable)
                             ((WrappedVariable)item).Write(bw);

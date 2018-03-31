@@ -41,7 +41,7 @@ namespace Sabresaurus.Sidekick
                             string path = br.ReadString();
                             int flags = br.ReadInt32();
 							
-                            response = new GetGameObjectRequest(path, InfoFlags.Fields | InfoFlags.Properties | InfoFlags.Methods).UncastResponse;
+                            response = new GetGameObjectRequest(path, (InfoFlags)flags).UncastResponse;
 						}
                         else if (apiRequest == APIRequest.SetVariable)
                         {
