@@ -159,6 +159,11 @@ namespace Sabresaurus.Sidekick
                 Debug.Log(stringBuilder);
                 lastDebugText = stringBuilder.ToString();
             }
+            else if (response is InvokeMethodResponse)
+            {
+                InvokeMethodResponse invokeMethodResponse = (InvokeMethodResponse)response;
+                Debug.Log("returned " + invokeMethodResponse.ReturnedVariable.Value);
+            }
         }
 
 
@@ -197,17 +202,7 @@ namespace Sabresaurus.Sidekick
             EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
             if (GUILayout.Button("Generate Test link.xml"))
             {
-                LinkXMLFactory.Generate(new Type[]
-                {
-					typeof(GameObject),
-                    typeof(Transform),
-                    typeof(Camera),
-                    typeof(Light),
-                    typeof(Animator),
-                    typeof(Animation),
-                    typeof(AudioClip),
-                    typeof(AudioSource),
-                });
+                LinkXMLFactory.Generate(LinkXMLFactory.DEFAULT_TYPES);
             }
             if (GUILayout.Button("Refresh Hierarchy"))
             {
@@ -270,9 +265,9 @@ namespace Sabresaurus.Sidekick
                     }
                     foreach (var method in component.Methods)
                     {
-                        if(GUILayout.Button(method.MethodName))
+                        if (GUILayout.Button(method.ReturnType + " " + method.MethodName + " (" + method.ParameterCount + ")"))
                         {
-                            SendToPlayers(APIRequest.InvokeMethod, component.InstanceID, method.MethodName);
+                            SendToPlayers(APIRequest.InvokeMethod, component.InstanceID, method.MethodName, 0);
                         }
                     }
                     Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
@@ -319,7 +314,7 @@ namespace Sabresaurus.Sidekick
                             bw.Write((string)item);
                         else if (item is int)
                             bw.Write((int)item);
-                        else if(item is Enum)
+                        else if (item is Enum)
                             bw.Write((int)item);
                         else if (item is WrappedVariable)
                             ((WrappedVariable)item).Write(bw);

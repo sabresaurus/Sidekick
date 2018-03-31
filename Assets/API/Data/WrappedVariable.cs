@@ -8,7 +8,7 @@ namespace Sabresaurus.Sidekick
     public enum DataType : byte
     {
         // Array
-        None, // i.e. void
+        Void, // i.e. void
         String,
         Boolean,
         Integer, // Signed 32 bit
@@ -42,6 +42,7 @@ namespace Sabresaurus.Sidekick
     {
         string variableName;
         DataType dataType;
+        bool readOnly = false;
         object value;
 
         #region Properties
@@ -58,6 +59,14 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return dataType;
+            }
+        }
+
+        public bool ReadOnly
+        {
+            get
+            {
+                return readOnly;
             }
         }
 
@@ -84,7 +93,9 @@ namespace Sabresaurus.Sidekick
         public WrappedVariable(BinaryReader br)
         {
             this.variableName = br.ReadString();
+            this.readOnly = (br.ReadByte() != 0);
             this.dataType = (DataType)br.ReadByte();
+
             object uncastValue = null;
 
             if (dataType == DataType.String)
@@ -147,6 +158,7 @@ namespace Sabresaurus.Sidekick
         public void Write(BinaryWriter bw)
         {
             bw.Write(variableName);
+            bw.Write(readOnly ? (byte)1 : (byte)0);
             bw.Write((byte)dataType);
 
             if (dataType == DataType.String)
@@ -228,7 +240,9 @@ namespace Sabresaurus.Sidekick
         public static DataType GetWrappedDataTypeFromSystemType(Type type)
         {
             //Debug.Log(type.Name);
-            if (type == typeof(string))
+            if (type == typeof(void))
+                return DataType.Void;
+            else if (type == typeof(string))
                 return DataType.String;
             else if (type == typeof(bool))
                 return DataType.Boolean;

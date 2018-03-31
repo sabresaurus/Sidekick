@@ -9,6 +9,18 @@ using UnityEditor;
 
 public static class LinkXMLFactory
 {
+    public static readonly Type[] DEFAULT_TYPES =
+    {
+        typeof(GameObject),
+        typeof(Transform),
+        typeof(Camera),
+        typeof(Light),
+        typeof(Animator),
+        typeof(Animation),
+        typeof(AudioClip),
+        typeof(AudioSource),
+    };
+
     public static void GenerateForAllAssemblies()
     {
         //foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())

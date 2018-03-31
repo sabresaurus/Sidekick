@@ -54,8 +54,14 @@ namespace Sabresaurus.Sidekick
                         {
                             int instanceID = br.ReadInt32();
                             string methodName = br.ReadString();
+                            int parameterCount = br.ReadInt32();
+                            WrappedVariable[] parameters = new WrappedVariable[parameterCount];
+                            for (int i = 0; i < parameterCount; i++)
+                            {
+                                parameters[i] = new WrappedVariable(br);
+                            }
 
-                            response = new InvokeMethodRequest(instanceID, methodName).UncastResponse;
+                            response = new InvokeMethodRequest(instanceID, methodName, parameters).UncastResponse;
                         }
                     }
                 }
