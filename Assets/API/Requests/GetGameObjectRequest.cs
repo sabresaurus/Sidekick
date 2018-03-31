@@ -81,7 +81,7 @@ namespace Sabresaurus.Sidekick.Requests
                     MethodInfo[] methods = componentType.GetMethods(BINDING_FLAGS);
                     foreach (var method in methods)
                     {
-                        WrappedMethod wrappedMethod = new WrappedMethod(method.Name, method.ReturnType);
+                        WrappedMethod wrappedMethod = new WrappedMethod(method.Name, method.ReturnType, method.GetParameters().Length);
                         description.Methods.Add(wrappedMethod);
                     }
                 }

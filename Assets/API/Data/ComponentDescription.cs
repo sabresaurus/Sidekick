@@ -25,19 +25,19 @@ namespace Sabresaurus.Sidekick
             int fieldCount = br.ReadInt32();
             for (int i = 0; i < fieldCount; i++)
             {
-                fields.Add(WrappedVariable.Read(br));
+                fields.Add(new WrappedVariable(br));
             }
             // Properties
             int propertyCount = br.ReadInt32();
             for (int i = 0; i < propertyCount; i++)
             {
-                properties.Add(WrappedVariable.Read(br));
+                properties.Add(new WrappedVariable(br));
             }
             // Methods
             int methodCount = br.ReadInt32();
             for (int i = 0; i < methodCount; i++)
             {
-                methods.Add(WrappedMethod.Read(br));
+                methods.Add(new WrappedMethod(br));
             }
         }
 

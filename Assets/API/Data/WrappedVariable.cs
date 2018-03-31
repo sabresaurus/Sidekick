@@ -74,19 +74,74 @@ namespace Sabresaurus.Sidekick
         }
         #endregion
 
-
-        protected WrappedVariable(string variableName, DataType dataType, object value)
-        {
-            this.variableName = variableName;
-            this.value = value;
-            this.dataType = dataType;
-        }
-
         public WrappedVariable(string variableName, object value, Type type)
         {
             this.variableName = variableName;
             this.value = value;
             this.dataType = GetWrappedDataTypeFromSystemType(type);
+        }
+
+        public WrappedVariable(BinaryReader br)
+        {
+            this.variableName = br.ReadString();
+            this.dataType = (DataType)br.ReadByte();
+            object uncastValue = null;
+
+            if (dataType == DataType.String)
+            {
+                uncastValue = br.ReadString();
+            }
+            else if (dataType == DataType.Boolean)
+            {
+                byte byteValue = br.ReadByte();
+                uncastValue = (byteValue != 0);
+            }
+            else if (dataType == DataType.Integer)
+            {
+                uncastValue = br.ReadInt32();
+            }
+            else if (dataType == DataType.Long)
+            {
+                uncastValue = br.ReadInt64();
+            }
+            else if (dataType == DataType.Float)
+            {
+                uncastValue = br.ReadSingle();
+            }
+            else if (dataType == DataType.Double)
+            {
+                uncastValue = br.ReadDouble();
+            }
+            else if (dataType == DataType.Vector2)
+            {
+                uncastValue = new Vector2(br.ReadSingle(), br.ReadSingle());
+            }
+            else if (dataType == DataType.Vector3)
+            {
+                uncastValue = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+            }
+            else if (dataType == DataType.Vector4)
+            {
+                uncastValue = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+            }
+            else if (dataType == DataType.Quaternion)
+            {
+                uncastValue = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+            }
+            else if (dataType == DataType.Rect)
+            {
+                uncastValue = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+            }
+            else if (dataType == DataType.Color)
+            {
+                uncastValue = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+            }
+            else
+            {
+                Debug.LogWarning("Could not read " + dataType);
+            }
+
+            this.value = uncastValue;
         }
 
         public void Write(BinaryWriter bw)
@@ -168,72 +223,6 @@ namespace Sabresaurus.Sidekick
             {
                 Debug.LogWarning("Could not write " + dataType);
             }
-        }
-
-
-
-        public static WrappedVariable Read(BinaryReader br)
-        {
-            string variableName = br.ReadString();
-            DataType dataType = (DataType)br.ReadByte();
-            object uncastValue = null;
-
-            if (dataType == DataType.String)
-            {
-                uncastValue = br.ReadString();
-            }
-            else if (dataType == DataType.Boolean)
-            {
-                byte byteValue = br.ReadByte();
-                uncastValue = (byteValue != 0);
-            }
-            else if (dataType == DataType.Integer)
-            {
-                uncastValue = br.ReadInt32();
-            }
-            else if (dataType == DataType.Long)
-            {
-                uncastValue = br.ReadInt64();
-            }
-            else if (dataType == DataType.Float)
-            {
-                uncastValue = br.ReadSingle();
-            }
-            else if (dataType == DataType.Double)
-            {
-                uncastValue = br.ReadDouble();
-            }
-            else if (dataType == DataType.Vector2)
-            {
-                uncastValue = new Vector2(br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Vector3)
-            {
-                uncastValue = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Vector4)
-            {
-                uncastValue = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Quaternion)
-            {
-                uncastValue = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Rect)
-            {
-                uncastValue = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Color)
-            {
-                uncastValue = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else
-            {
-                Debug.LogWarning("Could not read " + dataType);
-            }
-
-            WrappedVariable wrappedVariable = new WrappedVariable(variableName, dataType, uncastValue);
-            return wrappedVariable;
         }
 
         public static DataType GetWrappedDataTypeFromSystemType(Type type)

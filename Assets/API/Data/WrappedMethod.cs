@@ -50,32 +50,25 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public WrappedMethod(string methodName, Type returnType)
+        public WrappedMethod(string methodName, Type returnType, int parameterCount)
         {
             this.methodName = methodName;
             this.returnType = WrappedVariable.GetWrappedDataTypeFromSystemType(returnType);
+            this.parameterCount = parameterCount;
         }
 
-        public WrappedMethod(string methodName, DataType returnType)
+        public WrappedMethod(BinaryReader br)
         {
-            this.methodName = methodName;
-            this.returnType = returnType;
+            this.methodName = br.ReadString();
+            this.returnType = (DataType)br.ReadByte();
+            this.parameterCount = br.ReadInt32();
         }
 
         public void Write(BinaryWriter bw)
         {
             bw.Write(methodName);
             bw.Write((byte)returnType);
-        }
-
-        public static WrappedMethod Read(BinaryReader br)
-        {
-            string methodName = br.ReadString();
-            DataType returnType = (DataType)br.ReadByte();
-
-            WrappedMethod wrappedMethod = new WrappedMethod(methodName, returnType);
-
-            return wrappedMethod;
+            bw.Write(parameterCount);
         }
     }
 }

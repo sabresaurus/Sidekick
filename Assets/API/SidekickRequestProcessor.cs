@@ -46,7 +46,7 @@ namespace Sabresaurus.Sidekick
                         else if (apiRequest == APIRequest.SetVariable)
                         {
                             int instanceID = br.ReadInt32();
-                            WrappedVariable wrappedVariable = WrappedVariable.Read(br);
+                            WrappedVariable wrappedVariable = new WrappedVariable(br);
 
                             response = new SetVariableRequest(instanceID, wrappedVariable).UncastResponse;
                         }

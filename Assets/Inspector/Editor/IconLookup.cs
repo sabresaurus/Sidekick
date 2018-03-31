@@ -23,8 +23,6 @@ public static class IconLookup
             Type type = assembly.GetType(typeName);
             if(type != null)
             {
-                
-                Debug.Log(type.FullName);
 				GUIContent objectContent = EditorGUIUtility.ObjectContent(null, type);
 				Texture2D icon = objectContent.image as Texture2D;
                 // Cache it so we don't need to do expensive lookups next time

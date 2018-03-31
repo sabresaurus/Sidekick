@@ -151,6 +151,8 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.Append(method.MethodName);
                         stringBuilder.Append(" ");
                         stringBuilder.Append(method.ReturnType);
+                        stringBuilder.Append(" ");
+                        stringBuilder.Append(method.ParameterCount);
                         stringBuilder.AppendLine();
                     }
                 }
@@ -183,7 +185,7 @@ namespace Sabresaurus.Sidekick
 
             localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
             autoRefresh = EditorGUILayout.Toggle("Auto Refresh", autoRefresh);
-
+            getGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(getGameObjectFlags);
             int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
             StringBuilder builder = new StringBuilder();
             builder.AppendLine(string.Format("{0} players connected.", playerCount));
