@@ -16,5 +16,7 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] Quaternion testQuaternion = Quaternion.identity;
     [SerializeField] Rect testRect = new Rect(10, 10, 100, 60);
     [SerializeField] Color testColor = Color.blue;
-
+    readonly string readonlyString = "readonly";
+    const string constString = "const";
+    static string staticString = "static";
 }

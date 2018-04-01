@@ -7,17 +7,31 @@ public static class TempVariableDrawer
 {
     public static object Draw(WrappedVariable variable)
     {
+		string name = variable.VariableName;
+
+        if ((variable.Attributes & VariableAttributes.IsLiteral) == VariableAttributes.IsLiteral)
+        {
+            name += " [Const]";
+        }
+        else if((variable.Attributes & VariableAttributes.IsStatic) == VariableAttributes.IsStatic)
+        {
+            name += " [Static]";
+        }
+
         object objectValue = variable.Value;
         if(variable.DataType != DataType.Unknown)
         {
-            return VariablePane.DrawIndividualVariable(variable.VariableName, variable.Value.GetType(), variable.Value);
+            GUI.enabled = (variable.Attributes & (VariableAttributes.ReadOnly | VariableAttributes.IsLiteral)) == VariableAttributes.None;
+            object newValue = VariablePane.DrawIndividualVariable(name, variable.Value.GetType(), variable.Value);
+            GUI.enabled = true;
+            return newValue;
         }
         else
         {
 			if (objectValue == null)
-				EditorGUILayout.TextField(variable.VariableName, "{null}");
+                EditorGUILayout.TextField(name, "{null}");
 			else
-				EditorGUILayout.TextField(variable.VariableName, variable.Value.ToString());
+                EditorGUILayout.TextField(name, variable.Value.ToString());
             
 			return null;
         }

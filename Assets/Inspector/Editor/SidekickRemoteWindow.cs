@@ -243,7 +243,7 @@ namespace Sabresaurus.Sidekick
                     {
                         EditorGUI.BeginChangeCheck();
                         object newValue = TempVariableDrawer.Draw(field);
-                        if (EditorGUI.EndChangeCheck())
+                        if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.ReadOnly)
                         {
                             field.Value = newValue;
                             SendToPlayers(APIRequest.SetVariable, component.InstanceID, field);
@@ -255,7 +255,7 @@ namespace Sabresaurus.Sidekick
                     {
                         EditorGUI.BeginChangeCheck();
                         object newValue = TempVariableDrawer.Draw(property);
-                        if (EditorGUI.EndChangeCheck())
+                        if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.ReadOnly)
                         {
                             property.Value = newValue;
                             SendToPlayers(APIRequest.SetVariable, component.InstanceID, property);

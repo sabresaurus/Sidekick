@@ -38,11 +38,20 @@ namespace Sabresaurus.Sidekick
         Unknown = 255
     }
 
+    [Flags]
+    public enum VariableAttributes : byte
+    {
+        None = 0,
+        ReadOnly = 1,
+        IsStatic = 2,
+        IsLiteral = 4, // e.g. const
+    }
+
     public class WrappedVariable
     {
         string variableName;
         DataType dataType;
-        bool readOnly = false;
+        VariableAttributes attributes = VariableAttributes.None;
         object value;
 
         #region Properties
@@ -62,11 +71,11 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public bool ReadOnly
+        public VariableAttributes Attributes
         {
             get
             {
-                return readOnly;
+                return attributes;
             }
         }
 
@@ -83,17 +92,18 @@ namespace Sabresaurus.Sidekick
         }
         #endregion
 
-        public WrappedVariable(string variableName, object value, Type type)
+        public WrappedVariable(string variableName, object value, Type type, VariableAttributes attributes)
         {
             this.variableName = variableName;
-            this.value = value;
+            this.attributes = attributes;
             this.dataType = GetWrappedDataTypeFromSystemType(type);
+			this.value = value;
         }
 
         public WrappedVariable(BinaryReader br)
         {
             this.variableName = br.ReadString();
-            this.readOnly = (br.ReadByte() != 0);
+            this.attributes = (VariableAttributes)br.ReadByte();
             this.dataType = (DataType)br.ReadByte();
 
             object uncastValue = null;
@@ -158,7 +168,7 @@ namespace Sabresaurus.Sidekick
         public void Write(BinaryWriter bw)
         {
             bw.Write(variableName);
-            bw.Write(readOnly ? (byte)1 : (byte)0);
+            bw.Write((byte)attributes);
             bw.Write((byte)dataType);
 
             if (dataType == DataType.String)

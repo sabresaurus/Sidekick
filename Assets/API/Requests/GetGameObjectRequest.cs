@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Sabresaurus.Sidekick;
 using Sabresaurus.Sidekick.Responses;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -18,7 +19,7 @@ namespace Sabresaurus.Sidekick.Requests
 
     public class GetGameObjectRequest : BaseRequest
     {
-        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
         public GetGameObjectRequest(string gameObjectPath, InfoFlags flags)
         {
@@ -48,7 +49,20 @@ namespace Sabresaurus.Sidekick.Requests
 						string fieldName = field.Name;
 						
 						object objectValue = field.GetValue(component);
-						WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, field.FieldType);
+                        VariableAttributes variableAttributes = VariableAttributes.None;
+                        if(field.IsInitOnly)
+                        {
+                            variableAttributes |= VariableAttributes.ReadOnly;
+                        }
+                        if (field.IsStatic)
+                        {
+                            variableAttributes |= VariableAttributes.IsStatic;
+                        }
+                        if(field.IsLiteral)
+                        {
+                            variableAttributes |= VariableAttributes.IsLiteral;
+                        }
+                        WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, field.FieldType, variableAttributes);
 						description.Fields.Add(wrappedVariable);
 					}
                 }
@@ -63,14 +77,32 @@ namespace Sabresaurus.Sidekick.Requests
 						{
 							continue;
 						}
+
+                        object[] attributes = property.GetCustomAttributes(false);
+                        bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
+                        if(isObsoleteWithError)
+                        {
+                            continue;
+                        }
+
 						string propertyName = property.Name;
 						
 						MethodInfo getMethod = property.GetGetMethod(true);
 						MethodInfo setMethod = property.GetSetMethod(true);
-						if(getMethod != null && setMethod != null)
+						if(getMethod != null)
 						{
 							object objectValue = getMethod.Invoke(component, null);
-							WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType);
+                            // TODO consider moving these to the WrappedVariable ctor or a factory class
+                            VariableAttributes variableAttributes = VariableAttributes.None;
+                            if(setMethod == null)
+                            {
+                                variableAttributes |= VariableAttributes.ReadOnly;
+                            }
+                            if (getMethod.IsStatic)
+                            {
+                                variableAttributes |= VariableAttributes.IsStatic;
+                            }
+                            WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType, variableAttributes);
 							description.Properties.Add(wrappedVariable);
 						}
 					}
