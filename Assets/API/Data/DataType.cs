@@ -19,6 +19,7 @@ namespace Sabresaurus.Sidekick
         Quaternion,
         Rect,
         Color,
+        Color32,
         ObjectReference,
         LayerMask,
         Enum,
@@ -67,6 +68,8 @@ namespace Sabresaurus.Sidekick
                 return DataType.Rect;
             else if (type == typeof(Color))
                 return DataType.Color;
+            else if(type == typeof(Color32))
+                return DataType.Color32;
             else if (type.IsEnum)
                 return DataType.Enum;
             else

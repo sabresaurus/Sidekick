@@ -193,6 +193,10 @@ namespace Sabresaurus.Sidekick
 			{
 				newValue = EditorGUILayout.ColorField(fieldName, (Color)fieldValue);
 			}
+            else if (fieldType == typeof(Color32))
+            {
+                newValue = (Color32)EditorGUILayout.ColorField(fieldName, (Color32)fieldValue);
+            }
 			else if (fieldType == typeof(AnimationCurve))
 			{
 				newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve)fieldValue);

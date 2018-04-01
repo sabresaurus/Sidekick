@@ -123,6 +123,10 @@ namespace Sabresaurus.Sidekick
             {
                 value = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
+            else if (dataType == DataType.Color32)
+            {
+                value = new Color32(br.ReadByte(), br.ReadByte(), br.ReadByte(), br.ReadByte());
+            }
             else if(dataType == DataType.Enum)
             {
                 value = br.ReadInt32();
@@ -204,6 +208,14 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Color)
             {
                 Color color = (Color)value;
+                bw.Write(color.r);
+                bw.Write(color.g);
+                bw.Write(color.b);
+                bw.Write(color.a);
+            }
+            else if (dataType == DataType.Color32)
+            {
+                Color32 color = (Color32)value;
                 bw.Write(color.r);
                 bw.Write(color.g);
                 bw.Write(color.b);
