@@ -5,39 +5,6 @@ using System;
 
 namespace Sabresaurus.Sidekick
 {
-    public enum DataType : byte
-    {
-        // Array
-        Void, // i.e. void
-        String,
-        Boolean,
-        Integer, // Signed 32 bit
-        Long, // Signed 64 bit
-        Float, // 32 bit Single
-        Double, // 32 bit Single
-        Vector2,
-        Vector3,
-        Vector4,
-		Quaternion,
-        Rect,
-        Color,
-        ObjectReference,
-        LayerMask,
-        Enum,
-        Character,
-        AnimationCurve,
-        Bounds,
-        Gradient,
-        ExposedReference,
-        FixedBufferSize,
-        Vector2Int,
-        Vector3Int,
-        RectInt,
-        BoundsInt,
-
-        Unknown = 255
-    }
-
     [Flags]
     public enum VariableAttributes : byte
     {
@@ -45,13 +12,14 @@ namespace Sabresaurus.Sidekick
         ReadOnly = 1,
         IsStatic = 2,
         IsLiteral = 4, // e.g. const
+        IsArray = 8,
     }
 
     public class WrappedVariable
     {
         string variableName;
+		VariableAttributes attributes = VariableAttributes.None;
         DataType dataType;
-        VariableAttributes attributes = VariableAttributes.None;
         object value;
 
         #region Properties
@@ -96,7 +64,7 @@ namespace Sabresaurus.Sidekick
         {
             this.variableName = variableName;
             this.attributes = attributes;
-            this.dataType = GetWrappedDataTypeFromSystemType(type);
+            this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
 			this.value = value;
         }
 
@@ -106,63 +74,63 @@ namespace Sabresaurus.Sidekick
             this.attributes = (VariableAttributes)br.ReadByte();
             this.dataType = (DataType)br.ReadByte();
 
-            object uncastValue = null;
-
             if (dataType == DataType.String)
             {
-                uncastValue = br.ReadString();
+                value = br.ReadString();
             }
             else if (dataType == DataType.Boolean)
             {
                 byte byteValue = br.ReadByte();
-                uncastValue = (byteValue != 0);
+                value = (byteValue != 0);
             }
             else if (dataType == DataType.Integer)
             {
-                uncastValue = br.ReadInt32();
+                value = br.ReadInt32();
             }
             else if (dataType == DataType.Long)
             {
-                uncastValue = br.ReadInt64();
+                value = br.ReadInt64();
             }
             else if (dataType == DataType.Float)
             {
-                uncastValue = br.ReadSingle();
+                value = br.ReadSingle();
             }
             else if (dataType == DataType.Double)
             {
-                uncastValue = br.ReadDouble();
+                value = br.ReadDouble();
             }
             else if (dataType == DataType.Vector2)
             {
-                uncastValue = new Vector2(br.ReadSingle(), br.ReadSingle());
+                value = new Vector2(br.ReadSingle(), br.ReadSingle());
             }
             else if (dataType == DataType.Vector3)
             {
-                uncastValue = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                value = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
             else if (dataType == DataType.Vector4)
             {
-                uncastValue = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                value = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
             else if (dataType == DataType.Quaternion)
             {
-                uncastValue = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                value = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
             else if (dataType == DataType.Rect)
             {
-                uncastValue = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                value = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
             else if (dataType == DataType.Color)
             {
-                uncastValue = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                value = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+            }
+            else if(dataType == DataType.Enum)
+            {
+                value = br.ReadInt32();
             }
             else
             {
                 Debug.LogWarning("Could not read " + dataType);
             }
-
-            this.value = uncastValue;
         }
 
         public void Write(BinaryWriter bw)
@@ -241,44 +209,13 @@ namespace Sabresaurus.Sidekick
                 bw.Write(color.b);
                 bw.Write(color.a);
             }
+            else if (dataType == DataType.Enum)
+            {
+                bw.Write((int)value);
+            }
             else
             {
                 Debug.LogWarning("Could not write " + dataType);
-            }
-        }
-
-        public static DataType GetWrappedDataTypeFromSystemType(Type type)
-        {
-            //Debug.Log(type.Name);
-            if (type == typeof(void))
-                return DataType.Void;
-            else if (type == typeof(string))
-                return DataType.String;
-            else if (type == typeof(bool))
-                return DataType.Boolean;
-            else if (type == typeof(int))
-                return DataType.Integer;
-            else if (type == typeof(long))
-                return DataType.Long;
-            else if (type == typeof(float))
-                return DataType.Float;
-            else if (type == typeof(double))
-                return DataType.Double;
-            else if (type == typeof(Vector2))
-                return DataType.Vector2;
-            else if (type == typeof(Vector3))
-                return DataType.Vector3;
-            else if (type == typeof(Vector4))
-                return DataType.Vector4;
-            else if (type == typeof(Quaternion))
-                return DataType.Quaternion;
-            else if (type == typeof(Rect))
-                return DataType.Rect;
-            else if (type == typeof(Color))
-                return DataType.Color;
-            else
-            {
-                return DataType.Unknown;
             }
         }
     }

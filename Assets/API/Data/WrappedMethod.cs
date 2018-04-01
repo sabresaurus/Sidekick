@@ -53,7 +53,7 @@ namespace Sabresaurus.Sidekick
         public WrappedMethod(string methodName, Type returnType, int parameterCount)
         {
             this.methodName = methodName;
-            this.returnType = WrappedVariable.GetWrappedDataTypeFromSystemType(returnType);
+            this.returnType = DataTypeHelper.GetWrappedDataTypeFromSystemType(returnType);
             this.parameterCount = parameterCount;
         }
 

@@ -63,6 +63,11 @@ namespace Sabresaurus.Sidekick
 
 		public static string ParseDisplayString(string input)
 		{
+            if(input.StartsWith("m_", StringComparison.InvariantCultureIgnoreCase))
+            {
+                input = input.Remove(0, 2);
+            }
+
 			StringBuilder stringBuilder = new StringBuilder();
 
 			for (int i = 0; i < input.Length; i++) 

@@ -220,8 +220,9 @@ namespace Sabresaurus.Sidekick
             GUI.DrawTexture(verticalLineRect, EditorGUIUtility.whiteTexture);
             GUI.color = Color.white;
 
-
+            // Column 2
             GUILayout.BeginVertical();
+
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             if (gameObjectResponse != null)
             {
@@ -243,7 +244,7 @@ namespace Sabresaurus.Sidekick
                     {
                         EditorGUI.BeginChangeCheck();
                         object newValue = TempVariableDrawer.Draw(field);
-                        if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.ReadOnly)
+                        if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
                         {
                             field.Value = newValue;
                             SendToPlayers(APIRequest.SetVariable, component.InstanceID, field);
@@ -255,7 +256,7 @@ namespace Sabresaurus.Sidekick
                     {
                         EditorGUI.BeginChangeCheck();
                         object newValue = TempVariableDrawer.Draw(property);
-                        if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.ReadOnly)
+                        if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
                         {
                             property.Value = newValue;
                             SendToPlayers(APIRequest.SetVariable, component.InstanceID, property);

@@ -43,26 +43,32 @@ namespace Sabresaurus.Sidekick.Requests
 
                 if((flags & InfoFlags.Fields) == InfoFlags.Fields)
                 {
-					FieldInfo[] fields = componentType.GetFields(BINDING_FLAGS);
-					foreach (FieldInfo field in fields)
+					FieldInfo[] fieldInfos = componentType.GetFields(BINDING_FLAGS);
+                    foreach (FieldInfo fieldInfo in fieldInfos)
 					{
-						string fieldName = field.Name;
+                        if (TypeUtility.IsBackingField(fieldInfo, componentType))
+                        {
+                            // Skip backing fields for auto-implemented properties
+                            continue;
+                        }
+
+						string fieldName = fieldInfo.Name;
 						
-						object objectValue = field.GetValue(component);
+						object objectValue = fieldInfo.GetValue(component);
                         VariableAttributes variableAttributes = VariableAttributes.None;
-                        if(field.IsInitOnly)
+                        if(fieldInfo.IsInitOnly)
                         {
                             variableAttributes |= VariableAttributes.ReadOnly;
                         }
-                        if (field.IsStatic)
+                        if (fieldInfo.IsStatic)
                         {
                             variableAttributes |= VariableAttributes.IsStatic;
                         }
-                        if(field.IsLiteral)
+                        if(fieldInfo.IsLiteral)
                         {
                             variableAttributes |= VariableAttributes.IsLiteral;
                         }
-                        WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, field.FieldType, variableAttributes);
+                        WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, fieldInfo.FieldType, variableAttributes);
 						description.Fields.Add(wrappedVariable);
 					}
                 }
@@ -110,10 +116,16 @@ namespace Sabresaurus.Sidekick.Requests
 
                 if ((flags & InfoFlags.Methods) == InfoFlags.Methods)
                 {
-                    MethodInfo[] methods = componentType.GetMethods(BINDING_FLAGS);
-                    foreach (var method in methods)
+                    MethodInfo[] methodInfos = componentType.GetMethods(BINDING_FLAGS);
+                    foreach (var methodInfo in methodInfos)
                     {
-                        WrappedMethod wrappedMethod = new WrappedMethod(method.Name, method.ReturnType, method.GetParameters().Length);
+                        if (TypeUtility.IsPropertyMethod(methodInfo, componentType))
+                        {
+                            // Skip automatically generated getter/setter methods
+                            continue;
+                        }
+
+                        WrappedMethod wrappedMethod = new WrappedMethod(methodInfo.Name, methodInfo.ReturnType, methodInfo.GetParameters().Length);
                         description.Methods.Add(wrappedMethod);
                     }
                 }

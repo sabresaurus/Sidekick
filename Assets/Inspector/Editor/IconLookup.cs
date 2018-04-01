@@ -18,21 +18,26 @@ public static class IconLookup
             }
         }
 
+        GUIContent objectContent;
+
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
             Type type = assembly.GetType(typeName);
             if(type != null)
             {
-				GUIContent objectContent = EditorGUIUtility.ObjectContent(null, type);
-				Texture2D icon = objectContent.image as Texture2D;
-                // Cache it so we don't need to do expensive lookups next time
-                cachedIcons[typeName] = icon;
-				return icon;
+				objectContent = EditorGUIUtility.ObjectContent(null, type);
+                if(objectContent.image != null)
+                {
+					// Cache it so we don't need to do expensive lookups next time
+					cachedIcons[typeName] = objectContent.image;
+					return objectContent.image;
+                }
             }
         }
-
-        // None matched
-        return null;
+        objectContent = EditorGUIUtility.ObjectContent(null, typeof(MonoScript));
+        // Cache it so we don't need to do expensive lookups next time
+        cachedIcons[typeName] = objectContent.image;
+        return objectContent.image;
     }
 
 }
