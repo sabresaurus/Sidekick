@@ -6,7 +6,16 @@ namespace Sabresaurus.Sidekick.Responses
 {
     public class InvokeMethodResponse : BaseResponse
     {
+        string methodName;
         WrappedVariable returnedVariable;
+
+        public string MethodName
+        {
+            get
+            {
+                return methodName;
+            }
+        }
 
         public WrappedVariable ReturnedVariable
         {
@@ -16,19 +25,22 @@ namespace Sabresaurus.Sidekick.Responses
             }
         }
 
-        public InvokeMethodResponse(WrappedVariable returnedVariable)
+        public InvokeMethodResponse(string methodName, WrappedVariable returnedVariable)
         {
+            this.methodName = methodName;
             this.returnedVariable = returnedVariable;
         }
 
         public InvokeMethodResponse(BinaryReader br)
             : base(br)
         {
+            methodName = br.ReadString();
             returnedVariable = new WrappedVariable(br);
         }
 
         public override void Write(BinaryWriter bw)
         {
+            bw.Write(methodName);
             returnedVariable.Write(bw);
         }
     }

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 using System;
+using System.Reflection;
 
 namespace Sabresaurus.Sidekick
 {
@@ -50,13 +51,14 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public WrappedMethod(string methodName, Type returnType, int parameterCount)
+        public WrappedMethod(MethodInfo methodInfo)
         {
-            this.methodName = methodName;
-            this.returnType = DataTypeHelper.GetWrappedDataTypeFromSystemType(returnType);
-            this.parameterCount = parameterCount;
+            this.methodName = methodInfo.Name;
+            this.returnType = DataTypeHelper.GetWrappedDataTypeFromSystemType(methodInfo.ReturnType);
+            this.parameterCount = methodInfo.GetParameters().Length;
         }
 
+        // Deserialisation constructor
         public WrappedMethod(BinaryReader br)
         {
             this.methodName = br.ReadString();

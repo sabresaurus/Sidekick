@@ -52,23 +52,9 @@ namespace Sabresaurus.Sidekick.Requests
                             continue;
                         }
 
-						string fieldName = fieldInfo.Name;
-						
 						object objectValue = fieldInfo.GetValue(component);
-                        VariableAttributes variableAttributes = VariableAttributes.None;
-                        if(fieldInfo.IsInitOnly)
-                        {
-                            variableAttributes |= VariableAttributes.ReadOnly;
-                        }
-                        if (fieldInfo.IsStatic)
-                        {
-                            variableAttributes |= VariableAttributes.IsStatic;
-                        }
-                        if(fieldInfo.IsLiteral)
-                        {
-                            variableAttributes |= VariableAttributes.IsLiteral;
-                        }
-                        WrappedVariable wrappedVariable = new WrappedVariable(fieldName, objectValue, fieldInfo.FieldType, variableAttributes);
+
+                        WrappedVariable wrappedVariable = new WrappedVariable(fieldInfo, objectValue);
 						description.Fields.Add(wrappedVariable);
 					}
                 }
@@ -98,17 +84,8 @@ namespace Sabresaurus.Sidekick.Requests
 						if(getMethod != null)
 						{
 							object objectValue = getMethod.Invoke(component, null);
-                            // TODO consider moving these to the WrappedVariable ctor or a factory class
-                            VariableAttributes variableAttributes = VariableAttributes.None;
-                            if(setMethod == null)
-                            {
-                                variableAttributes |= VariableAttributes.ReadOnly;
-                            }
-                            if (getMethod.IsStatic)
-                            {
-                                variableAttributes |= VariableAttributes.IsStatic;
-                            }
-                            WrappedVariable wrappedVariable = new WrappedVariable(propertyName, objectValue, property.PropertyType, variableAttributes);
+
+                            WrappedVariable wrappedVariable = new WrappedVariable(property, objectValue);
 							description.Properties.Add(wrappedVariable);
 						}
 					}
@@ -125,7 +102,7 @@ namespace Sabresaurus.Sidekick.Requests
                             continue;
                         }
 
-                        WrappedMethod wrappedMethod = new WrappedMethod(methodInfo.Name, methodInfo.ReturnType, methodInfo.GetParameters().Length);
+                        WrappedMethod wrappedMethod = new WrappedMethod(methodInfo);
                         description.Methods.Add(wrappedMethod);
                     }
                 }

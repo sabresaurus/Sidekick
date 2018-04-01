@@ -71,7 +71,7 @@ namespace Sabresaurus.Sidekick
             else if(type == typeof(Color32))
                 return DataType.Color32;
             else if (type.IsEnum)
-                return DataType.Enum;
+				return DataType.Enum;
             else
             {
                 return DataType.Unknown;

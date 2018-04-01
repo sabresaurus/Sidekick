@@ -18,17 +18,18 @@ namespace Sabresaurus.Sidekick
 
         bool localDevMode = false;
         bool autoRefresh = false;
-
-        string lastDebugText = "";
+        string searchTerm = "";
 
         Vector2 scrollPosition = Vector2.zero;
+
 
         InfoFlags getGameObjectFlags = InfoFlags.Fields | InfoFlags.Properties;
 
         TreeViewState treeViewState;
 
         SimpleTreeView treeView;
-        SearchField searchField;
+        SearchField treeViewSearchField;
+        SearchField searchField2;
 
         GetGameObjectResponse gameObjectResponse;
 
@@ -57,8 +58,11 @@ namespace Sabresaurus.Sidekick
 
             treeView = new SimpleTreeView(treeViewState);
             treeView.OnSelectionChanged += OnHierarchySelectionChanged;
-            searchField = new SearchField();
-            searchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
+
+            searchField2 = new SearchField();
+
+            treeViewSearchField = new SearchField();
+            treeViewSearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
         }
 
         void OnDisable()
@@ -157,12 +161,11 @@ namespace Sabresaurus.Sidekick
                     }
                 }
                 Debug.Log(stringBuilder);
-                lastDebugText = stringBuilder.ToString();
             }
             else if (response is InvokeMethodResponse)
             {
                 InvokeMethodResponse invokeMethodResponse = (InvokeMethodResponse)response;
-                Debug.Log("returned " + invokeMethodResponse.ReturnedVariable.Value);
+                Debug.Log(invokeMethodResponse.MethodName + "() returned " + invokeMethodResponse.ReturnedVariable.Value);
             }
         }
 
@@ -184,8 +187,9 @@ namespace Sabresaurus.Sidekick
 
 
         void OnGUI()
-        {
+        {            
             GUILayout.BeginHorizontal();
+            // Column 1
             GUILayout.BeginVertical(GUILayout.Width(position.width / 2f));
 
             localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
@@ -222,6 +226,9 @@ namespace Sabresaurus.Sidekick
 
             // Column 2
             GUILayout.BeginVertical();
+            GUILayout.Space(2);
+            searchTerm = searchField2.OnGUI(searchTerm);
+            GUILayout.Space(3);
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             if (gameObjectResponse != null)
@@ -344,7 +351,7 @@ namespace Sabresaurus.Sidekick
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Space(100);
             GUILayout.FlexibleSpace();
-            treeView.searchString = searchField.OnToolbarGUI(treeView.searchString);
+            treeView.searchString = treeViewSearchField.OnToolbarGUI(treeView.searchString);
             GUILayout.EndHorizontal();
         }
 

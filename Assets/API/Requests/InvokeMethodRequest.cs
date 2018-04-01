@@ -22,10 +22,10 @@ namespace Sabresaurus.Sidekick.Requests
 
                 object returnedValue = methodInfo.Invoke(targetObject, parameters);
                 returnedVariable = new WrappedVariable("", returnedValue, methodInfo.ReturnType, VariableAttributes.None);
-                Debug.Log(returnedValue);
+                //Debug.Log(returnedValue);
             }
 
-            uncastResponse = new InvokeMethodResponse(returnedVariable);
+            uncastResponse = new InvokeMethodResponse(methodName, returnedVariable);
         }
     }
 }

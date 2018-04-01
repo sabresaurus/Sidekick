@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 using System;
+using System.Reflection;
 
 namespace Sabresaurus.Sidekick
 {
@@ -18,9 +19,13 @@ namespace Sabresaurus.Sidekick
     public class WrappedVariable
     {
         string variableName;
-		VariableAttributes attributes = VariableAttributes.None;
+        VariableAttributes attributes = VariableAttributes.None;
         DataType dataType;
         object value;
+
+        // TODO: Consider moving these elsewhere, maybe into an object
+        string[] enumNames;
+        int[] enumValues;
 
         #region Properties
         public string VariableName
@@ -47,6 +52,22 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        public string[] EnumNames
+        {
+            get
+            {
+                return enumNames;
+            }
+        }
+
+        public int[] EnumValues
+        {
+            get
+            {
+                return enumValues;
+            }
+        }
+
         public object Value
         {
             get
@@ -60,12 +81,76 @@ namespace Sabresaurus.Sidekick
         }
         #endregion
 
+        public WrappedVariable(FieldInfo fieldInfo, object objectValue)
+        {
+            this.variableName = fieldInfo.Name;
+            this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(fieldInfo.FieldType);
+
+            if (dataType == DataType.Enum)
+            {
+                FetchEnumMetadata(fieldInfo.FieldType);
+            }
+
+            this.attributes = VariableAttributes.None;
+            if (fieldInfo.IsInitOnly)
+            {
+                this.attributes |= VariableAttributes.ReadOnly;
+            }
+            if (fieldInfo.IsStatic)
+            {
+                this.attributes |= VariableAttributes.IsStatic;
+            }
+            if (fieldInfo.IsLiteral)
+            {
+                this.attributes |= VariableAttributes.IsLiteral;
+            }
+
+            this.value = objectValue;
+        }
+
+        public WrappedVariable(PropertyInfo propertyInfo, object objectValue)
+        {
+            this.variableName = propertyInfo.Name;
+            this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(propertyInfo.PropertyType);
+
+            if (dataType == DataType.Enum)
+            {
+                FetchEnumMetadata(propertyInfo.PropertyType);
+            }
+
+            MethodInfo getMethod = propertyInfo.GetGetMethod(true);
+            MethodInfo setMethod = propertyInfo.GetSetMethod(true);
+
+            this.attributes = VariableAttributes.None;
+            if (setMethod == null)
+            {
+                this.attributes |= VariableAttributes.ReadOnly;
+            }
+            if (getMethod.IsStatic)
+            {
+                this.attributes |= VariableAttributes.IsStatic;
+            }
+
+            this.value = objectValue;
+        }
+
+        public void FetchEnumMetadata(Type type)
+        {
+            this.enumNames = Enum.GetNames(type);
+            this.enumValues = new int[this.enumNames.Length];
+            Array enumValuesArray = Enum.GetValues(type);
+            for (int i = 0; i < enumNames.Length; i++)
+            {
+                this.enumValues[i] = (int)enumValuesArray.GetValue(i);
+            }
+        }
+
         public WrappedVariable(string variableName, object value, Type type, VariableAttributes attributes)
         {
             this.variableName = variableName;
             this.attributes = attributes;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
-			this.value = value;
+            this.value = value;
         }
 
         public WrappedVariable(BinaryReader br)
@@ -127,9 +212,20 @@ namespace Sabresaurus.Sidekick
             {
                 value = new Color32(br.ReadByte(), br.ReadByte(), br.ReadByte(), br.ReadByte());
             }
-            else if(dataType == DataType.Enum)
+            else if (dataType == DataType.Enum)
             {
                 value = br.ReadInt32();
+                int enumNameCount = br.ReadInt32();
+                enumNames = new string[enumNameCount];
+                enumValues = new int[enumNameCount];
+                for (int i = 0; i < enumNameCount; i++)
+                {
+                    enumNames[i] = br.ReadString();
+                }
+                for (int i = 0; i < enumNameCount; i++)
+                {
+                    enumValues[i] = br.ReadInt32();
+                }
             }
             else
             {
@@ -224,6 +320,16 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Enum)
             {
                 bw.Write((int)value);
+
+                bw.Write(enumNames.Length);
+                for (int i = 0; i < enumNames.Length; i++)
+                {
+                    bw.Write(enumNames[i]);
+                }
+                for (int i = 0; i < enumNames.Length; i++)
+                {
+                    bw.Write(enumValues[i]);
+                }
             }
             else
             {

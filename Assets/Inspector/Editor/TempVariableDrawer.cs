@@ -23,14 +23,19 @@ public static class TempVariableDrawer
         object objectValue = variable.Value;
         if(variable.DataType == DataType.Enum)
         {
-            GUI.enabled = enableEditing;
-            object newValue = VariablePane.DrawIndividualVariable(name, variable.Value.GetType(), variable.Value);
+			GUI.enabled = enableEditing;
+            int newValue = EditorGUILayout.IntPopup(name, (int)variable.Value, variable.EnumNames, variable.EnumValues);
             GUI.enabled = true;
             return newValue;
         }
         else if (variable.DataType != DataType.Unknown)
         {
             GUI.enabled = enableEditing;
+            if(variable.Value == null)
+            {
+                Debug.LogError(name + " is null");
+            }
+
             object newValue = VariablePane.DrawIndividualVariable(name, variable.Value.GetType(), variable.Value);
             GUI.enabled = true;
             return newValue;
