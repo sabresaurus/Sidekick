@@ -85,20 +85,11 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        [MenuItem("Window/Inspector Sidekick")]
+        [MenuItem("Tools/Old Sidekick")]
         static void Init()
         {
             // Get existing open window or if none, make a new one:
             InspectorSidekick sidekick = EditorWindow.GetWindow<InspectorSidekick>();
-            sidekick.UpdateTitleContent();
-        }
-
-        [MenuItem("Window/Inspector Sidekick (Duplicate)")]
-        static void Init2()
-        {
-            // Get existing open window or if none, make a new one:
-            InspectorSidekick sidekick = EditorWindow.CreateInstance<InspectorSidekick>();
-            sidekick.Show();
             sidekick.UpdateTitleContent();
         }
 
@@ -111,8 +102,7 @@ namespace Sabresaurus.Sidekick
 
         void UpdateTitleContent()
         {
-            Texture2D texture = UnityEditor.AssetDatabase.LoadMainAssetAtPath(SidekickUtility.GetInstallPath() + "Editor/SidekickIcon.png") as Texture2D;
-            titleContent = new GUIContent("Sidekick", texture);
+            titleContent = new GUIContent("Old Sidekick");
         }
 
 

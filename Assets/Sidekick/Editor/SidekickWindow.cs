@@ -12,7 +12,7 @@ using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
-    public class SidekickRemoteWindow : EditorWindow
+    public class SidekickWindow : EditorWindow
     {
         const float AUTO_REFRESH_FREQUENCY = 2f;
 
@@ -35,16 +35,33 @@ namespace Sabresaurus.Sidekick
 
         double timeLastRefreshed = 0;
 
-        [MenuItem("Sidekick/Remote Window")]
+        [MenuItem("Tools/Sidekick")]
         static void Init()
         {
-            SidekickRemoteWindow window = (SidekickRemoteWindow)EditorWindow.GetWindow(typeof(SidekickRemoteWindow));
+            SidekickWindow window = (SidekickWindow)EditorWindow.GetWindow(typeof(SidekickWindow));
             window.Show();
-            window.titleContent = new GUIContent("Sidekick Remote");
+            window.titleContent = new GUIContent("Sidekick");
+            window.UpdateTitleContent();
+        }
+
+        void UpdateTitleContent()
+        {
+            string[] guids = AssetDatabase.FindAssets("SidekickIcon t:Texture");
+            if(guids.Length >= 1)
+            {
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(guids[0]));
+				titleContent = new GUIContent("Sidekick", texture);
+            }
+            else
+            {
+                titleContent = new GUIContent("Sidekick");
+            }
         }
 
         void OnEnable()
         {
+            UpdateTitleContent();
+
             EditorConnection.instance.Initialize();
             EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
 
