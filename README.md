@@ -30,13 +30,21 @@ All interactions are handled through a single unified API. This means if you're 
 
 ### Current requests:
 **GetHierarchy** - Fetches a list of scenes with the hierarchy of transforms inside them
+
 **GetGameObject** - Fetches a list of components given a fully qualified path to a game object
+
 **SetVariable** - Sets a field or property given an Object's instance ID and a value
+
 **InvokeMethod** - Fires a method given an instance ID, method name and any parameters
 
 ## Editor Inspector
 
 ## Remote Inspector
+
+
+### Note on Code Stripping
+
+Note that Sidekick heavily uses reflection which relies on signatures being present in the remote assembly. For example if none of your code uses the background color property on a Camera component then that property may be stripped out at build time to keep build times and sizes down. In this case if you wanted to try changing the camera background color using Sidekick, then reflection would not be able to find the property (because it doesn't exist). IL2CPP backend builds do bytecode stripping by default ([details here](https://docs.unity3d.com/Manual/IL2CPP-BytecodeStripping.html)), but by creating one or more link.xml files in Assets we can define components that shouldn't have stripping enabled. If you have any issues with missing fields/properties then try creating a link.xml file as outlined in the Unity Docs link.
 
 # Installation
 
