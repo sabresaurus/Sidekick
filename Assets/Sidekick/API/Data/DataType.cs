@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Sabresaurus.Sidekick
@@ -40,43 +41,52 @@ namespace Sabresaurus.Sidekick
 
     public static class DataTypeHelper
     {
+        static Dictionary<Type, DataType> mappings = new Dictionary<Type, DataType>()
+        {
+            {typeof(void), DataType.Void},
+            {typeof(string), DataType.String},
+            {typeof(bool), DataType.Boolean},
+            {typeof(int), DataType.Integer},
+            {typeof(long), DataType.Long},
+            {typeof(float), DataType.Float},
+            {typeof(double), DataType.Double},
+            {typeof(Vector2), DataType.Vector2},
+            {typeof(Vector3), DataType.Vector3},
+            {typeof(Vector4), DataType.Vector4},
+            {typeof(Quaternion), DataType.Quaternion},
+            {typeof(Rect), DataType.Rect},
+            {typeof(Color), DataType.Color},
+            {typeof(Color32), DataType.Color32},
+            //else if (type.IsEnum)), DataType.Enum},
+        };
+
         public static DataType GetWrappedDataTypeFromSystemType(Type type)
         {
-            //Debug.Log(type.Name);
-            if (type == typeof(void))
-                return DataType.Void;
-            else if (type == typeof(string))
-                return DataType.String;
-            else if (type == typeof(bool))
-                return DataType.Boolean;
-            else if (type == typeof(int))
-                return DataType.Integer;
-            else if (type == typeof(long))
-                return DataType.Long;
-            else if (type == typeof(float))
-                return DataType.Float;
-            else if (type == typeof(double))
-                return DataType.Double;
-            else if (type == typeof(Vector2))
-                return DataType.Vector2;
-            else if (type == typeof(Vector3))
-                return DataType.Vector3;
-            else if (type == typeof(Vector4))
-                return DataType.Vector4;
-            else if (type == typeof(Quaternion))
-                return DataType.Quaternion;
-            else if (type == typeof(Rect))
-                return DataType.Rect;
-            else if (type == typeof(Color))
-                return DataType.Color;
-            else if(type == typeof(Color32))
-                return DataType.Color32;
+            if (mappings.ContainsKey(type))
+            {
+                return mappings[type];
+            }
             else if (type.IsEnum)
-				return DataType.Enum;
+            {
+                return DataType.Enum;
+            }
             else
             {
                 return DataType.Unknown;
             }
+        }
+
+        public static Type GetSystemTypeFromWrappedDataType(DataType dataType)
+        {
+            foreach (var mapping in mappings)
+            {
+                if(mapping.Value == dataType)
+                {
+                    return mapping.Key;
+                }
+            }
+            // None matched
+            return null;
         }
 
         public static object ReadFromBinary(DataType dataType, BinaryReader br)

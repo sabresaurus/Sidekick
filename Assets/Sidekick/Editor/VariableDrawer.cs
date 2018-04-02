@@ -38,7 +38,7 @@ public static class VariableDrawer
                 EditorGUI.indentLevel++;
                 IList list = (IList)variable.Value;
 
-                Type type = list[0].GetType(); // HACK Replace this with the real fix
+                Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(variable.DataType);
 
                 int newSize = Mathf.Max(0, EditorGUILayout.IntField("Size", list.Count));
                 if (newSize != list.Count)
