@@ -132,7 +132,7 @@ namespace Sabresaurus.Sidekick
 			return newValue;
 		}
 
-		public static object DrawIndividualVariable(string fieldName, Type fieldType, object fieldValue)
+        protected static object DrawIndividualVariable(string fieldName, Type fieldType, object fieldValue)
 		{
 			object newValue;
 			if (fieldType == typeof(int)

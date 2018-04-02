@@ -250,7 +250,7 @@ namespace Sabresaurus.Sidekick
                     foreach (var field in component.Fields)
                     {
                         EditorGUI.BeginChangeCheck();
-                        object newValue = TempVariableDrawer.Draw(field);
+                        object newValue = VariableDrawer.Draw(field);
                         if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
                         {
                             field.Value = newValue;
@@ -262,7 +262,7 @@ namespace Sabresaurus.Sidekick
                     foreach (var property in component.Properties)
                     {
                         EditorGUI.BeginChangeCheck();
-                        object newValue = TempVariableDrawer.Draw(property);
+                        object newValue = VariableDrawer.Draw(property);
                         if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
                         {
                             property.Value = newValue;

@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 #pragma warning disable 0414
 /// <summary>
@@ -11,7 +11,7 @@ public class DataTestScript : MonoBehaviour
 
     [SerializeField] string testString = "Hello World";
     [SerializeField] bool testBool = true;
-    [SerializeField] int testInt =   2147483647;
+    [SerializeField] int testInt = 2147483647;
     [SerializeField] long testLong = 12345678912345678;
     [SerializeField] float testFloat = 0.1234f;
     [SerializeField] double testDouble = 0.12345678f;
@@ -24,6 +24,7 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] Color32 testColor32 = Color.blue;
     [SerializeField] TestEnum testEnum = TestEnum.Foo;
     [SerializeField] int[] testArray = { 1, 2, 3, 4 };
+    [SerializeField] List<int> testList = new List<int>() { 5, 6, 7, 8 };
     readonly string readonlyString = "readonly";
     const string constString = "const";
     static string staticString = "static";
@@ -38,5 +39,18 @@ public class DataTestScript : MonoBehaviour
     {
         get;
         set;
+    }
+
+    public List<int> TestList
+    {
+        get
+        {
+            return testList;
+        }
+
+        set
+        {
+            testList = value;
+        }
     }
 }

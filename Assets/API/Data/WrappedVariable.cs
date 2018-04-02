@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick
 {
@@ -13,7 +14,7 @@ namespace Sabresaurus.Sidekick
         ReadOnly = 1,
         IsStatic = 2,
         IsLiteral = 4, // e.g. const
-        IsArray = 8,
+        IsArrayOrList = 8,
     }
 
     public class WrappedVariable
@@ -91,7 +92,19 @@ namespace Sabresaurus.Sidekick
                 FetchEnumMetadata(fieldInfo.FieldType);
             }
 
-            this.attributes = VariableAttributes.None;
+            bool isArray = fieldInfo.FieldType.IsArray;
+            bool isGenericList = TypeUtility.IsGenericList(fieldInfo.FieldType);
+
+			this.attributes = VariableAttributes.None;
+
+			if (isArray || isGenericList)
+			{
+                this.attributes |= VariableAttributes.IsArrayOrList;
+                Type elementType = TypeUtility.GetElementType(fieldInfo.FieldType);
+				//Debug.Log(elementType);
+                this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
+                //do something
+			}
             if (fieldInfo.IsInitOnly)
             {
                 this.attributes |= VariableAttributes.ReadOnly;
@@ -159,62 +172,25 @@ namespace Sabresaurus.Sidekick
             this.attributes = (VariableAttributes)br.ReadByte();
             this.dataType = (DataType)br.ReadByte();
 
-            if (dataType == DataType.String)
+            if(this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
             {
-                value = br.ReadString();
+                int count = br.ReadInt32();
+
+                List<object> list = new List<object>(count);
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(DataTypeHelper.ReadFromBinary(dataType, br));
+                }
+                this.value = list;
             }
-            else if (dataType == DataType.Boolean)
+            else
             {
-                byte byteValue = br.ReadByte();
-                value = (byteValue != 0);
+                this.value = DataTypeHelper.ReadFromBinary(dataType, br);
             }
-            else if (dataType == DataType.Integer)
+
+
+            if(dataType == DataType.Enum)
             {
-                value = br.ReadInt32();
-            }
-            else if (dataType == DataType.Long)
-            {
-                value = br.ReadInt64();
-            }
-            else if (dataType == DataType.Float)
-            {
-                value = br.ReadSingle();
-            }
-            else if (dataType == DataType.Double)
-            {
-                value = br.ReadDouble();
-            }
-            else if (dataType == DataType.Vector2)
-            {
-                value = new Vector2(br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Vector3)
-            {
-                value = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Vector4)
-            {
-                value = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Quaternion)
-            {
-                value = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Rect)
-            {
-                value = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Color)
-            {
-                value = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-            }
-            else if (dataType == DataType.Color32)
-            {
-                value = new Color32(br.ReadByte(), br.ReadByte(), br.ReadByte(), br.ReadByte());
-            }
-            else if (dataType == DataType.Enum)
-            {
-                value = br.ReadInt32();
                 int enumNameCount = br.ReadInt32();
                 enumNames = new string[enumNameCount];
                 enumValues = new int[enumNameCount];
@@ -227,10 +203,6 @@ namespace Sabresaurus.Sidekick
                     enumValues[i] = br.ReadInt32();
                 }
             }
-            else
-            {
-                Debug.LogWarning("Could not read " + dataType);
-            }
         }
 
         public void Write(BinaryWriter bw)
@@ -239,101 +211,43 @@ namespace Sabresaurus.Sidekick
             bw.Write((byte)attributes);
             bw.Write((byte)dataType);
 
-            if (dataType == DataType.String)
+            if(this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
             {
-                bw.Write((string)value);
-            }
-            else if (dataType == DataType.Boolean)
-            {
-                bool boolValue = (bool)value;
-                bw.Write(boolValue ? (byte)1 : (byte)0);
-            }
-            else if (dataType == DataType.Integer)
-            {
-                bw.Write((int)value);
-            }
-            else if (dataType == DataType.Long)
-            {
-                bw.Write((long)value);
-            }
-            else if (dataType == DataType.Float)
-            {
-                bw.Write((float)value);
-            }
-            else if (dataType == DataType.Double)
-            {
-                bw.Write((double)value);
-            }
-            else if (dataType == DataType.Vector2)
-            {
-                Vector2 vector = (Vector2)value;
-                bw.Write(vector.x);
-                bw.Write(vector.y);
-            }
-            else if (dataType == DataType.Vector3)
-            {
-                Vector3 vector = (Vector3)value;
-                bw.Write(vector.x);
-                bw.Write(vector.y);
-                bw.Write(vector.z);
-            }
-            else if (dataType == DataType.Vector4)
-            {
-                Vector4 vector = (Vector4)value;
-                bw.Write(vector.x);
-                bw.Write(vector.y);
-                bw.Write(vector.z);
-                bw.Write(vector.w);
-            }
-            else if (dataType == DataType.Quaternion)
-            {
-                Quaternion rotation = (Quaternion)value;
-                bw.Write(rotation.x);
-                bw.Write(rotation.y);
-                bw.Write(rotation.z);
-                bw.Write(rotation.w);
-            }
-            else if (dataType == DataType.Rect)
-            {
-                Rect rect = (Rect)value;
-                bw.Write(rect.x);
-                bw.Write(rect.y);
-                bw.Write(rect.width);
-                bw.Write(rect.height);
-            }
-            else if (dataType == DataType.Color)
-            {
-                Color color = (Color)value;
-                bw.Write(color.r);
-                bw.Write(color.g);
-                bw.Write(color.b);
-                bw.Write(color.a);
-            }
-            else if (dataType == DataType.Color32)
-            {
-                Color32 color = (Color32)value;
-                bw.Write(color.r);
-                bw.Write(color.g);
-                bw.Write(color.b);
-                bw.Write(color.a);
-            }
-            else if (dataType == DataType.Enum)
-            {
-                bw.Write((int)value);
-
-                bw.Write(enumNames.Length);
-                for (int i = 0; i < enumNames.Length; i++)
+                if(value is IList)
                 {
-                    bw.Write(enumNames[i]);
+                    IList list = (IList)value;
+                    int count = list.Count;
+                    bw.Write(count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        DataTypeHelper.WriteToBinary(dataType, list[i], bw);
+                    }
                 }
-                for (int i = 0; i < enumNames.Length; i++)
+                //else if(value is Array)
+                //{
+                //    Debug.Log(variableName + " is Array");
+                //}
+                else
                 {
-                    bw.Write(enumValues[i]);
+                    throw new NotImplementedException("Array serialisation has not been implemented for this array type");
                 }
             }
             else
             {
-                Debug.LogWarning("Could not write " + dataType);
+				DataTypeHelper.WriteToBinary(dataType, value, bw);
+            }
+
+            if(dataType == DataType.Enum)
+            {
+				bw.Write(enumNames.Length);
+				for (int i = 0; i < enumNames.Length; i++)
+				{
+					bw.Write(enumNames[i]);
+				}
+				for (int i = 0; i < enumNames.Length; i++)
+				{
+					bw.Write(enumValues[i]);
+				}
             }
         }
     }

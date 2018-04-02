@@ -22,5 +22,10 @@ namespace Sabresaurus.Sidekick
 		{
 			return source.IndexOf(value, comparison) >= 0;
 		}
+
+        public static bool HasFlagByte(this Enum mask, Enum flags) // Same behavior than Enum.HasFlag is .NET 4
+        {
+            return ((byte)(IConvertible)mask & (byte)(IConvertible)flags) == (byte)(IConvertible)flags;
+        }
     }
 }
