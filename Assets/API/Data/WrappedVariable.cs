@@ -83,28 +83,10 @@ namespace Sabresaurus.Sidekick
         #endregion
 
         public WrappedVariable(FieldInfo fieldInfo, object objectValue)
+            : this(fieldInfo.Name, objectValue, fieldInfo.FieldType, true)
         {
             this.variableName = fieldInfo.Name;
-            this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(fieldInfo.FieldType);
 
-            if (dataType == DataType.Enum)
-            {
-                FetchEnumMetadata(fieldInfo.FieldType);
-            }
-
-            bool isArray = fieldInfo.FieldType.IsArray;
-            bool isGenericList = TypeUtility.IsGenericList(fieldInfo.FieldType);
-
-			this.attributes = VariableAttributes.None;
-
-			if (isArray || isGenericList)
-			{
-                this.attributes |= VariableAttributes.IsArrayOrList;
-                Type elementType = TypeUtility.GetElementType(fieldInfo.FieldType);
-				//Debug.Log(elementType);
-                this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
-                //do something
-			}
             if (fieldInfo.IsInitOnly)
             {
                 this.attributes |= VariableAttributes.ReadOnly;
@@ -122,19 +104,11 @@ namespace Sabresaurus.Sidekick
         }
 
         public WrappedVariable(PropertyInfo propertyInfo, object objectValue)
+            : this(propertyInfo.Name, objectValue, propertyInfo.PropertyType, true )
         {
-            this.variableName = propertyInfo.Name;
-            this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(propertyInfo.PropertyType);
-
-            if (dataType == DataType.Enum)
-            {
-                FetchEnumMetadata(propertyInfo.PropertyType);
-            }
-
             MethodInfo getMethod = propertyInfo.GetGetMethod(true);
             MethodInfo setMethod = propertyInfo.GetSetMethod(true);
 
-            this.attributes = VariableAttributes.None;
             if (setMethod == null)
             {
                 this.attributes |= VariableAttributes.ReadOnly;
@@ -147,23 +121,39 @@ namespace Sabresaurus.Sidekick
             this.value = objectValue;
         }
 
-        public void FetchEnumMetadata(Type type)
-        {
-            this.enumNames = Enum.GetNames(type);
-            this.enumValues = new int[this.enumNames.Length];
-            Array enumValuesArray = Enum.GetValues(type);
-            for (int i = 0; i < enumNames.Length; i++)
-            {
-                this.enumValues[i] = (int)enumValuesArray.GetValue(i);
-            }
-        }
-
-        public WrappedVariable(string variableName, object value, Type type, VariableAttributes attributes)
+        public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
         {
             this.variableName = variableName;
-            this.attributes = attributes;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
             this.value = value;
+
+            bool isArray = type.IsArray;
+            bool isGenericList = TypeUtility.IsGenericList(type);
+
+            this.attributes = VariableAttributes.None;
+
+            if (isArray || isGenericList)
+            {
+                this.attributes |= VariableAttributes.IsArrayOrList;
+                Type elementType = TypeUtility.GetElementType(type);
+                //Debug.Log(elementType);
+                this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
+                //do something
+            }
+
+            if(generateMetadata)
+            {
+                if (dataType == DataType.Enum)
+                {
+                    this.enumNames = Enum.GetNames(type);
+                    this.enumValues = new int[this.enumNames.Length];
+                    Array enumValuesArray = Enum.GetValues(type);
+                    for (int i = 0; i < enumNames.Length; i++)
+                    {
+                        this.enumValues[i] = (int)enumValuesArray.GetValue(i);
+                    }
+                }
+            }
         }
 
         public WrappedVariable(BinaryReader br)

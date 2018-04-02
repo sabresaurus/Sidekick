@@ -18,35 +18,27 @@ namespace Sabresaurus.Sidekick.Requests
                 FieldInfo fieldInfo = targetObject.GetType().GetField(wrappedVariable.VariableName, GetGameObjectRequest.BINDING_FLAGS);
                 if(fieldInfo != null)
                 {
-                    // TODO: Investigate if this array copying could be simplified
-					IList sourceList = (IList)wrappedVariable.Value;
-					int count = sourceList.Count;
-
-                    if(fieldInfo.FieldType.IsArray)
+                    if(wrappedVariable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
                     {
-                        // Copying to an array
-                        object newArray = Activator.CreateInstance(fieldInfo.FieldType, new object[] { count });
-                        for (int i = 0; i < count; i++)
-                        {
-                            ((Array)newArray).SetValue(sourceList[i], i);
-                        }
-                        fieldInfo.SetValue(targetObject, newArray);
+                        fieldInfo.SetValue(targetObject, ConvertArrayOrList(wrappedVariable, fieldInfo.FieldType));
                     }
                     else
-                    {
-                        object newList = Activator.CreateInstance(fieldInfo.FieldType, new object[] { 0 });
-                        for (int i = 0; i < count; i++)
-                        {
-                            ((IList)newList).Add(sourceList[i]);
-                        }
-                        fieldInfo.SetValue(targetObject, newList);
+					{
+                        fieldInfo.SetValue(targetObject, wrappedVariable.Value);
                     }
                 }
                 else
                 {
                     PropertyInfo propertyInfo = targetObject.GetType().GetProperty(wrappedVariable.VariableName, GetGameObjectRequest.BINDING_FLAGS);
                     MethodInfo setMethod = propertyInfo.GetSetMethod();
-                    setMethod.Invoke(targetObject, new object[] { wrappedVariable.Value });
+                    if (wrappedVariable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+                    {
+                        setMethod.Invoke(targetObject, new object[] { ConvertArrayOrList(wrappedVariable, propertyInfo.PropertyType) });
+                    }
+                    else
+                    {
+						setMethod.Invoke(targetObject, new object[] { wrappedVariable.Value });
+                    }
                 }
             }
             else
@@ -56,6 +48,38 @@ namespace Sabresaurus.Sidekick.Requests
 
             uncastResponse = new SetVariableResponse();
         }
+
+        object ConvertArrayOrList(WrappedVariable wrappedVariable, Type type)
+        {
+            // TODO: Investigate if this array copying could be simplified
+            IList sourceList = (IList)wrappedVariable.Value;
+            int count = sourceList.Count;
+            if (type.IsArray)
+            {
+                // Copying to an array
+                object newArray = Activator.CreateInstance(type, new object[] { count });
+                for (int i = 0; i < count; i++)
+                {
+                    ((Array)newArray).SetValue(sourceList[i], i);
+                }
+                return newArray;
+            }
+            else
+            {
+                object newList = Activator.CreateInstance(type, new object[] { 0 });
+                for (int i = 0; i < count; i++)
+                {
+                    ((IList)newList).Add(sourceList[i]);
+                }
+                return newList;
+            }
+            
+        }
+
+
+
+
+
     }
 
 }

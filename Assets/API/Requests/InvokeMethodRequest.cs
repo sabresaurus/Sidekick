@@ -21,7 +21,7 @@ namespace Sabresaurus.Sidekick.Requests
                 }
 
                 object returnedValue = methodInfo.Invoke(targetObject, parameters);
-                returnedVariable = new WrappedVariable("", returnedValue, methodInfo.ReturnType, VariableAttributes.None);
+                returnedVariable = new WrappedVariable("", returnedValue, methodInfo.ReturnType, false);
                 //Debug.Log(returnedValue);
             }
 
