@@ -24,9 +24,13 @@ namespace Sabresaurus.Sidekick
         DataType dataType;
         object value;
 
+        // Meta data
         // TODO: Consider moving these elsewhere, maybe into an object
         string[] enumNames;
         int[] enumValues;
+
+        string typeFullName;
+        string valueDisplayName;
 
         #region Properties
         public string VariableName
@@ -69,6 +73,22 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        public string TypeFullName
+        {
+            get
+            {
+                return typeFullName;
+            }
+        }
+
+        public string ValueDisplayName
+        {
+            get
+            {
+                return valueDisplayName;
+            }
+        }
+
         public object Value
         {
             get
@@ -102,7 +122,7 @@ namespace Sabresaurus.Sidekick
         }
 
         public WrappedVariable(PropertyInfo propertyInfo, object objectValue)
-            : this(propertyInfo.Name, objectValue, propertyInfo.PropertyType, true )
+            : this(propertyInfo.Name, objectValue, propertyInfo.PropertyType, true)
         {
             MethodInfo getMethod = propertyInfo.GetGetMethod(true);
             MethodInfo setMethod = propertyInfo.GetSetMethod(true);
@@ -133,16 +153,18 @@ namespace Sabresaurus.Sidekick
 
             this.attributes = VariableAttributes.None;
 
+            Type elementType = type;
+
             if (isArray || isGenericList)
             {
                 this.attributes |= VariableAttributes.IsArrayOrList;
-                Type elementType = TypeUtility.GetElementType(type);
+                elementType = TypeUtility.GetElementType(type);
                 //Debug.Log(elementType);
                 this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
                 //do something
             }
 
-            if(generateMetadata)
+            if (generateMetadata)
             {
                 if (dataType == DataType.Enum)
                 {
@@ -154,6 +176,21 @@ namespace Sabresaurus.Sidekick
                         this.enumValues[i] = (int)enumValuesArray.GetValue(i);
                     }
                 }
+                else if (dataType == DataType.UnityObjectReference)
+                {
+                    typeFullName = elementType.FullName;
+                    if (value != null)
+                    {
+                        if (isArray || isGenericList)
+                            valueDisplayName = "Array/List";
+                        else
+                            valueDisplayName = ((UnityEngine.Object)value).name;
+                    }
+                    else
+                    {
+                        valueDisplayName = "null";
+                    }
+                }
             }
         }
 
@@ -163,7 +200,7 @@ namespace Sabresaurus.Sidekick
             this.attributes = (VariableAttributes)br.ReadByte();
             this.dataType = (DataType)br.ReadByte();
 
-            if(this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+            if (this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
             {
                 int count = br.ReadInt32();
 
@@ -180,7 +217,7 @@ namespace Sabresaurus.Sidekick
             }
 
 
-            if(dataType == DataType.Enum)
+            if (dataType == DataType.Enum)
             {
                 int enumNameCount = br.ReadInt32();
                 enumNames = new string[enumNameCount];
@@ -194,6 +231,11 @@ namespace Sabresaurus.Sidekick
                     enumValues[i] = br.ReadInt32();
                 }
             }
+            else if (dataType == DataType.UnityObjectReference)
+            {
+                typeFullName = br.ReadString();
+                valueDisplayName = br.ReadString();
+            }
         }
 
         public void Write(BinaryWriter bw)
@@ -202,9 +244,9 @@ namespace Sabresaurus.Sidekick
             bw.Write((byte)attributes);
             bw.Write((byte)dataType);
 
-            if(this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+            if (this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
             {
-                if(value is IList)
+                if (value is IList)
                 {
                     IList list = (IList)value;
                     int count = list.Count;
@@ -225,20 +267,25 @@ namespace Sabresaurus.Sidekick
             }
             else
             {
-				DataTypeHelper.WriteToBinary(dataType, value, bw);
+                DataTypeHelper.WriteToBinary(dataType, value, bw);
             }
 
-            if(dataType == DataType.Enum)
+            if (dataType == DataType.Enum)
             {
-				bw.Write(enumNames.Length);
-				for (int i = 0; i < enumNames.Length; i++)
-				{
-					bw.Write(enumNames[i]);
-				}
-				for (int i = 0; i < enumNames.Length; i++)
-				{
-					bw.Write(enumValues[i]);
-				}
+                bw.Write(enumNames.Length);
+                for (int i = 0; i < enumNames.Length; i++)
+                {
+                    bw.Write(enumNames[i]);
+                }
+                for (int i = 0; i < enumNames.Length; i++)
+                {
+                    bw.Write(enumValues[i]);
+                }
+            }
+            else if (dataType == DataType.UnityObjectReference)
+            {
+                bw.Write(typeFullName);
+                bw.Write(valueDisplayName);
             }
         }
     }

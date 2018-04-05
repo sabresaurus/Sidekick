@@ -27,14 +27,14 @@ public static class VariableDrawer
 
         if (variable.DataType != DataType.Unknown)
         {
-            if(variable.Value == null)
+            if (variable.Value == null)
             {
                 Debug.LogError(name + " is null");
             }
 
             if (variable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
             {
-				GUILayout.Label(name);
+                GUILayout.Label(name);
                 EditorGUI.indentLevel++;
                 IList list = (IList)variable.Value;
 
@@ -59,7 +59,7 @@ public static class VariableDrawer
             }
             else
             {
-				newValue = DrawIndividualVariable(variable, name, variable.Value.GetType(), variable.Value);
+                newValue = DrawIndividualVariable(variable, name, variable.Value.GetType(), variable.Value);
             }
         }
         else
@@ -82,6 +82,12 @@ public static class VariableDrawer
         if (variable.DataType == DataType.Enum)
         {
             newValue = EditorGUILayout.IntPopup(fieldName, (int)variable.Value, variable.EnumNames, variable.EnumValues);
+        }
+        else if (variable.DataType == DataType.UnityObjectReference)
+        {
+            GUILayout.Label(fieldName + " " + variable.TypeFullName + " " + variable.ValueDisplayName + " " + (int)fieldValue);
+            newValue = fieldValue;
+            //newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
         else if (fieldType == typeof(int)
             || (fieldType.IsSubclassOf(typeof(Enum)) && InspectorSidekick.Current.Settings.TreatEnumsAsInts))

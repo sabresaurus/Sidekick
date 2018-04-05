@@ -8,7 +8,7 @@ namespace Sabresaurus.Sidekick
     public enum DataType : byte
     {
         // Array
-        Void, // i.e. void
+        Void, // Method return type
         String,
         Boolean,
         Integer, // Signed 32 bit
@@ -22,7 +22,7 @@ namespace Sabresaurus.Sidekick
         Rect,
         Color,
         Color32,
-        ObjectReference,
+        UnityObjectReference,
         LayerMask,
         Enum,
         Character,
@@ -66,6 +66,11 @@ namespace Sabresaurus.Sidekick
             {
                 return mappings[type];
             }
+            //else if (type.IsAssignableFrom(typeof(UnityEngine.Object)))
+            else if(typeof(UnityEngine.Object).IsAssignableFrom(type))
+            {
+                return DataType.UnityObjectReference;
+            }
             else if (type.IsEnum)
             {
                 return DataType.Enum;
@@ -78,6 +83,7 @@ namespace Sabresaurus.Sidekick
 
         public static Type GetSystemTypeFromWrappedDataType(DataType dataType)
         {
+            // TODO support enums and UnityEngine.Objects
             foreach (var mapping in mappings)
             {
                 if(mapping.Value == dataType)
@@ -148,6 +154,10 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Enum)
             {
                 value = br.ReadInt32();
+            }
+            else if(dataType == DataType.UnityObjectReference)
+            {
+                value = br.ReadInt32(); // Read instance ID
             }
             else
             {
@@ -240,6 +250,14 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Enum)
             {
                 bw.Write((int)value);
+            }
+            else if(dataType == DataType.UnityObjectReference)
+            {
+                UnityEngine.Object unityObject = (UnityEngine.Object)value;
+                if (unityObject != null)
+                    bw.Write(unityObject.GetInstanceID());
+                else
+                    bw.Write(-1);
             }
             else
             {
