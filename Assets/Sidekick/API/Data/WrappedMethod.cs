@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick
 {
@@ -10,7 +11,7 @@ namespace Sabresaurus.Sidekick
     {
         string methodName;
         DataType returnType;
-        int parameterCount;
+        List<WrappedParameter> parameters = new List<WrappedParameter>();
 
         public string MethodName
         {
@@ -42,12 +43,15 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
-                return parameterCount;
+                return parameters.Count;
             }
+        }
 
-            set
+        public List<WrappedParameter> Parameters
+        {
+            get
             {
-                parameterCount = value;
+                return parameters;
             }
         }
 
@@ -55,7 +59,12 @@ namespace Sabresaurus.Sidekick
         {
             this.methodName = methodInfo.Name;
             this.returnType = DataTypeHelper.GetWrappedDataTypeFromSystemType(methodInfo.ReturnType);
-            this.parameterCount = methodInfo.GetParameters().Length;
+
+            parameters = new List<WrappedParameter>();
+            foreach (ParameterInfo parameterInfo in methodInfo.GetParameters())
+            {
+                parameters.Add(new WrappedParameter(parameterInfo));
+            }
         }
 
         // Deserialisation constructor
@@ -63,14 +72,23 @@ namespace Sabresaurus.Sidekick
         {
             this.methodName = br.ReadString();
             this.returnType = (DataType)br.ReadByte();
-            this.parameterCount = br.ReadInt32();
+            int parameterCount = br.ReadInt32();
+            parameters.Clear();
+            for (int i = 0; i < parameterCount; i++)
+            {
+                parameters.Add(new WrappedParameter(br));
+            }
         }
 
         public void Write(BinaryWriter bw)
         {
             bw.Write(methodName);
             bw.Write((byte)returnType);
-            bw.Write(parameterCount);
+            bw.Write(parameters.Count);
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                parameters[i].Write(bw);
+            }
         }
     }
 }

@@ -99,8 +99,6 @@ namespace Sabresaurus.Sidekick
             {
                 this.attributes |= VariableAttributes.IsLiteral;
             }
-
-            this.value = objectValue;
         }
 
         public WrappedVariable(PropertyInfo propertyInfo, object objectValue)
@@ -117,8 +115,11 @@ namespace Sabresaurus.Sidekick
             {
                 this.attributes |= VariableAttributes.IsStatic;
             }
+        }
 
-            this.value = objectValue;
+        public WrappedVariable(ParameterInfo parameterInfo, object objectValue)
+            : this(parameterInfo.Name, objectValue, parameterInfo.ParameterType, true)
+        {
         }
 
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)

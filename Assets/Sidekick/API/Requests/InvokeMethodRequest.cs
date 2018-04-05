@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Reflection;
 using Sabresaurus.Sidekick.Responses;
+using System;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick.Requests
 {
@@ -13,7 +15,12 @@ namespace Sabresaurus.Sidekick.Requests
             WrappedVariable returnedVariable = null;
             if (targetObject != null)
             {
-                MethodInfo methodInfo = targetObject.GetType().GetMethod(methodName, GetGameObjectRequest.BINDING_FLAGS);
+                Type[] parameterTypes = new Type[wrappedParameters.Length];
+                for (int i = 0; i < wrappedParameters.Length; i++)
+                {
+                    parameterTypes[i] = DataTypeHelper.GetSystemTypeFromWrappedDataType(wrappedParameters[i].DataType);
+                }
+                MethodInfo methodInfo = targetObject.GetType().GetMethod(methodName, GetGameObjectRequest.BINDING_FLAGS, null, parameterTypes, null);
                 object[] parameters = new object[wrappedParameters.Length];
                 for (int i = 0; i < wrappedParameters.Length; i++)
                 {

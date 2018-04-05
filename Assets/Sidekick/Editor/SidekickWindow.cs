@@ -20,6 +20,9 @@ namespace Sabresaurus.Sidekick
         bool autoRefresh = false;
         string searchTerm = "";
 
+        WrappedMethod expandedMethod = null;
+        List<WrappedVariable> arguments = null;
+
         Vector2 scrollPosition = Vector2.zero;
 
 
@@ -174,6 +177,11 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.Append(method.ReturnType);
                         stringBuilder.Append(" ");
                         stringBuilder.Append(method.ParameterCount);
+                        stringBuilder.Append(" ");
+                        if(method.Parameters.Count > 0)
+                        {
+                            stringBuilder.Append(method.Parameters[0].DataType);
+                        }
                         stringBuilder.AppendLine();
                     }
                 }
@@ -288,11 +296,73 @@ namespace Sabresaurus.Sidekick
                             //Debug.Log("Value changed in " + property.VariableName);
                         }
                     }
+
+                    GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
+                    RectOffset padding = expandButtonStyle.padding;
+                    padding.left = 0;
+                    padding.right = 1;
+                    expandButtonStyle.padding = padding;
+
                     foreach (var method in component.Methods)
                     {
+                        GUILayout.BeginHorizontal();
                         if (GUILayout.Button(method.ReturnType + " " + method.MethodName + " (" + method.ParameterCount + ")"))
                         {
                             SendToPlayers(APIRequest.InvokeMethod, component.InstanceID, method.MethodName, 0);
+                        }
+
+                        bool wasExpanded = (expandedMethod == method);
+                        bool expanded = GUILayout.Toggle(wasExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
+						GUILayout.EndHorizontal();
+                        if(expanded != wasExpanded) // has changed
+                        {
+                            if(expanded)
+                            {
+                                expandedMethod = method;
+                                arguments = new List<WrappedVariable>(method.ParameterCount);
+                                for (int i = 0; i < method.ParameterCount; i++)
+                                {
+                                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
+                                    object defaultValue = TypeUtility.GetDefaultValue(type);
+
+                                    WrappedParameter parameter = method.Parameters[i];
+                                    arguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
+                                }
+                            }
+                            else
+                            {
+                                expandedMethod = null;
+                                arguments = null;
+                            }
+                        }
+                        else if(expanded)
+                        {
+                            EditorGUI.indentLevel++;
+                            foreach (var argument in arguments)
+                            {
+                                argument.Value = VariableDrawer.DrawIndividualVariable(argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value);
+                            }
+
+                            Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
+                            buttonRect = EditorGUI.IndentedRect(buttonRect);
+
+                            if(GUI.Button(buttonRect, "Fire"))
+                            {
+                                object[] objects = new object[]
+                                {
+                                    component.InstanceID, method.MethodName, arguments.Count
+                                };
+                                int lengthBeforeArguments = objects.Length;
+                                Array.Resize(ref objects, lengthBeforeArguments + arguments.Count);
+                                for (int i = 0; i < arguments.Count; i++)
+                                {
+                                    objects[i + lengthBeforeArguments] = arguments[0];
+                                }
+                                SendToPlayers(APIRequest.InvokeMethod, objects);
+                            }
+							EditorGUI.indentLevel--;
+
+                            GUILayout.Space(10);
                         }
                     }
                     Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
