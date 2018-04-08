@@ -7,6 +7,9 @@ using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick.Requests
 {
+    /// <summary>
+    /// Fires a method with supplied arguments on the Unity object that instanceID maps to
+    /// </summary>
     public class InvokeMethodRequest : BaseRequest
     {
         public InvokeMethodRequest(int instanceID, string methodName, WrappedVariable[] wrappedParameters)

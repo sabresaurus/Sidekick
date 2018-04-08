@@ -32,6 +32,10 @@ namespace Sabresaurus.Sidekick
                         {
                             return new InvokeMethodResponse(br);
                         }
+                        else if (apiRequest == APIRequest.GetUnityObjects)
+                        {
+                            return new GetUnityObjectsResponse(br);
+                        }
                         else
                         {
                             throw new System.NotImplementedException();

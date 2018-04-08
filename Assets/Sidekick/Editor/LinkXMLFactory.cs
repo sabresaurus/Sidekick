@@ -9,6 +9,7 @@ using UnityEditor;
 
 public static class LinkXMLFactory
 {
+    // Incomplete list of default components and types that shouldn't be stripped for debugging
     public static readonly Type[] DEFAULT_TYPES =
     {
         typeof(GameObject),

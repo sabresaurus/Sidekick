@@ -17,6 +17,9 @@ namespace Sabresaurus.Sidekick.Requests
         Methods = 4,
 	}
 
+    /// <summary>
+    /// Gets reflected information about components on a game object specified by path. Flags specify what information to include.
+    /// </summary>
     public class GetGameObjectRequest : BaseRequest
     {
         public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;

@@ -192,6 +192,17 @@ namespace Sabresaurus.Sidekick
                 InvokeMethodResponse invokeMethodResponse = (InvokeMethodResponse)response;
                 Debug.Log(invokeMethodResponse.MethodName + "() returned " + invokeMethodResponse.ReturnedVariable.Value);
             }
+            else if (response is GetUnityObjectsResponse)
+            {
+                GetUnityObjectsResponse castResponse = (GetUnityObjectsResponse)response;
+
+                foreach (UnityObjectDescription item in castResponse.ObjectDescriptions)
+                {
+                    Debug.Log("GetUnityObjectsResponse found " + item.ObjectName);
+                }
+
+                RemotePickerWindow.Show(castResponse.ObjectDescriptions);
+            }
         }
 
 
@@ -229,9 +240,10 @@ namespace Sabresaurus.Sidekick
                 builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
             }
             EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
-            if (GUILayout.Button("Generate Test link.xml"))
+            if (GUILayout.Button("Test"))
             {
-                LinkXMLFactory.Generate(LinkXMLFactory.DEFAULT_TYPES);
+                Type testType = typeof(GameObject);
+                SendToPlayers(APIRequest.GetUnityObjects, testType.FullName, testType.Assembly.FullName);
             }
             if (GUILayout.Button("Refresh Hierarchy"))
             {
@@ -275,7 +287,7 @@ namespace Sabresaurus.Sidekick
                     foreach (var field in component.Fields)
                     {
                         EditorGUI.BeginChangeCheck();
-                        object newValue = VariableDrawer.Draw(field);
+                        object newValue = VariableDrawer.Draw(field, OnObjectPicker);
                         if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
                         {
                             field.Value = newValue;
@@ -287,7 +299,7 @@ namespace Sabresaurus.Sidekick
                     foreach (var property in component.Properties)
                     {
                         EditorGUI.BeginChangeCheck();
-                        object newValue = VariableDrawer.Draw(property);
+                        object newValue = VariableDrawer.Draw(property, OnObjectPicker);
                         if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
                         {
                             property.Value = newValue;
@@ -340,7 +352,7 @@ namespace Sabresaurus.Sidekick
                             EditorGUI.indentLevel++;
                             foreach (var argument in arguments)
                             {
-                                argument.Value = VariableDrawer.DrawIndividualVariable(argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value);
+                                argument.Value = VariableDrawer.DrawIndividualVariable(argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnObjectPicker);
                             }
 
                             Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
@@ -391,6 +403,11 @@ namespace Sabresaurus.Sidekick
             }
 
             return path;
+        }
+
+        public void OnObjectPicker(WrappedVariable variable)
+        {
+            SendToPlayers(APIRequest.GetUnityObjects, variable.TypeFullName, variable.AssemblyName);
         }
 
         void SendToPlayers(APIRequest action, params object[] args)

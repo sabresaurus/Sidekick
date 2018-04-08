@@ -7,6 +7,9 @@ using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick.Requests
 {
+    /// <summary>
+    /// Sets a field or property's value on the Unity object that instanceID maps to
+    /// </summary>
     public class SetVariableRequest : BaseRequest
     {
         public SetVariableRequest(int instanceID, WrappedVariable wrappedVariable)

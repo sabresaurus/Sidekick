@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
+    /// <summary>
+    /// Enum matching types that Sidekick can understand
+    /// </summary>
     public enum DataType : byte
     {
         // Array
@@ -55,6 +58,8 @@ namespace Sabresaurus.Sidekick
             {typeof(Vector2), DataType.Vector2},
             {typeof(Vector3), DataType.Vector3},
             {typeof(Vector4), DataType.Vector4},
+            {typeof(Vector2Int), DataType.Vector2Int},
+            {typeof(Vector3Int), DataType.Vector3Int},
             {typeof(Quaternion), DataType.Quaternion},
             {typeof(Rect), DataType.Rect},
             {typeof(RectInt), DataType.RectInt},
@@ -289,12 +294,12 @@ namespace Sabresaurus.Sidekick
             {
                 BoundsInt bounds = (BoundsInt)value;
 
-                Vector3 center = bounds.position;
-                bw.Write(center.x);
-                bw.Write(center.y);
-                bw.Write(center.z);
+                Vector3Int position = bounds.position;
+                bw.Write(position.x);
+                bw.Write(position.y);
+                bw.Write(position.z);
 
-                Vector3 size = bounds.size;
+                Vector3Int size = bounds.size;
                 bw.Write(size.x);
                 bw.Write(size.y);
                 bw.Write(size.z);
@@ -358,7 +363,7 @@ namespace Sabresaurus.Sidekick
             }
             else if(dataType == DataType.UnityObjectReference)
             {
-                UnityEngine.Object unityObject = (UnityEngine.Object)value;
+                UnityEngine.Object unityObject = value as UnityEngine.Object;
                 if (unityObject != null)
                     bw.Write(unityObject.GetInstanceID());
                 else

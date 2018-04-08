@@ -6,7 +6,7 @@ using System;
 
 public static class VariableDrawer
 {
-    public static object Draw(WrappedVariable variable)
+    public static object Draw(WrappedVariable variable, Action<WrappedVariable> onObjectPicker)
     {
         string name = variable.VariableName;
 
@@ -52,14 +52,14 @@ public static class VariableDrawer
 
                 for (int i = 0; i < list.Count; i++)
                 {
-                    list[i] = DrawIndividualVariable(variable, name, type, list[i]);
+                    list[i] = DrawIndividualVariable(variable, name, type, list[i], onObjectPicker);
                 }
                 newValue = list;
                 EditorGUI.indentLevel--;
             }
             else
             {
-                newValue = DrawIndividualVariable(variable, name, variable.Value.GetType(), variable.Value);
+                newValue = DrawIndividualVariable(variable, name, variable.Value.GetType(), variable.Value, onObjectPicker);
             }
         }
         else
@@ -76,7 +76,7 @@ public static class VariableDrawer
 
     }
 
-    public static object DrawIndividualVariable(WrappedVariable variable, string fieldName, Type fieldType, object fieldValue)
+    public static object DrawIndividualVariable(WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<WrappedVariable> onObjectPicker)
     {
         object newValue;
         if (variable.DataType == DataType.Enum)
@@ -87,6 +87,12 @@ public static class VariableDrawer
         {
             GUILayout.Label(fieldName + " " + variable.TypeFullName + " " + variable.ValueDisplayName + " " + (int)fieldValue);
             newValue = fieldValue;
+            Rect lastRect = GUILayoutUtility.GetLastRect();
+            lastRect.xMin = lastRect.xMax - 30;
+            if(GUI.Button(lastRect, "..."))
+            {
+                onObjectPicker(variable);
+            }
             //newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
         else if (fieldType == typeof(int)
@@ -166,6 +172,10 @@ public static class VariableDrawer
         else if (fieldType == typeof(Bounds))
         {
             newValue = EditorGUILayout.BoundsField(fieldName, (Bounds)fieldValue);
+        }
+        else if (fieldType == typeof(BoundsInt))
+        {
+            newValue = EditorGUILayout.BoundsIntField(fieldName, (BoundsInt)fieldValue);
         }
         else if (fieldType == typeof(Color))
         {

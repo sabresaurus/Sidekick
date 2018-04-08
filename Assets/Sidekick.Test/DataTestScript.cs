@@ -33,6 +33,7 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] List<int> testList = new List<int>() { 5, 6, 7, 8 };
     [SerializeField] char character = 'a';
     [SerializeField] AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [SerializeField] GameObject assetPrefab;
     readonly string readonlyString = "readonly";
     const string constString = "const";
     static string staticString = "static";

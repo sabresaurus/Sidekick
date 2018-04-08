@@ -4,6 +4,9 @@ using System.Reflection;
 
 namespace Sabresaurus.Sidekick
 {
+    /// <summary>
+    /// Wraps a method parameter so that it can be sent over the network.
+    /// </summary>
     public class WrappedParameter
     {
         string variableName;

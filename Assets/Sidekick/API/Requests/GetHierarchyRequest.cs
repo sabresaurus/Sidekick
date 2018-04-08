@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick.Requests
 {
+    /// <summary>
+    /// Gets a complete hierarchy of all loaded scenes, only including named paths
+    /// </summary>
     public class GetHierarchyRequest : BaseRequest
     {
         public GetHierarchyRequest()

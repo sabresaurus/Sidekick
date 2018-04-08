@@ -12,6 +12,7 @@ namespace Sabresaurus.Sidekick
         GetGameObject,
         SetVariable,
         InvokeMethod,
+        GetUnityObjects,
     }
 
     public static class SidekickRequestProcessor
@@ -62,6 +63,13 @@ namespace Sabresaurus.Sidekick
                             }
 
                             response = new InvokeMethodRequest(instanceID, methodName, parameters).UncastResponse;
+                        }
+                        else if (apiRequest == APIRequest.GetUnityObjects)
+                        {
+                            string typeFullName = br.ReadString();
+                            string assemblyName = br.ReadString();
+
+                            response = new GetUnityObjectsRequest(typeFullName, assemblyName).UncastResponse;
                         }
                     }
                 }

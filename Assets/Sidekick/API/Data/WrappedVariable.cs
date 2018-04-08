@@ -17,6 +17,9 @@ namespace Sabresaurus.Sidekick
         IsArrayOrList = 8,
     }
 
+    /// <summary>
+    /// Wraps a field or property so that it can be sent over the network
+    /// </summary>
     public class WrappedVariable
     {
         string variableName;
@@ -30,6 +33,7 @@ namespace Sabresaurus.Sidekick
         int[] enumValues;
 
         string typeFullName;
+        string assemblyName;
         string valueDisplayName;
 
         #region Properties
@@ -78,6 +82,14 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return typeFullName;
+            }
+        }
+
+        public string AssemblyName
+        {
+            get
+            {
+                return assemblyName;
             }
         }
 
@@ -179,6 +191,7 @@ namespace Sabresaurus.Sidekick
                 else if (dataType == DataType.UnityObjectReference)
                 {
                     typeFullName = elementType.FullName;
+                    assemblyName = elementType.Assembly.FullName;
                     if (value != null)
                     {
                         if (isArray || isGenericList)
@@ -234,6 +247,7 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.UnityObjectReference)
             {
                 typeFullName = br.ReadString();
+                assemblyName = br.ReadString();
                 valueDisplayName = br.ReadString();
             }
         }
@@ -285,6 +299,7 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.UnityObjectReference)
             {
                 bw.Write(typeFullName);
+                bw.Write(assemblyName);
                 bw.Write(valueDisplayName);
             }
         }
