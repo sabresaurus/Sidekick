@@ -10,6 +10,7 @@ namespace Sabresaurus.Sidekick
         // Array
         Void, // Method return type
         String,
+		Char,
         Boolean,
         Integer, // Signed 32 bit
         Long, // Signed 64 bit
@@ -18,23 +19,23 @@ namespace Sabresaurus.Sidekick
         Vector2,
         Vector3,
         Vector4,
+        Vector2Int,
+        Vector3Int,
+        Bounds,
+        BoundsInt,
         Quaternion,
         Rect,
+        RectInt,
         Color,
         Color32,
         UnityObjectReference,
         LayerMask,
         Enum,
-        Character,
         AnimationCurve,
-        Bounds,
-        Gradient,
+        //Gradient,
         ExposedReference,
         FixedBufferSize,
-        Vector2Int,
-        Vector3Int,
-        RectInt,
-        BoundsInt,
+
 
         Unknown = 255
     }
@@ -45,6 +46,7 @@ namespace Sabresaurus.Sidekick
         {
             {typeof(void), DataType.Void},
             {typeof(string), DataType.String},
+            {typeof(Char), DataType.Char},
             {typeof(bool), DataType.Boolean},
             {typeof(int), DataType.Integer},
             {typeof(long), DataType.Long},
@@ -55,6 +57,11 @@ namespace Sabresaurus.Sidekick
             {typeof(Vector4), DataType.Vector4},
             {typeof(Quaternion), DataType.Quaternion},
             {typeof(Rect), DataType.Rect},
+            {typeof(RectInt), DataType.RectInt},
+            {typeof(Bounds), DataType.Bounds},
+            {typeof(BoundsInt), DataType.BoundsInt},
+            //{typeof(Gradient), DataType.Gradient},
+            {typeof(AnimationCurve), DataType.AnimationCurve},
             {typeof(Color), DataType.Color},
             {typeof(Color32), DataType.Color32},
             //else if (type.IsEnum)), DataType.Enum},
@@ -102,6 +109,10 @@ namespace Sabresaurus.Sidekick
             {
                 value = br.ReadString();
             }
+            else if (dataType == DataType.Char)
+            {
+                value = br.ReadChar();
+            }
             else if (dataType == DataType.Boolean)
             {
                 byte byteValue = br.ReadByte();
@@ -135,6 +146,22 @@ namespace Sabresaurus.Sidekick
             {
                 value = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
+            else if (dataType == DataType.Vector2Int)
+            {
+                value = new Vector2Int(br.ReadInt32(), br.ReadInt32());
+            }
+            else if (dataType == DataType.Vector3Int)
+            {
+                value = new Vector3Int(br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
+            }
+            else if (dataType == DataType.Bounds)
+            {
+                value = new Bounds(new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()), new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()));
+            }
+            else if (dataType == DataType.BoundsInt)
+            {
+                value = new BoundsInt(new Vector3Int(br.ReadInt32(), br.ReadInt32(), br.ReadInt32()), new Vector3Int(br.ReadInt32(), br.ReadInt32(), br.ReadInt32()));
+            }
             else if (dataType == DataType.Quaternion)
             {
                 value = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -143,6 +170,10 @@ namespace Sabresaurus.Sidekick
             {
                 value = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
+            else if (dataType == DataType.RectInt)
+            {
+                value = new Rect(br.ReadInt32(), br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
+            }
             else if (dataType == DataType.Color)
             {
                 value = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -150,6 +181,16 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Color32)
             {
                 value = new Color32(br.ReadByte(), br.ReadByte(), br.ReadByte(), br.ReadByte());
+            }
+            else if (dataType == DataType.AnimationCurve)
+            {
+                int keyframeCount = br.ReadInt32();
+                Keyframe[] keyframes = new Keyframe[keyframeCount];
+                for (int i = 0; i < keyframeCount; i++)
+                {
+                    keyframes[i] = new Keyframe(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                }
+                value = new AnimationCurve(keyframes);
             }
             else if (dataType == DataType.Enum)
             {
@@ -168,10 +209,13 @@ namespace Sabresaurus.Sidekick
 
         public static void WriteToBinary(DataType dataType, object value, BinaryWriter bw)
         {
-
             if (dataType == DataType.String)
             {
                 bw.Write((string)value);
+            }
+            else if (dataType == DataType.Char)
+            {
+                bw.Write((char)value);
             }
             else if (dataType == DataType.Boolean)
             {
@@ -215,6 +259,46 @@ namespace Sabresaurus.Sidekick
                 bw.Write(vector.z);
                 bw.Write(vector.w);
             }
+            else if (dataType == DataType.Vector2Int)
+            {
+                Vector2Int vector = (Vector2Int)value;
+                bw.Write(vector.x);
+                bw.Write(vector.y);
+            }
+            else if (dataType == DataType.Vector3Int)
+            {
+                Vector3Int vector = (Vector3Int)value;
+                bw.Write(vector.x);
+                bw.Write(vector.y);
+                bw.Write(vector.z);
+            }
+            else if (dataType == DataType.Bounds)
+            {
+                Bounds bounds = (Bounds)value;
+                Vector3 center = bounds.center;
+                bw.Write(center.x);
+                bw.Write(center.y);
+                bw.Write(center.z);
+
+                Vector3 size = bounds.size;
+                bw.Write(size.x);
+                bw.Write(size.y);
+                bw.Write(size.z);
+            }
+            else if (dataType == DataType.BoundsInt)
+            {
+                BoundsInt bounds = (BoundsInt)value;
+
+                Vector3 center = bounds.position;
+                bw.Write(center.x);
+                bw.Write(center.y);
+                bw.Write(center.z);
+
+                Vector3 size = bounds.size;
+                bw.Write(size.x);
+                bw.Write(size.y);
+                bw.Write(size.z);
+            }
             else if (dataType == DataType.Quaternion)
             {
                 Quaternion rotation = (Quaternion)value;
@@ -226,6 +310,14 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Rect)
             {
                 Rect rect = (Rect)value;
+                bw.Write(rect.x);
+                bw.Write(rect.y);
+                bw.Write(rect.width);
+                bw.Write(rect.height);
+            }
+            else if (dataType == DataType.RectInt)
+            {
+                RectInt rect = (RectInt)value;
                 bw.Write(rect.x);
                 bw.Write(rect.y);
                 bw.Write(rect.width);
@@ -246,6 +338,19 @@ namespace Sabresaurus.Sidekick
                 bw.Write(color.g);
                 bw.Write(color.b);
                 bw.Write(color.a);
+            }
+            else if (dataType == DataType.AnimationCurve)
+            {
+                AnimationCurve curve = (AnimationCurve)value;
+                bw.Write(curve.keys.Length);
+                for (int i = 0; i < curve.keys.Length; i++)
+                {
+                    Keyframe key = curve.keys[i];
+                    bw.Write(key.time);
+                    bw.Write(key.value);
+                    bw.Write(key.inTangent);
+                    bw.Write(key.outTangent);
+                }
             }
             else if (dataType == DataType.Enum)
             {

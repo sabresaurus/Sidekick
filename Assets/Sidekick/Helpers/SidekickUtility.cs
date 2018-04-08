@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System;
 //using System.Linq;
 using System.Text;
@@ -12,30 +11,30 @@ namespace Sabresaurus.Sidekick
 		/// Find the path to where InspectorSidekick is in the project
 		/// </summary>
 		/// <returns>The installed path of InspectorSidekick.</returns>
-		public static string GetInstallPath()
-		{
-			// Find all the scripts with CSGModel in their name
-			string[] guids = AssetDatabase.FindAssets("InspectorSidekick t:Script");
+		//public static string GetInstallPath()
+		//{
+		//	// Find all the scripts with CSGModel in their name
+		//	string[] guids = AssetDatabase.FindAssets("InspectorSidekick t:Script");
 
-			foreach (string guid in guids) 
-			{
-				// Find the path of the file
-				string path = AssetDatabase.GUIDToAssetPath(guid);
+		//	foreach (string guid in guids) 
+		//	{
+		//		// Find the path of the file
+		//		string path = AssetDatabase.GUIDToAssetPath(guid);
 
-				string suffix = "Editor/InspectorSidekick.cs";
-				// If it is the target file, i.e. CSGModel.cs not CSGModelInspector
-				if(path.EndsWith(suffix))
-				{
-					// Remove the suffix, to get for example Assets/SabreCSG
-					path = path.Remove(path.Length-suffix.Length, suffix.Length);
+		//		string suffix = "Editor/InspectorSidekick.cs";
+		//		// If it is the target file, i.e. CSGModel.cs not CSGModelInspector
+		//		if(path.EndsWith(suffix))
+		//		{
+		//			// Remove the suffix, to get for example Assets/SabreCSG
+		//			path = path.Remove(path.Length-suffix.Length, suffix.Length);
 
-					return path;
-				}
-			}
+		//			return path;
+		//		}
+		//	}
 
-			// None matched
-			return string.Empty;
-		}
+		//	// None matched
+		//	return string.Empty;
+		//}
 
 		public static T EnumToolbar<T>(T value, GUIStyle style = null, params GUILayoutOption[] options) where T : struct, IConvertible
 		{

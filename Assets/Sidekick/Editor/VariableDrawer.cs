@@ -94,9 +94,25 @@ public static class VariableDrawer
         {
             newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
+        else if (fieldType == typeof(long))
+        {
+            newValue = EditorGUILayout.LongField(fieldName, (long)fieldValue);
+        }
         else if (fieldType == typeof(string))
         {
             newValue = EditorGUILayout.TextField(fieldName, (string)fieldValue);
+        }
+        else if (fieldType == typeof(char))
+        {
+            string newString= EditorGUILayout.TextField(fieldName, new string((char)fieldValue, 1));
+            if(newString.Length == 1)
+            {
+				newValue = newString[0];
+            }
+            else
+            {
+                newValue = fieldValue;
+            }
         }
         else if (fieldType == typeof(float))
         {
@@ -121,6 +137,14 @@ public static class VariableDrawer
         else if (fieldType == typeof(Vector4))
         {
             newValue = EditorGUILayout.Vector4Field(fieldName, (Vector4)fieldValue);
+        }
+        else if (fieldType == typeof(Vector2Int))
+        {
+            newValue = EditorGUILayout.Vector2IntField(fieldName, (Vector2Int)fieldValue);
+        }
+        else if (fieldType == typeof(Vector3Int))
+        {
+            newValue = EditorGUILayout.Vector3IntField(fieldName, (Vector3Int)fieldValue);
         }
         else if (fieldType == typeof(Quaternion))
         {
@@ -151,6 +175,10 @@ public static class VariableDrawer
         {
             newValue = (Color32)EditorGUILayout.ColorField(fieldName, (Color32)fieldValue);
         }
+        //else if (fieldType == typeof(Gradient))
+        //{
+        //    //newValue = EditorGUILayout.grad(fieldName, (AnimationCurve)fieldValue);
+        //}
         else if (fieldType == typeof(AnimationCurve))
         {
             newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve)fieldValue);
@@ -162,6 +190,10 @@ public static class VariableDrawer
         else if (fieldType == typeof(Rect))
         {
             newValue = EditorGUILayout.RectField(fieldName, (Rect)fieldValue);
+        }
+        else if (fieldType == typeof(RectInt))
+        {
+            newValue = EditorGUILayout.RectIntField(fieldName, (RectInt)fieldValue);
         }
         else if (fieldType.IsSubclassOf(typeof(UnityEngine.Object)))
         {
