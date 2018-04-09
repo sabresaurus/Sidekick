@@ -24,8 +24,8 @@ namespace Sabresaurus.Sidekick.Responses
             }
         }
 
-        public GetUnityObjectsResponse(BinaryReader br)
-            : base(br)
+        public GetUnityObjectsResponse(BinaryReader br, int requestID)
+            : base(br, requestID)
         {
             int count = br.ReadInt32();
             objectDescriptions = new UnityObjectDescription[count];

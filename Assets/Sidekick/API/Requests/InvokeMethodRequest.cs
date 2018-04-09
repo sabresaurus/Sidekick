@@ -31,7 +31,14 @@ namespace Sabresaurus.Sidekick.Requests
                 }
 
                 object returnedValue = methodInfo.Invoke(targetObject, parameters);
+                if (methodInfo.ReturnType == typeof(IEnumerator) && targetObject is MonoBehaviour)
+                {
+                    // Run it as a coroutine
+                    MonoBehaviour monoBehaviour = (MonoBehaviour)targetObject;
+                    monoBehaviour.StartCoroutine((IEnumerator)returnedValue);
+                }
                 returnedVariable = new WrappedVariable("", returnedValue, methodInfo.ReturnType, false);
+
                 //Debug.Log(returnedValue);
             }
 

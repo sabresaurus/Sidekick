@@ -19,7 +19,7 @@ namespace Sabresaurus.Sidekick
 			{
 				return "void";
 			}
-			if(type == typeof(System.Boolean))
+			else if(type == typeof(System.Boolean))
 			{
 				return "bool";
 			}
@@ -84,6 +84,78 @@ namespace Sabresaurus.Sidekick
 				return type.Name;
 			}
 		}
+
+        public static string NameForType(DataType type)
+        {
+            if (type == DataType.Void)
+            {
+                return "void";
+            }
+            else if (type == DataType.Boolean)
+            {
+                return "bool";
+            }
+            //else if (type == DataType.Byte)
+            //{
+            //    return "byte";
+            //}
+            //else if (type == typeof(System.SByte))
+            //{
+            //    return "sbyte";
+            //}
+            else if (type == DataType.Char)
+            {
+                return "char";
+            }
+            //else if (type == typeof(System.Decimal))
+            //{
+            //    return "decimal";
+            //}
+            else if (type == DataType.Double)
+            {
+                return "double";
+            }
+            else if (type == DataType.Float)
+            {
+                return "float";
+            }
+            else if (type == DataType.Integer)
+            {
+                return "int";
+            }
+            //else if (type == typeof(System.UInt32))
+            //{
+            //    return "uint";
+            //}
+            else if (type == DataType.Long)
+            {
+                return "long";
+            }
+            //else if (type == typeof(System.UInt64))
+            //{
+            //    return "ulong";
+            //}
+            //else if (type == typeof(System.Object))
+            //{
+            //    return "object";
+            //}
+            //else if (type == typeof(System.Int16))
+            //{
+            //    return "short";
+            //}
+            //else if (type == typeof(System.UInt16))
+            //{
+                //return "ushort";
+            //}
+            else if (type == DataType.String)
+            {
+                return "string";
+            }
+            else
+            {
+                return type.ToString();
+            }
+        }
 
 		public static bool IsGenericList(Type type)
 		{

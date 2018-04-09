@@ -31,8 +31,8 @@ namespace Sabresaurus.Sidekick.Responses
             this.returnedVariable = returnedVariable;
         }
 
-        public InvokeMethodResponse(BinaryReader br)
-            : base(br)
+        public InvokeMethodResponse(BinaryReader br, int requestID)
+            : base(br, requestID)
         {
             methodName = br.ReadString();
             returnedVariable = new WrappedVariable(br);

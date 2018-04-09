@@ -13,28 +13,28 @@ namespace Sabresaurus.Sidekick
             {
                 using (BinaryReader br = new BinaryReader(ms))
                 {
-                    string requestId = br.ReadString();
+                    int requestId = br.ReadInt32();
                     if (EnumHelper.TryParse(br.ReadString(), out apiRequest))
                     {
                         if(apiRequest == APIRequest.GetHierarchy)
                         {
-                            return new GetHierarchyResponse(br);
+                            return new GetHierarchyResponse(br, requestId);
                         }
                         else if (apiRequest == APIRequest.GetGameObject)
                         {
-                            return new GetGameObjectResponse(br);
+                            return new GetGameObjectResponse(br, requestId);
                         }
                         else if (apiRequest == APIRequest.SetVariable)
                         {
-                            return new SetVariableResponse(br);
+                            return new SetVariableResponse(br, requestId);
                         }
                         else if (apiRequest == APIRequest.InvokeMethod)
                         {
-                            return new InvokeMethodResponse(br);
+                            return new InvokeMethodResponse(br, requestId);
                         }
                         else if (apiRequest == APIRequest.GetUnityObjects)
                         {
-                            return new GetUnityObjectsResponse(br);
+                            return new GetUnityObjectsResponse(br, requestId);
                         }
                         else
                         {

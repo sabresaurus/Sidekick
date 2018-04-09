@@ -9,8 +9,8 @@ namespace Sabresaurus.Sidekick.Responses
         string gameObjectName = "";
         List<ComponentDescription> components = new List<ComponentDescription>();
 
-        public GetGameObjectResponse(BinaryReader br)
-            : base(br)
+        public GetGameObjectResponse(BinaryReader br, int requestID)
+            : base(br, requestID)
         {
             gameObjectName = br.ReadString();
 

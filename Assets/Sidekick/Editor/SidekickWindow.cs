@@ -38,6 +38,9 @@ namespace Sabresaurus.Sidekick
 
         double timeLastRefreshed = 0;
 
+        int lastRequestID = 0;
+
+
         [MenuItem("Tools/Sidekick")]
         static void Init()
         {
@@ -318,7 +321,14 @@ namespace Sabresaurus.Sidekick
                     foreach (var method in component.Methods)
                     {
                         GUILayout.BeginHorizontal();
-                        if (GUILayout.Button(method.ReturnType + " " + method.MethodName + " (" + method.ParameterCount + ")"))
+                        //if (method.ReturnType == typeof(void))
+                        //    labelStyle.normal.textColor = Color.grey;
+                        //else if (method.ReturnType.IsValueType)
+                        //    labelStyle.normal.textColor = new Color(0, 0, 1);
+                        //else
+                            //labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
+
+                        if (GUILayout.Button(TypeUtility.NameForType(method.ReturnType) + " " + method.MethodName + " (" + method.ParameterCount + ")"))
                         {
                             SendToPlayers(APIRequest.InvokeMethod, component.InstanceID, method.MethodName, 0);
                         }
@@ -410,14 +420,15 @@ namespace Sabresaurus.Sidekick
             SendToPlayers(APIRequest.GetUnityObjects, variable.TypeFullName, variable.AssemblyName);
         }
 
-        void SendToPlayers(APIRequest action, params object[] args)
+        int SendToPlayers(APIRequest action, params object[] args)
         {
             byte[] bytes;
             using (MemoryStream ms = new MemoryStream())
             {
                 using (BinaryWriter bw = new BinaryWriter(ms))
                 {
-                    bw.Write("1");
+					lastRequestID++;
+                    bw.Write(lastRequestID);
 
                     bw.Write(action.ToString());
                     foreach (var item in args)
@@ -447,6 +458,7 @@ namespace Sabresaurus.Sidekick
             {
                 EditorConnection.instance.Send(RuntimeSidekick.kMsgSendEditorToPlayer, bytes);
             }
+            return lastRequestID;
         }
 
 

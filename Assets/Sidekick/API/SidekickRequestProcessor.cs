@@ -21,14 +21,14 @@ namespace Sabresaurus.Sidekick
         {
             BaseResponse response = null;
 
-            string requestId;
+            int requestId;
             APIRequest apiRequest;
 
             using (MemoryStream msIn = new MemoryStream(input))
             {
                 using (BinaryReader br = new BinaryReader(msIn))
                 {
-                    requestId = br.ReadString();
+                    requestId = br.ReadInt32();
                     string action = br.ReadString();
                     //Debug.Log(action);
                     if(EnumHelper.TryParse(action, out apiRequest))

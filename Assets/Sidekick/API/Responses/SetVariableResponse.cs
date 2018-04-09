@@ -10,8 +10,8 @@ namespace Sabresaurus.Sidekick.Responses
         {
 
         }
-        public SetVariableResponse(BinaryReader br)
-            : base(br)
+        public SetVariableResponse(BinaryReader br, int requestID)
+            : base(br, requestID)
         {
         }
 

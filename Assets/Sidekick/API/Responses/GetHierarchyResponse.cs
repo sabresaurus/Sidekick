@@ -10,8 +10,8 @@ namespace Sabresaurus.Sidekick.Responses
         {
 
         }
-        public GetHierarchyResponse(BinaryReader br)
-            : base(br)
+        public GetHierarchyResponse(BinaryReader br, int requestID)
+            : base(br, requestID)
         {
             int sceneCount = br.ReadInt32();
             for (int i = 0; i < sceneCount; i++)
