@@ -85,14 +85,24 @@ public static class VariableDrawer
         }
         else if (variable.DataType == DataType.UnityObjectReference)
         {
-            GUILayout.Label(fieldName + " " + variable.TypeFullName + " " + variable.ValueDisplayName + " " + (int)fieldValue);
-            newValue = fieldValue;
-            Rect lastRect = GUILayoutUtility.GetLastRect();
-            lastRect.xMin = lastRect.xMax - 30;
-            if(GUI.Button(lastRect, "..."))
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(fieldName);
+            if((int)fieldValue != 0)
+            {
+                EditorGUILayout.TextField(variable.ValueDisplayName);
+            }
+            else
+            {
+                EditorGUILayout.TextField("None (" + variable.TypeFullName +")");
+            }
+            if (GUILayout.Button("...", GUILayout.Width(30)))
             {
                 onObjectPicker(variable);
             }
+            EditorGUILayout.EndHorizontal();
+
+            newValue = fieldValue;
+
             //newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
         else if (fieldType == typeof(int)

@@ -201,7 +201,7 @@ namespace Sabresaurus.Sidekick
                     Debug.Log("GetUnityObjectsResponse found " + item.ObjectName);
                 }
 
-                RemotePickerWindow.Show(castResponse.ObjectDescriptions);
+                RemotePickerWindow.Show(castResponse.ObjectDescriptions, null);
             }
         }
 

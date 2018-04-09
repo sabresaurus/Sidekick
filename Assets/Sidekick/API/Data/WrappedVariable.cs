@@ -192,7 +192,7 @@ namespace Sabresaurus.Sidekick
                 {
                     typeFullName = elementType.FullName;
                     assemblyName = elementType.Assembly.FullName;
-                    if (value != null)
+                    if (value != null && (isArray || isGenericList || ((UnityEngine.Object)value).GetInstanceID() != 0))
                     {
                         if (isArray || isGenericList)
                             valueDisplayName = "Array/List";

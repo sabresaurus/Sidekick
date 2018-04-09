@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace Sabresaurus.Sidekick
     public class RemotePickerWindow : EditorWindow
     {
         Vector2 scrollPosition = Vector2.zero;
+        WrappedVariable variable;
         UnityObjectDescription[] objectDescriptions;
         GUIStyle lineStyle;
 
@@ -80,10 +82,14 @@ namespace Sabresaurus.Sidekick
             //Repaint();
         }
 
-        public static void Show(UnityObjectDescription[] objectDescriptions)
+        public static void Show(UnityObjectDescription[] objectDescriptions, WrappedVariable variable)
         {
             RemotePickerWindow window = new RemotePickerWindow();
             window.objectDescriptions = objectDescriptions;
+            if(variable != null)
+            {
+				window.index = objectDescriptions.Select(item => item.InstanceID).ToList().IndexOf((int)variable.Value) + 1;
+            }
             window.titleContent = new GUIContent("Select Object");
             window.ShowUtility();
         }

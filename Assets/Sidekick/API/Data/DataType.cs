@@ -367,7 +367,7 @@ namespace Sabresaurus.Sidekick
                 if (unityObject != null)
                     bw.Write(unityObject.GetInstanceID());
                 else
-                    bw.Write(-1);
+                    bw.Write(0);
             }
             else
             {
