@@ -40,7 +40,12 @@ namespace Sabresaurus.Sidekick.Requests
                     }
                     else
                     {
-						setMethod.Invoke(targetObject, new object[] { wrappedVariable.Value });
+                        object value = wrappedVariable.Value;
+                        if(wrappedVariable.DataType == DataType.UnityObjectReference)
+                        {
+                            value = InstanceIDMap.GetObjectFromInstanceID((int)value);
+                        }
+						setMethod.Invoke(targetObject, new object[] { value });
                     }
                 }
             }

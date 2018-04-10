@@ -363,11 +363,18 @@ namespace Sabresaurus.Sidekick
             }
             else if(dataType == DataType.UnityObjectReference)
             {
-                UnityEngine.Object unityObject = value as UnityEngine.Object;
-                if (unityObject != null)
-                    bw.Write(unityObject.GetInstanceID());
+                if(value is UnityEngine.Object || value == null)
+                {
+					UnityEngine.Object unityObject = value as UnityEngine.Object;
+					if (unityObject != null)
+						bw.Write(unityObject.GetInstanceID());
+					else
+						bw.Write(0);
+                }
                 else
-                    bw.Write(0);
+                {
+                    bw.Write((int)value);
+                }
             }
             else
             {

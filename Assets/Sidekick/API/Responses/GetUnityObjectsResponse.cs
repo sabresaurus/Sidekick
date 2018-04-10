@@ -5,7 +5,10 @@ namespace Sabresaurus.Sidekick.Responses
 {
     public class GetUnityObjectsResponse : BaseResponse
     {
-        UnityObjectDescription[] objectDescriptions;
+		UnityObjectDescription[] objectDescriptions;
+        WrappedVariable variable;
+        ComponentDescription componentDescription;
+
 
         public UnityObjectDescription[] ObjectDescriptions
         {
@@ -15,8 +18,26 @@ namespace Sabresaurus.Sidekick.Responses
             }
         }
 
-        public GetUnityObjectsResponse(Object[] sourceObjects)
+		public WrappedVariable Variable
+		{
+			get
+			{
+				return variable;
+			}
+		}
+		
+		public ComponentDescription ComponentDescription
+		{
+			get
+			{
+				return componentDescription;
+			}
+		}
+
+        public GetUnityObjectsResponse(WrappedVariable variable, ComponentDescription componentDescription, Object[] sourceObjects)
         {
+            this.variable = variable;
+            this.componentDescription = componentDescription;
             objectDescriptions = new UnityObjectDescription[sourceObjects.Length];
             for (int i = 0; i < sourceObjects.Length; i++)
             {
@@ -27,6 +48,8 @@ namespace Sabresaurus.Sidekick.Responses
         public GetUnityObjectsResponse(BinaryReader br, int requestID)
             : base(br, requestID)
         {
+            variable = new WrappedVariable(br);
+            componentDescription = new ComponentDescription(br);
             int count = br.ReadInt32();
             objectDescriptions = new UnityObjectDescription[count];
             for (int i = 0; i < count; i++)
@@ -38,6 +61,8 @@ namespace Sabresaurus.Sidekick.Responses
 
 		public override void Write(BinaryWriter bw)
 		{
+            variable.Write(bw);
+            componentDescription.Write(bw);
             bw.Write(objectDescriptions.Length);
             for (int i = 0; i < objectDescriptions.Length; i++)
             {

@@ -6,7 +6,7 @@ using System;
 
 public static class VariableDrawer
 {
-    public static object Draw(WrappedVariable variable, Action<WrappedVariable> onObjectPicker)
+    public static object Draw(ComponentDescription componentDescription, WrappedVariable variable, Action<ComponentDescription, WrappedVariable> onObjectPicker)
     {
         string name = variable.VariableName;
 
@@ -52,14 +52,14 @@ public static class VariableDrawer
 
                 for (int i = 0; i < list.Count; i++)
                 {
-                    list[i] = DrawIndividualVariable(variable, name, type, list[i], onObjectPicker);
+                    list[i] = DrawIndividualVariable(componentDescription, variable, name, type, list[i], onObjectPicker);
                 }
                 newValue = list;
                 EditorGUI.indentLevel--;
             }
             else
             {
-                newValue = DrawIndividualVariable(variable, name, variable.Value.GetType(), variable.Value, onObjectPicker);
+                newValue = DrawIndividualVariable(componentDescription, variable, name, variable.Value.GetType(), variable.Value, onObjectPicker);
             }
         }
         else
@@ -76,7 +76,7 @@ public static class VariableDrawer
 
     }
 
-    public static object DrawIndividualVariable(WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<WrappedVariable> onObjectPicker)
+    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<ComponentDescription, WrappedVariable> onObjectPicker)
     {
         object newValue;
         if (variable.DataType == DataType.Enum)
@@ -87,17 +87,20 @@ public static class VariableDrawer
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(fieldName);
-            if((int)fieldValue != 0)
+            if ((int)fieldValue != 0)
             {
                 EditorGUILayout.TextField(variable.ValueDisplayName);
             }
             else
             {
-                EditorGUILayout.TextField("None (" + variable.TypeFullName +")");
+                EditorGUILayout.TextField("None (" + variable.TypeFullName + ")");
             }
-            if (GUILayout.Button("...", GUILayout.Width(30)))
+            if (componentDescription != null)
             {
-                onObjectPicker(variable);
+                if (GUILayout.Button("...", GUILayout.Width(30)))
+                {
+                    onObjectPicker(componentDescription, variable);
+                }
             }
             EditorGUILayout.EndHorizontal();
 
@@ -120,10 +123,10 @@ public static class VariableDrawer
         }
         else if (fieldType == typeof(char))
         {
-            string newString= EditorGUILayout.TextField(fieldName, new string((char)fieldValue, 1));
-            if(newString.Length == 1)
+            string newString = EditorGUILayout.TextField(fieldName, new string((char)fieldValue, 1));
+            if (newString.Length == 1)
             {
-				newValue = newString[0];
+                newValue = newString[0];
             }
             else
             {

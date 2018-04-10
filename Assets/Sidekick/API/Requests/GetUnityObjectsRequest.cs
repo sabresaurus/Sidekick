@@ -8,12 +8,12 @@ namespace Sabresaurus.Sidekick.Requests
 {
     public class GetUnityObjectsRequest : BaseRequest
     {
-        public GetUnityObjectsRequest(string typeFullName, string assemblyName)
+        public GetUnityObjectsRequest(WrappedVariable variable, ComponentDescription componentDescription)
         {
-            Type type = Assembly.Load(assemblyName).GetType(typeFullName);
+            Type type = Assembly.Load(variable.AssemblyName).GetType(variable.TypeFullName);
             Object[] objects = Resources.FindObjectsOfTypeAll(type);
 
-            uncastResponse = new GetUnityObjectsResponse(objects);
+            uncastResponse = new GetUnityObjectsResponse(variable, componentDescription, objects);
         }
     }
 }

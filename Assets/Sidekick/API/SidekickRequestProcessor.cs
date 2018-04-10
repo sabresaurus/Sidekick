@@ -66,10 +66,10 @@ namespace Sabresaurus.Sidekick
                         }
                         else if (apiRequest == APIRequest.GetUnityObjects)
                         {
-                            string typeFullName = br.ReadString();
-                            string assemblyName = br.ReadString();
+                            WrappedVariable variable = new WrappedVariable(br);
+                            ComponentDescription componentDescription = new ComponentDescription(br);
 
-                            response = new GetUnityObjectsRequest(typeFullName, assemblyName).UncastResponse;
+                            response = new GetUnityObjectsRequest(variable, componentDescription).UncastResponse;
                         }
                     }
                 }
