@@ -83,7 +83,6 @@ namespace Sabresaurus.Sidekick.Requests
 						string propertyName = property.Name;
 						
 						MethodInfo getMethod = property.GetGetMethod(true);
-						MethodInfo setMethod = property.GetSetMethod(true);
 						if(getMethod != null)
 						{
 							object objectValue = getMethod.Invoke(component, null);

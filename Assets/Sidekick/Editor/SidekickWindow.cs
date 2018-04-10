@@ -53,10 +53,10 @@ namespace Sabresaurus.Sidekick
         void UpdateTitleContent()
         {
             string[] guids = AssetDatabase.FindAssets("SidekickIcon t:Texture");
-            if(guids.Length >= 1)
+            if (guids.Length >= 1)
             {
                 Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(guids[0]));
-				titleContent = new GUIContent("Sidekick", texture);
+                titleContent = new GUIContent("Sidekick", texture);
             }
             else
             {
@@ -181,7 +181,7 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.Append(" ");
                         stringBuilder.Append(method.ParameterCount);
                         stringBuilder.Append(" ");
-                        if(method.Parameters.Count > 0)
+                        if (method.Parameters.Count > 0)
                         {
                             stringBuilder.Append(method.Parameters[0].DataType);
                         }
@@ -226,7 +226,7 @@ namespace Sabresaurus.Sidekick
 
 
         void OnGUI()
-        {            
+        {
             GUILayout.BeginHorizontal();
             // Column 1
             GUILayout.BeginVertical(GUILayout.Width(position.width / 2f));
@@ -326,19 +326,41 @@ namespace Sabresaurus.Sidekick
                         //else if (method.ReturnType.IsValueType)
                         //    labelStyle.normal.textColor = new Color(0, 0, 1);
                         //else
-                            //labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
+                        //labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
 
                         if (GUILayout.Button(TypeUtility.NameForType(method.ReturnType) + " " + method.MethodName + " (" + method.ParameterCount + ")"))
                         {
-                            SendToPlayers(APIRequest.InvokeMethod, component.InstanceID, method.MethodName, 0);
+                            List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
+
+                            for (int i = 0; i < method.ParameterCount; i++)
+                            {
+                                Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
+                                object defaultValue = TypeUtility.GetDefaultValue(type);
+
+                                WrappedParameter parameter = method.Parameters[i];
+                                defaultArguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
+                            }
+
+                            object[] objects = new object[]
+                                {
+                                component.InstanceID, method.MethodName, defaultArguments.Count
+                                };
+                            int lengthBeforeArguments = objects.Length;
+                            Array.Resize(ref objects, lengthBeforeArguments + defaultArguments.Count);
+                            for (int i = 0; i < defaultArguments.Count; i++)
+                            {
+                                objects[i + lengthBeforeArguments] = defaultArguments[i];
+                            }
+
+                            SendToPlayers(APIRequest.InvokeMethod, objects);
                         }
 
                         bool wasExpanded = (expandedMethod == method);
                         bool expanded = GUILayout.Toggle(wasExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
-						GUILayout.EndHorizontal();
-                        if(expanded != wasExpanded) // has changed
+                        GUILayout.EndHorizontal();
+                        if (expanded != wasExpanded) // has changed
                         {
-                            if(expanded)
+                            if (expanded)
                             {
                                 expandedMethod = method;
                                 arguments = new List<WrappedVariable>(method.ParameterCount);
@@ -357,7 +379,7 @@ namespace Sabresaurus.Sidekick
                                 arguments = null;
                             }
                         }
-                        else if(expanded)
+                        else if (expanded)
                         {
                             EditorGUI.indentLevel++;
                             foreach (var argument in arguments)
@@ -368,7 +390,7 @@ namespace Sabresaurus.Sidekick
                             Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
                             buttonRect = EditorGUI.IndentedRect(buttonRect);
 
-                            if(GUI.Button(buttonRect, "Fire"))
+                            if (GUI.Button(buttonRect, "Fire"))
                             {
                                 object[] objects = new object[]
                                 {
@@ -378,11 +400,11 @@ namespace Sabresaurus.Sidekick
                                 Array.Resize(ref objects, lengthBeforeArguments + arguments.Count);
                                 for (int i = 0; i < arguments.Count; i++)
                                 {
-                                    objects[i + lengthBeforeArguments] = arguments[0];
+                                    objects[i + lengthBeforeArguments] = arguments[i];
                                 }
                                 SendToPlayers(APIRequest.InvokeMethod, objects);
                             }
-							EditorGUI.indentLevel--;
+                            EditorGUI.indentLevel--;
 
                             GUILayout.Space(10);
                         }
@@ -427,7 +449,7 @@ namespace Sabresaurus.Sidekick
             {
                 using (BinaryWriter bw = new BinaryWriter(ms))
                 {
-					lastRequestID++;
+                    lastRequestID++;
                     bw.Write(lastRequestID);
 
                     bw.Write(action.ToString());
