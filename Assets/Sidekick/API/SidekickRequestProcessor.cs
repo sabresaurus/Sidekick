@@ -13,38 +13,26 @@ namespace Sabresaurus.Sidekick
             BaseResponse response = null;
 
             int requestId;
-            string action;
+            string requestType;
 
             using (MemoryStream msIn = new MemoryStream(input))
             {
                 using (BinaryReader br = new BinaryReader(msIn))
                 {
                     requestId = br.ReadInt32();
-                    action = br.ReadString();
+                    requestType = br.ReadString();
 
-                    if (action == typeof(GetHierarchyRequest).Name)
+                    Type type = typeof(BaseRequest).Assembly.GetType("Sabresaurus.Sidekick.Requests." + requestType);
+
+                    if(type != null && typeof(BaseRequest).IsAssignableFrom(type))
                     {
-                        response = new GetHierarchyRequest(br).GenerateResponse();
-                    }
-                    else if (action == typeof(GetGameObjectRequest).Name)
-                    {
-                        response = new GetGameObjectRequest(br).GenerateResponse();
-                    }
-                    else if (action == typeof(SetVariableRequest).Name)
-                    {
-                        response = new SetVariableRequest(br).GenerateResponse();
-                    }
-                    else if (action == typeof(InvokeMethodRequest).Name)
-                    {
-                        response = new InvokeMethodRequest(br).GenerateResponse();
-                    }
-                    else if (action == typeof(GetUnityObjectsRequest).Name)
-                    {
-                        response = new GetUnityObjectsRequest(br).GenerateResponse();
+						BaseRequest request = (BaseRequest)Activator.CreateInstance(type, br);
+						
+						response = request.GenerateResponse();
                     }
                     else
                     {
-                        throw new System.NotImplementedException();
+                        throw new NotImplementedException();
                     }
                 }
             }
@@ -55,7 +43,7 @@ namespace Sabresaurus.Sidekick
                 using (BinaryWriter bw = new BinaryWriter(msOut))
                 {
                     bw.Write(requestId);
-                    bw.Write(action);
+                    bw.Write(requestType);
                     response.Write(bw);
                 }
                 bytes = msOut.ToArray();

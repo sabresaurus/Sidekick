@@ -199,11 +199,6 @@ namespace Sabresaurus.Sidekick
             {
                 GetUnityObjectsResponse castResponse = (GetUnityObjectsResponse)response;
 
-                foreach (UnityObjectDescription item in castResponse.ObjectDescriptions)
-                {
-                    Debug.Log("GetUnityObjectsResponse found " + item.ObjectName);
-                }
-
                 RemotePickerWindow.Show(castResponse.ComponentDescription, castResponse.ObjectDescriptions, castResponse.Variable, OnObjectPickerChanged);
             }
         }
