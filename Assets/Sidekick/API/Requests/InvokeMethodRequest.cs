@@ -4,6 +4,7 @@ using System.Reflection;
 using Sabresaurus.Sidekick.Responses;
 using System;
 using Object = UnityEngine.Object;
+using System.IO;
 
 namespace Sabresaurus.Sidekick.Requests
 {
@@ -12,8 +13,38 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class InvokeMethodRequest : BaseRequest
     {
+        int instanceID;
+        string methodName;
+        WrappedVariable[] wrappedParameters;
+
         public InvokeMethodRequest(int instanceID, string methodName, WrappedVariable[] wrappedParameters)
         {
+            this.instanceID = instanceID;
+            this.methodName = methodName;
+            this.wrappedParameters = wrappedParameters;
+        }
+
+        public InvokeMethodRequest(BinaryReader br)
+        {
+            this.instanceID = br.ReadInt32();
+            this.methodName = br.ReadString();
+            int parameterCount = br.ReadInt32();
+
+            this.wrappedParameters = new WrappedVariable[parameterCount];
+            for (int i = 0; i < parameterCount; i++)
+            {
+                this.wrappedParameters[i] = new WrappedVariable(br);
+            }
+        }
+
+		public override void Write(BinaryWriter bw)
+		{
+            base.Write(bw);
+		}
+
+
+		public override BaseResponse GenerateResponse()
+		{
             Object targetObject = InstanceIDMap.GetObjectFromInstanceID(instanceID);
             WrappedVariable returnedVariable = null;
             if (targetObject != null)
@@ -42,7 +73,7 @@ namespace Sabresaurus.Sidekick.Requests
                 //Debug.Log(returnedValue);
             }
 
-            uncastResponse = new InvokeMethodResponse(methodName, returnedVariable);
-        }
-    }
+            return new InvokeMethodResponse(methodName, returnedVariable);
+		}
+	}
 }

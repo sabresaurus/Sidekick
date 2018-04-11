@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Sabresaurus.Sidekick.Responses;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Sabresaurus.Sidekick.Requests
 {
@@ -12,6 +13,21 @@ namespace Sabresaurus.Sidekick.Requests
     {
         public GetHierarchyRequest()
         {
+            
+        }
+
+        public GetHierarchyRequest(BinaryReader br)
+        {
+
+        }
+
+        public override void Write(BinaryWriter bw)
+        {
+            base.Write(bw);
+        }
+
+		public override BaseResponse GenerateResponse()
+		{
             GetHierarchyResponse response = new GetHierarchyResponse();
 
             for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -29,10 +45,10 @@ namespace Sabresaurus.Sidekick.Requests
                 response.Scenes.Add(sceneHierarchyDescription);
             }
 
-            uncastResponse = response;
-        }
+            return response;
+		}
 
-        private static void RecurseHierarchy(List<SceneHierarchyDescription.HierarchyNode> nodes, Transform transform, int depth)
+		private static void RecurseHierarchy(List<SceneHierarchyDescription.HierarchyNode> nodes, Transform transform, int depth)
         {
             InstanceIDMap.AddObject(transform);
             InstanceIDMap.AddObject(transform.gameObject);

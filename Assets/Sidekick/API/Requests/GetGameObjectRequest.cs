@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using Sabresaurus.Sidekick;
 using Sabresaurus.Sidekick.Responses;
@@ -24,8 +25,31 @@ namespace Sabresaurus.Sidekick.Requests
     {
         public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
+        string gameObjectPath;
+        InfoFlags flags;
+
         public GetGameObjectRequest(string gameObjectPath, InfoFlags flags)
         {
+            this.gameObjectPath = gameObjectPath;
+            this.flags = flags;
+        }
+
+        public GetGameObjectRequest(BinaryReader br)
+        {
+            this.gameObjectPath = br.ReadString();
+            this.flags = (InfoFlags)br.ReadInt32();
+        }
+
+        public override void Write(BinaryWriter bw)
+        {
+            base.Write(bw);
+
+            bw.Write(gameObjectPath);
+            bw.Write((int)flags);
+        }
+
+		public override BaseResponse GenerateResponse()
+		{
             GetGameObjectResponse getGOResponse = new GetGameObjectResponse();
 
             Transform foundTransform = TransformHelper.GetFromPath(gameObjectPath);
@@ -44,53 +68,53 @@ namespace Sabresaurus.Sidekick.Requests
                 description.TypeName = componentType.FullName;
                 description.InstanceID = component.GetInstanceID();
 
-                if((flags & InfoFlags.Fields) == InfoFlags.Fields)
+                if ((flags & InfoFlags.Fields) == InfoFlags.Fields)
                 {
-					FieldInfo[] fieldInfos = componentType.GetFields(BINDING_FLAGS);
+                    FieldInfo[] fieldInfos = componentType.GetFields(BINDING_FLAGS);
                     foreach (FieldInfo fieldInfo in fieldInfos)
-					{
+                    {
                         if (TypeUtility.IsBackingField(fieldInfo, componentType))
                         {
                             // Skip backing fields for auto-implemented properties
                             continue;
                         }
 
-						object objectValue = fieldInfo.GetValue(component);
+                        object objectValue = fieldInfo.GetValue(component);
 
                         WrappedVariable wrappedVariable = new WrappedVariable(fieldInfo, objectValue);
-						description.Fields.Add(wrappedVariable);
-					}
+                        description.Fields.Add(wrappedVariable);
+                    }
                 }
 
                 if ((flags & InfoFlags.Properties) == InfoFlags.Properties)
                 {
-					PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
-					foreach (PropertyInfo property in properties)
-					{
-						if (property.DeclaringType == typeof(Component)
-						    || property.DeclaringType == typeof(UnityEngine.Object))
-						{
-							continue;
-						}
-
-                        object[] attributes = property.GetCustomAttributes(false);
-                        bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
-                        if(isObsoleteWithError)
+                    PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
+                    foreach (PropertyInfo property in properties)
+                    {
+                        if (property.DeclaringType == typeof(Component)
+                            || property.DeclaringType == typeof(UnityEngine.Object))
                         {
                             continue;
                         }
 
-						string propertyName = property.Name;
-						
-						MethodInfo getMethod = property.GetGetMethod(true);
-						if(getMethod != null)
-						{
-							object objectValue = getMethod.Invoke(component, null);
+                        object[] attributes = property.GetCustomAttributes(false);
+                        bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
+                        if (isObsoleteWithError)
+                        {
+                            continue;
+                        }
+
+                        string propertyName = property.Name;
+
+                        MethodInfo getMethod = property.GetGetMethod(true);
+                        if (getMethod != null)
+                        {
+                            object objectValue = getMethod.Invoke(component, null);
 
                             WrappedVariable wrappedVariable = new WrappedVariable(property, objectValue);
-							description.Properties.Add(wrappedVariable);
-						}
-					}
+                            description.Properties.Add(wrappedVariable);
+                        }
+                    }
                 }
 
                 if ((flags & InfoFlags.Methods) == InfoFlags.Methods)
@@ -111,7 +135,7 @@ namespace Sabresaurus.Sidekick.Requests
 
                 getGOResponse.Components.Add(description);
             }
-            base.uncastResponse = getGOResponse;
-        }
-    }
+            return getGOResponse;
+		}
+	}
 }

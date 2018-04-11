@@ -4,6 +4,7 @@ using System.Reflection;
 using Sabresaurus.Sidekick.Responses;
 using System;
 using Object = UnityEngine.Object;
+using System.IO;
 
 namespace Sabresaurus.Sidekick.Requests
 {
@@ -12,21 +13,44 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class SetVariableRequest : BaseRequest
     {
+        int instanceID;
+        WrappedVariable wrappedVariable;
+
         public SetVariableRequest(int instanceID, WrappedVariable wrappedVariable)
         {
+            this.instanceID = instanceID;
+            this.wrappedVariable = wrappedVariable;
+        }
+
+        public SetVariableRequest(BinaryReader br)
+        {
+            this.instanceID = br.ReadInt32();
+            this.wrappedVariable = new WrappedVariable(br);
+        }
+
+		public override void Write(BinaryWriter bw)
+		{
+            base.Write(bw);
+
+            bw.Write(instanceID);
+            wrappedVariable.Write(bw);
+		}
+
+		public override BaseResponse GenerateResponse()
+		{
             Object targetObject = InstanceIDMap.GetObjectFromInstanceID(instanceID);
 
             if (targetObject != null)
             {
                 FieldInfo fieldInfo = targetObject.GetType().GetField(wrappedVariable.VariableName, GetGameObjectRequest.BINDING_FLAGS);
-                if(fieldInfo != null)
+                if (fieldInfo != null)
                 {
-                    if(wrappedVariable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+                    if (wrappedVariable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
                     {
                         fieldInfo.SetValue(targetObject, ConvertArrayOrList(wrappedVariable, fieldInfo.FieldType));
                     }
                     else
-					{
+                    {
                         fieldInfo.SetValue(targetObject, wrappedVariable.Value);
                     }
                 }
@@ -41,11 +65,11 @@ namespace Sabresaurus.Sidekick.Requests
                     else
                     {
                         object value = wrappedVariable.Value;
-                        if(wrappedVariable.DataType == DataType.UnityObjectReference)
+                        if (wrappedVariable.DataType == DataType.UnityObjectReference)
                         {
                             value = InstanceIDMap.GetObjectFromInstanceID((int)value);
                         }
-						setMethod.Invoke(targetObject, new object[] { value });
+                        setMethod.Invoke(targetObject, new object[] { value });
                     }
                 }
             }
@@ -54,10 +78,10 @@ namespace Sabresaurus.Sidekick.Requests
                 throw new System.NullReferenceException();
             }
 
-            uncastResponse = new SetVariableResponse();
-        }
+            return new SetVariableResponse();
+		}
 
-        object ConvertArrayOrList(WrappedVariable wrappedVariable, Type type)
+		object ConvertArrayOrList(WrappedVariable wrappedVariable, Type type)
         {
             // TODO: Investigate if this array copying could be simplified
             IList sourceList = (IList)wrappedVariable.Value;

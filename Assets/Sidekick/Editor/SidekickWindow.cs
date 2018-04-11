@@ -107,7 +107,7 @@ namespace Sabresaurus.Sidekick
                         // Get the path of the selection
                         string path = GetPathForTreeViewItem(items[i]);
                         //Debug.Log(TransformHelper.GetFromPath(path).name);
-                        SendToPlayers(APIRequest.GetGameObject, path, getGameObjectFlags);
+                        SendToPlayers(new GetGameObjectRequest( path, getGameObjectFlags));
                         break;
                     }
                 }
@@ -217,7 +217,7 @@ namespace Sabresaurus.Sidekick
                 if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
                 {
                     timeLastRefreshed = EditorApplication.timeSinceStartup;
-                    SendToPlayers(APIRequest.GetHierarchy);
+                    SendToPlayers(new GetHierarchyRequest());
                     FetchSelectionComponents();
                 }
 
@@ -246,7 +246,7 @@ namespace Sabresaurus.Sidekick
 
             if (GUILayout.Button("Refresh Hierarchy"))
             {
-                SendToPlayers(APIRequest.GetHierarchy);
+                SendToPlayers(new GetHierarchyRequest());
             }
 
 
@@ -292,7 +292,7 @@ namespace Sabresaurus.Sidekick
                             if (newValue != field.Value)
                             {
                                 field.Value = newValue;
-                                SendToPlayers(APIRequest.SetVariable, component.InstanceID, field);
+                                SendToPlayers(new SetVariableRequest(component.InstanceID, field));
                             }
 
                             //Debug.Log("Value changed in " + field.VariableName);
@@ -307,7 +307,7 @@ namespace Sabresaurus.Sidekick
                             if (newValue != property.Value)
                             {
                                 property.Value = newValue;
-                                SendToPlayers(APIRequest.SetVariable, component.InstanceID, property);
+                                SendToPlayers(new SetVariableRequest(component.InstanceID, property));
                             }
                             //Debug.Log("Value changed in " + property.VariableName);
                         }
@@ -342,18 +342,7 @@ namespace Sabresaurus.Sidekick
                                 defaultArguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
                             }
 
-                            object[] objects = new object[]
-                                {
-                                component.InstanceID, method.MethodName, defaultArguments.Count
-                                };
-                            int lengthBeforeArguments = objects.Length;
-                            Array.Resize(ref objects, lengthBeforeArguments + defaultArguments.Count);
-                            for (int i = 0; i < defaultArguments.Count; i++)
-                            {
-                                objects[i + lengthBeforeArguments] = defaultArguments[i];
-                            }
-
-                            SendToPlayers(APIRequest.InvokeMethod, objects);
+                            SendToPlayers(new InvokeMethodRequest(component.InstanceID, method.MethodName, defaultArguments.ToArray()));
                         }
 
                         bool wasExpanded = (expandedMethod == method);
@@ -393,17 +382,7 @@ namespace Sabresaurus.Sidekick
 
                             if (GUI.Button(buttonRect, "Fire"))
                             {
-                                object[] objects = new object[]
-                                {
-                                    component.InstanceID, method.MethodName, arguments.Count
-                                };
-                                int lengthBeforeArguments = objects.Length;
-                                Array.Resize(ref objects, lengthBeforeArguments + arguments.Count);
-                                for (int i = 0; i < arguments.Count; i++)
-                                {
-                                    objects[i + lengthBeforeArguments] = arguments[i];
-                                }
-                                SendToPlayers(APIRequest.InvokeMethod, objects);
+                                SendToPlayers(new InvokeMethodRequest(component.InstanceID, method.MethodName, arguments.ToArray()));
                             }
                             EditorGUI.indentLevel--;
 
@@ -440,19 +419,19 @@ namespace Sabresaurus.Sidekick
 
         public void OnOpenObjectPicker(ComponentDescription componentDescription, WrappedVariable variable)
         {
-            SendToPlayers(APIRequest.GetUnityObjects, variable, componentDescription);
+            SendToPlayers(new GetUnityObjectsRequest(variable, componentDescription));
         }
 
         public void OnObjectPickerChanged(ComponentDescription componentDescription, WrappedVariable variable, UnityObjectDescription objectDescription)
         {
             Debug.Log("OnObjectPickerChanged");
             variable.Value = (objectDescription != null) ? objectDescription.InstanceID : 0;
-            SendToPlayers(APIRequest.SetVariable, componentDescription.InstanceID, variable);
+            SendToPlayers(new SetVariableRequest(componentDescription.InstanceID, variable));
 
             //SendToPlayers(APIRequest.GetUnityObjects, componentDescription, variable.TypeFullName, variable.AssemblyName);
         }
 
-        int SendToPlayers(APIRequest action, params object[] args)
+        int SendToPlayers(BaseRequest request)
         {
             byte[] bytes;
             using (MemoryStream ms = new MemoryStream())
@@ -462,28 +441,14 @@ namespace Sabresaurus.Sidekick
                     lastRequestID++;
                     bw.Write(lastRequestID);
 
-                    bw.Write(action.ToString());
-                    foreach (var item in args)
-                    {
-                        if (item is string)
-                            bw.Write((string)item);
-                        else if (item is int)
-                            bw.Write((int)item);
-                        else if (item is Enum)
-                            bw.Write((int)item);
-                        else if (item is WrappedVariable)
-                            ((WrappedVariable)item).Write(bw);
-                        else if (item is ComponentDescription)
-                            ((ComponentDescription)item).Write(bw);
-                        else
-                            throw new NotSupportedException();
-                    }
+                    bw.Write(request.GetType().Name);
+                    request.Write(bw);
                 }
                 bytes = ms.ToArray();
             }
             if (localDevMode)
             {
-                var testResponse = SidekickRequestProcessor.Process(bytes);
+                byte[] testResponse = SidekickRequestProcessor.Process(bytes);
                 MessageEventArgs messageEvent = new MessageEventArgs();
                 messageEvent.data = testResponse;
                 OnMessageEvent(messageEvent);

@@ -6,15 +6,6 @@ using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
-    public enum APIRequest
-    {
-        GetHierarchy,
-        GetGameObject,
-        SetVariable,
-        InvokeMethod,
-        GetUnityObjects,
-    }
-
     public static class SidekickRequestProcessor
     {
         public static byte[] Process(byte[] input)
@@ -22,55 +13,38 @@ namespace Sabresaurus.Sidekick
             BaseResponse response = null;
 
             int requestId;
-            APIRequest apiRequest;
+            string action;
 
             using (MemoryStream msIn = new MemoryStream(input))
             {
                 using (BinaryReader br = new BinaryReader(msIn))
                 {
                     requestId = br.ReadInt32();
-                    string action = br.ReadString();
-                    //Debug.Log(action);
-                    if(EnumHelper.TryParse(action, out apiRequest))
+                    action = br.ReadString();
+
+                    if (action == typeof(GetHierarchyRequest).Name)
                     {
-						if (apiRequest == APIRequest.GetHierarchy)
-						{
-                            response = new GetHierarchyRequest().UncastResponse;
-						}
-						else if (apiRequest == APIRequest.GetGameObject)
-						{
-                            string path = br.ReadString();
-                            int flags = br.ReadInt32();
-							
-                            response = new GetGameObjectRequest(path, (InfoFlags)flags).UncastResponse;
-						}
-                        else if (apiRequest == APIRequest.SetVariable)
-                        {
-                            int instanceID = br.ReadInt32();
-                            WrappedVariable wrappedVariable = new WrappedVariable(br);
-
-                            response = new SetVariableRequest(instanceID, wrappedVariable).UncastResponse;
-                        }
-                        else if (apiRequest == APIRequest.InvokeMethod)
-                        {
-                            int instanceID = br.ReadInt32();
-                            string methodName = br.ReadString();
-                            int parameterCount = br.ReadInt32();
-                            WrappedVariable[] parameters = new WrappedVariable[parameterCount];
-                            for (int i = 0; i < parameterCount; i++)
-                            {
-                                parameters[i] = new WrappedVariable(br);
-                            }
-
-                            response = new InvokeMethodRequest(instanceID, methodName, parameters).UncastResponse;
-                        }
-                        else if (apiRequest == APIRequest.GetUnityObjects)
-                        {
-                            WrappedVariable variable = new WrappedVariable(br);
-                            ComponentDescription componentDescription = new ComponentDescription(br);
-
-                            response = new GetUnityObjectsRequest(variable, componentDescription).UncastResponse;
-                        }
+                        response = new GetHierarchyRequest(br).GenerateResponse();
+                    }
+                    else if (action == typeof(GetGameObjectRequest).Name)
+                    {
+                        response = new GetGameObjectRequest(br).GenerateResponse();
+                    }
+                    else if (action == typeof(SetVariableRequest).Name)
+                    {
+                        response = new SetVariableRequest(br).GenerateResponse();
+                    }
+                    else if (action == typeof(InvokeMethodRequest).Name)
+                    {
+                        response = new InvokeMethodRequest(br).GenerateResponse();
+                    }
+                    else if (action == typeof(GetUnityObjectsRequest).Name)
+                    {
+                        response = new GetUnityObjectsRequest(br).GenerateResponse();
+                    }
+                    else
+                    {
+                        throw new System.NotImplementedException();
                     }
                 }
             }
@@ -81,7 +55,7 @@ namespace Sabresaurus.Sidekick
                 using (BinaryWriter bw = new BinaryWriter(msOut))
                 {
                     bw.Write(requestId);
-                    bw.Write(apiRequest.ToString());
+                    bw.Write(action);
                     response.Write(bw);
                 }
                 bytes = msOut.ToArray();

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.IO;
+using Sabresaurus.Sidekick.Requests;
 using Sabresaurus.Sidekick.Responses;
 
 namespace Sabresaurus.Sidekick
@@ -8,38 +9,31 @@ namespace Sabresaurus.Sidekick
     {
         public static BaseResponse Process(byte[] input)
         {
-            APIRequest apiRequest;
             using (MemoryStream ms = new MemoryStream(input))
             {
                 using (BinaryReader br = new BinaryReader(ms))
                 {
                     int requestId = br.ReadInt32();
-                    if (EnumHelper.TryParse(br.ReadString(), out apiRequest))
+                    string action = br.ReadString();
+                    if(action == typeof(GetHierarchyRequest).Name)
                     {
-                        if(apiRequest == APIRequest.GetHierarchy)
-                        {
-                            return new GetHierarchyResponse(br, requestId);
-                        }
-                        else if (apiRequest == APIRequest.GetGameObject)
-                        {
-                            return new GetGameObjectResponse(br, requestId);
-                        }
-                        else if (apiRequest == APIRequest.SetVariable)
-                        {
-                            return new SetVariableResponse(br, requestId);
-                        }
-                        else if (apiRequest == APIRequest.InvokeMethod)
-                        {
-                            return new InvokeMethodResponse(br, requestId);
-                        }
-                        else if (apiRequest == APIRequest.GetUnityObjects)
-                        {
-                            return new GetUnityObjectsResponse(br, requestId);
-                        }
-                        else
-                        {
-                            throw new System.NotImplementedException();
-                        }
+                        return new GetHierarchyResponse(br, requestId);
+                    }
+                    else if (action == typeof(GetGameObjectRequest).Name)
+                    {
+                        return new GetGameObjectResponse(br, requestId);
+                    }
+                    else if (action == typeof(SetVariableRequest).Name)
+                    {
+                        return new SetVariableResponse(br, requestId);
+                    }
+                    else if (action == typeof(InvokeMethodRequest).Name)
+                    {
+                        return new InvokeMethodResponse(br, requestId);
+                    }
+                    else if (action == typeof(GetUnityObjectsRequest).Name)
+                    {
+                        return new GetUnityObjectsResponse(br, requestId);
                     }
                     else
                     {

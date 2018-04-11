@@ -5,24 +5,11 @@ namespace Sabresaurus.Sidekick.Requests
 {
     public abstract class BaseRequest
     {
-        protected BaseResponse uncastResponse;
-
-        public BaseResponse UncastResponse
+        public virtual void Write(BinaryWriter bw)
         {
-            get
-            {
-                return uncastResponse;
-            }
-
-            set
-            {
-                uncastResponse = value;
-            }
+            
         }
 
-        public void Write(BinaryWriter bw)
-        {
-            uncastResponse.Write(bw);
-        }
+        public abstract BaseResponse GenerateResponse();
     }
 }
