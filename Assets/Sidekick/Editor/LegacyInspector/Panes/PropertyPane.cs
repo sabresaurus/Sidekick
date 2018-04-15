@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
 	{
 		public void DrawProperties(Type componentType, object component, PropertyInfo[] properties)
 		{
-			Settings settings = InspectorSidekick.Current.Settings; // Grab the active window's settings
+			OldSettings settings = OldInspectorSidekick.Current.Settings; // Grab the active window's settings
 
 			for (int j = 0; j < properties.Length; j++)
 			{

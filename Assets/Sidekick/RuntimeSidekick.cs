@@ -19,7 +19,10 @@ namespace Sabresaurus.Sidekick
 
         private void Start()
         {
-            text.text = "Not Connected";
+            if(text != null)
+            {
+				text.text = "Not Connected";
+            }
         }
 
         void Update()
@@ -42,21 +45,26 @@ namespace Sabresaurus.Sidekick
 
         private void OnConnected()
         {
-            text.text = "Connected";
-            PlayerConnection.instance.Register(kMsgSendEditorToPlayer, OnMessageReceived);
+			PlayerConnection.instance.Register(kMsgSendEditorToPlayer, OnMessageReceived);
+            if (text != null)
+            {
+                text.text = "Connected";
+            }
         }
 
         private void OnDisconnected()
         {
-            text.text = "Not Connected";
-            PlayerConnection.instance.Unregister(kMsgSendEditorToPlayer, OnMessageReceived);
+			PlayerConnection.instance.Unregister(kMsgSendEditorToPlayer, OnMessageReceived);
+            if (text != null)
+            {
+                text.text = "Not Connected";
+            }
         }
 
         private void OnMessageReceived(MessageEventArgs args)
         {
             byte[] response = SidekickRequestProcessor.Process(args.data);
             PlayerConnection.instance.Send(kMsgSendPlayerToEditor, response);
-
         }
 
         public void Send()

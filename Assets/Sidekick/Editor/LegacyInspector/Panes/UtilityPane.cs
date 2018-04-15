@@ -14,7 +14,7 @@ namespace Sabresaurus.Sidekick
 	{
         public void Draw(Type componentType, object component)
         {
-            Settings settings = InspectorSidekick.Current.Settings; // Grab the active window's settings
+            OldSettings settings = OldInspectorSidekick.Current.Settings; // Grab the active window's settings
 
             if (component is MonoScript)
             {

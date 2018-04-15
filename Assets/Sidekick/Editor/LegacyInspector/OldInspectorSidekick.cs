@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
-    public class InspectorSidekick : EditorWindow
+    public class OldInspectorSidekick : EditorWindow
     {
         enum InspectedType { Selection, AssemblyClass, Remote };
         enum InspectorMode { Fields, Props, Methods, Events, Misc };
 
-        Settings settings = new Settings();
+        OldSettings settings = new OldSettings();
 
         FieldPane fieldPane = new FieldPane();
         PropertyPane propertyPane = new PropertyPane();
@@ -21,7 +21,7 @@ namespace Sabresaurus.Sidekick
         EventPane eventPane = new EventPane();
         UtilityPane utilityPane = new UtilityPane();
 
-        static InspectorSidekick current;
+        static OldInspectorSidekick current;
 
 
 
@@ -48,7 +48,7 @@ namespace Sabresaurus.Sidekick
         Dictionary<Assembly, List<Type>> assemblyTypes = new Dictionary<Assembly, List<Type>>();
 
 
-        public static InspectorSidekick Current
+        public static OldInspectorSidekick Current
         {
             get
             {
@@ -64,7 +64,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public Settings Settings
+        public OldSettings Settings
         {
             get
             {
@@ -89,7 +89,7 @@ namespace Sabresaurus.Sidekick
         static void Init()
         {
             // Get existing open window or if none, make a new one:
-            InspectorSidekick sidekick = EditorWindow.GetWindow<InspectorSidekick>();
+            OldInspectorSidekick sidekick = EditorWindow.GetWindow<OldInspectorSidekick>();
             sidekick.UpdateTitleContent();
         }
 

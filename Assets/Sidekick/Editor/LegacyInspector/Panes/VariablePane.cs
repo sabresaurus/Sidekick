@@ -91,7 +91,7 @@ namespace Sabresaurus.Sidekick
 					//			GUI.SetNextControlName(
 					if(GUILayout.Button("->", expandButtonStyle, GUILayout.Width(20)))
 					{
-						InspectorSidekick.Current.SetSelection(fieldValue, true);
+						OldInspectorSidekick.Current.SetSelection(fieldValue, true);
 					}
 					bool expanded = GUILayout.Button("...", expandButtonStyle, GUILayout.Width(20));
 					if(Event.current.type == EventType.Repaint)
@@ -136,7 +136,7 @@ namespace Sabresaurus.Sidekick
 		{
 			object newValue;
 			if (fieldType == typeof(int)
-                || (fieldType.IsSubclassOf(typeof(Enum)) && InspectorSidekick.Current.Settings.TreatEnumsAsInts))
+                || (fieldType.IsSubclassOf(typeof(Enum)) && OldInspectorSidekick.Current.Settings.TreatEnumsAsInts))
 			{
 				newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
 			}

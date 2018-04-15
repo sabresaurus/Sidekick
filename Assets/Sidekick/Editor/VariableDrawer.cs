@@ -109,7 +109,7 @@ public static class VariableDrawer
             //newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
         else if (fieldType == typeof(int)
-            || (fieldType.IsSubclassOf(typeof(Enum)) && InspectorSidekick.Current.Settings.TreatEnumsAsInts))
+            || (fieldType.IsSubclassOf(typeof(Enum)) && OldInspectorSidekick.Current.Settings.TreatEnumsAsInts))
         {
             newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }

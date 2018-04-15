@@ -12,26 +12,24 @@ using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
+    public enum InspectionConnection { LocalEditor, RemotePlayer };
+
     public class SidekickWindow : EditorWindow
     {
         const float AUTO_REFRESH_FREQUENCY = 2f;
 
-        bool localDevMode = false;
-        bool autoRefresh = false;
-        string searchTerm = "";
+        // Shared serialized context that persists through recompiles
+        SidekickSettings settings = new SidekickSettings();
 
         WrappedMethod expandedMethod = null;
         List<WrappedVariable> arguments = null;
 
         Vector2 scrollPosition = Vector2.zero;
 
-
-        InfoFlags getGameObjectFlags = InfoFlags.Fields | InfoFlags.Properties;
-
         TreeViewState treeViewState;
 
         SimpleTreeView treeView;
-        SearchField treeViewSearchField;
+        SearchField hierarchySearchField;
         SearchField searchField2;
 
         GetGameObjectResponse gameObjectResponse;
@@ -84,8 +82,8 @@ namespace Sabresaurus.Sidekick
 
             searchField2 = new SearchField();
 
-            treeViewSearchField = new SearchField();
-            treeViewSearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
+            hierarchySearchField = new SearchField();
+            hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
         }
 
         void OnDisable()
@@ -107,7 +105,7 @@ namespace Sabresaurus.Sidekick
                         // Get the path of the selection
                         string path = GetPathForTreeViewItem(items[i]);
                         //Debug.Log(TransformHelper.GetFromPath(path).name);
-                        SendToPlayers(new GetGameObjectRequest( path, getGameObjectFlags));
+                        SendToPlayers(new GetGameObjectRequest(path, settings.GetGameObjectFlags));
                         break;
                     }
                 }
@@ -188,7 +186,7 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.AppendLine();
                     }
                 }
-                Debug.Log(stringBuilder);
+                //Debug.Log(stringBuilder);
             }
             else if (response is InvokeMethodResponse)
             {
@@ -207,7 +205,8 @@ namespace Sabresaurus.Sidekick
 
         private void OnInspectorUpdate()
         {
-            if (autoRefresh)
+            if (settings.InspectionConnection == InspectionConnection.LocalEditor
+                || settings.AutoRefreshRemote)
             {
                 if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
                 {
@@ -215,29 +214,38 @@ namespace Sabresaurus.Sidekick
                     SendToPlayers(new GetHierarchyRequest());
                     FetchSelectionComponents();
                 }
-
             }
         }
 
 
         void OnGUI()
         {
+			GUILayout.Space(9);
             GUILayout.BeginHorizontal();
             // Column 1
             GUILayout.BeginVertical(GUILayout.Width(position.width / 2f));
 
-            localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
-            autoRefresh = EditorGUILayout.Toggle("Auto Refresh", autoRefresh);
-            getGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(getGameObjectFlags);
-            int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
-            StringBuilder builder = new StringBuilder();
-            builder.AppendLine(string.Format("{0} players connected.", playerCount));
-            int count = 0;
-            foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
+            settings.InspectionConnection = (InspectionConnection)GUILayout.Toolbar((int)settings.InspectionConnection, new string[] { "Local", "Remote" }, new GUIStyle("LargeButton"));
+
+            if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
             {
-                builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+                int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
+
+
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine(string.Format("{0} players connected.", playerCount));
+                int count = 0;
+                foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
+                {
+                    builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+                }
+                EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
+                settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
             }
-            EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
+
+            //localDevMode = EditorGUILayout.Toggle("Local Dev Mode", localDevMode);
+            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
+
 
             if (GUILayout.Button("Refresh Hierarchy"))
             {
@@ -258,12 +266,16 @@ namespace Sabresaurus.Sidekick
             // Column 2
             GUILayout.BeginVertical();
             GUILayout.Space(2);
-            searchTerm = searchField2.OnGUI(searchTerm);
+
+            settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
             GUILayout.Space(3);
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
             if (gameObjectResponse != null)
             {
+				string activeSearchTerm = settings.SearchTerm;
+
                 foreach (var component in gameObjectResponse.Components)
                 {
                     GUIStyle style = new GUIStyle(EditorStyles.foldout);
@@ -277,9 +289,13 @@ namespace Sabresaurus.Sidekick
                     EditorGUILayout.Foldout(true, content, style);
 
                     EditorGUIUtility.labelWidth = labelWidth; // Restore label width
-
                     foreach (var field in component.Fields)
                     {
+                        if(!string.IsNullOrEmpty(activeSearchTerm) && !field.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            // Active search term not matched, skip it
+                            continue;
+                        }
                         EditorGUI.BeginChangeCheck();
                         object newValue = VariableDrawer.Draw(component, field, OnOpenObjectPicker);
                         if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
@@ -295,6 +311,11 @@ namespace Sabresaurus.Sidekick
                     }
                     foreach (var property in component.Properties)
                     {
+                        if (!string.IsNullOrEmpty(activeSearchTerm) && !property.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            // Active search term not matched, skip it
+                            continue;
+                        }
                         EditorGUI.BeginChangeCheck();
                         object newValue = VariableDrawer.Draw(component, property, OnOpenObjectPicker);
                         if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
@@ -316,6 +337,11 @@ namespace Sabresaurus.Sidekick
 
                     foreach (var method in component.Methods)
                     {
+                        if (!string.IsNullOrEmpty(activeSearchTerm) && !method.MethodName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            // Active search term not matched, skip it
+                            continue;
+                        }
                         GUILayout.BeginHorizontal();
                         //if (method.ReturnType == typeof(void))
                         //    labelStyle.normal.textColor = Color.grey;
@@ -441,7 +467,7 @@ namespace Sabresaurus.Sidekick
                 }
                 bytes = ms.ToArray();
             }
-            if (localDevMode)
+            if (settings.InspectionConnection == InspectionConnection.LocalEditor)
             {
                 byte[] testResponse = SidekickRequestProcessor.Process(bytes);
                 MessageEventArgs messageEvent = new MessageEventArgs();
@@ -461,7 +487,7 @@ namespace Sabresaurus.Sidekick
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Space(100);
             GUILayout.FlexibleSpace();
-            treeView.searchString = treeViewSearchField.OnToolbarGUI(treeView.searchString);
+            treeView.searchString = hierarchySearchField.OnToolbarGUI(treeView.searchString);
             GUILayout.EndHorizontal();
         }
 
