@@ -286,129 +286,157 @@ namespace Sabresaurus.Sidekick
                     float labelWidth = EditorGUIUtility.labelWidth; // Cache label width
                     // Temporarily set the label width to full width so the icon is not squashed with long strings
                     EditorGUIUtility.labelWidth = position.width / 2f;
-                    EditorGUILayout.Foldout(true, content, style);
 
-                    EditorGUIUtility.labelWidth = labelWidth; // Restore label width
-                    foreach (var field in component.Fields)
+                    bool wasComponentExpanded = !settings.CollapsedTypeNames.Contains(component.TypeName);
+                    bool isComponentExpanded = EditorGUILayout.Foldout(wasComponentExpanded, content, style);
+					EditorGUIUtility.labelWidth = labelWidth; // Restore label width
+                    if(isComponentExpanded != wasComponentExpanded )
                     {
-                        if(!string.IsNullOrEmpty(activeSearchTerm) && !field.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                        if(isComponentExpanded == false)
                         {
-                            // Active search term not matched, skip it
-                            continue;
+                            // Not expanded, so collapse it
+							settings.CollapsedTypeNames.Add(component.TypeName);
                         }
-                        EditorGUI.BeginChangeCheck();
-                        object newValue = VariableDrawer.Draw(component, field, OnOpenObjectPicker);
-                        if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
+                        else
                         {
-                            if (newValue != field.Value)
-                            {
-                                field.Value = newValue;
-                                SendToPlayers(new SetVariableRequest(component.InstanceID, field));
-                            }
-
-                            //Debug.Log("Value changed in " + field.VariableName);
-                        }
-                    }
-                    foreach (var property in component.Properties)
-                    {
-                        if (!string.IsNullOrEmpty(activeSearchTerm) && !property.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            // Active search term not matched, skip it
-                            continue;
-                        }
-                        EditorGUI.BeginChangeCheck();
-                        object newValue = VariableDrawer.Draw(component, property, OnOpenObjectPicker);
-                        if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
-                        {
-                            if (newValue != property.Value)
-                            {
-                                property.Value = newValue;
-                                SendToPlayers(new SetVariableRequest(component.InstanceID, property));
-                            }
-                            //Debug.Log("Value changed in " + property.VariableName);
+                            // Expanded, remove it from collapse list
+							settings.CollapsedTypeNames.Remove(component.TypeName);
                         }
                     }
 
-                    GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
-                    RectOffset padding = expandButtonStyle.padding;
-                    padding.left = 0;
-                    padding.right = 1;
-                    expandButtonStyle.padding = padding;
-
-                    foreach (var method in component.Methods)
+                    if(isComponentExpanded)
                     {
-                        if (!string.IsNullOrEmpty(activeSearchTerm) && !method.MethodName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            // Active search term not matched, skip it
-                            continue;
-                        }
-                        GUILayout.BeginHorizontal();
-                        //if (method.ReturnType == typeof(void))
-                        //    labelStyle.normal.textColor = Color.grey;
-                        //else if (method.ReturnType.IsValueType)
-                        //    labelStyle.normal.textColor = new Color(0, 0, 1);
-                        //else
-                        //labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
-
-                        if (GUILayout.Button(TypeUtility.NameForType(method.ReturnType) + " " + method.MethodName + " (" + method.ParameterCount + ")"))
-                        {
-                            List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
-
-                            for (int i = 0; i < method.ParameterCount; i++)
-                            {
-                                Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
-                                object defaultValue = TypeUtility.GetDefaultValue(type);
-
-                                WrappedParameter parameter = method.Parameters[i];
-                                defaultArguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
-                            }
-
-                            SendToPlayers(new InvokeMethodRequest(component.InstanceID, method.MethodName, defaultArguments.ToArray()));
-                        }
-
-                        bool wasExpanded = (expandedMethod == method);
-                        bool expanded = GUILayout.Toggle(wasExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
-                        GUILayout.EndHorizontal();
-                        if (expanded != wasExpanded) // has changed
-                        {
-                            if (expanded)
-                            {
-                                expandedMethod = method;
-                                arguments = new List<WrappedVariable>(method.ParameterCount);
-                                for (int i = 0; i < method.ParameterCount; i++)
-                                {
-                                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
-                                    object defaultValue = TypeUtility.GetDefaultValue(type);
-
-                                    WrappedParameter parameter = method.Parameters[i];
-                                    arguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
-                                }
-                            }
-                            else
-                            {
-                                expandedMethod = null;
-                                arguments = null;
-                            }
-                        }
-                        else if (expanded)
-                        {
-                            EditorGUI.indentLevel++;
-                            foreach (var argument in arguments)
-                            {
-                                argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
-                            }
-
-                            Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
-                            buttonRect = EditorGUI.IndentedRect(buttonRect);
-
-                            if (GUI.Button(buttonRect, "Fire"))
-                            {
-                                SendToPlayers(new InvokeMethodRequest(component.InstanceID, method.MethodName, arguments.ToArray()));
-                            }
-                            EditorGUI.indentLevel--;
-
-                            GUILayout.Space(10);
-                        }
+						foreach (var field in component.Fields)
+						{
+							if(!string.IsNullOrEmpty(activeSearchTerm) && !field.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+							{
+								// Active search term not matched, skip it
+								continue;
+							}
+							EditorGUI.BeginChangeCheck();
+							object newValue = VariableDrawer.Draw(component, field, OnOpenObjectPicker);
+							if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
+							{
+								if (newValue != field.Value)
+								{
+									field.Value = newValue;
+									SendToPlayers(new SetVariableRequest(component.InstanceID, field));
+								}
+								
+								//Debug.Log("Value changed in " + field.VariableName);
+							}
+						}
+						foreach (var property in component.Properties)
+						{
+							if (!string.IsNullOrEmpty(activeSearchTerm) && !property.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+							{
+								// Active search term not matched, skip it
+								continue;
+							}
+							EditorGUI.BeginChangeCheck();
+							object newValue = VariableDrawer.Draw(component, property, OnOpenObjectPicker);
+							if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
+							{
+								if (newValue != property.Value)
+								{
+									property.Value = newValue;
+									SendToPlayers(new SetVariableRequest(component.InstanceID, property));
+								}
+								//Debug.Log("Value changed in " + property.VariableName);
+							}
+						}
+						
+						GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
+						RectOffset padding = expandButtonStyle.padding;
+						padding.left = 0;
+						padding.right = 1;
+						expandButtonStyle.padding = padding;
+						
+						GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+						labelStyle.alignment = TextAnchor.MiddleRight;
+						GUIStyle normalButtonStyle = new GUIStyle(GUI.skin.button);
+						normalButtonStyle.padding = normalButtonStyle.padding.SetLeft(100);
+						normalButtonStyle.alignment = TextAnchor.MiddleLeft;
+						
+						foreach (var method in component.Methods)
+						{
+							if (!string.IsNullOrEmpty(activeSearchTerm) && !method.MethodName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+							{
+								// Active search term not matched, skip it
+								continue;
+							}
+							GUILayout.BeginHorizontal();
+							if (method.ReturnType == DataType.Void)
+								labelStyle.normal.textColor = Color.grey;
+							else if ((method.ReturnTypeAttributes & VariableAttributes.IsValueType) == VariableAttributes.IsValueType)
+								labelStyle.normal.textColor = new Color(0, 0, 1);
+							else
+								labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
+							
+							if (GUILayout.Button(method.MethodName + " (" + method.ParameterCount + ")", normalButtonStyle))
+							{
+								List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
+								
+								for (int i = 0; i < method.ParameterCount; i++)
+								{
+									Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
+									object defaultValue = TypeUtility.GetDefaultValue(type);
+									
+									WrappedParameter parameter = method.Parameters[i];
+									defaultArguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
+								}
+								
+								SendToPlayers(new InvokeMethodRequest(component.InstanceID, method.MethodName, defaultArguments.ToArray()));
+							}
+							
+							Rect lastRect = GUILayoutUtility.GetLastRect();
+							lastRect.xMax = normalButtonStyle.padding.left;
+							GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
+							
+                            bool wasMethodExpanded = (expandedMethod == method);
+							bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
+							GUILayout.EndHorizontal();
+							if (isMethodExpanded != wasMethodExpanded) // has changed
+							{
+								if (isMethodExpanded)
+								{
+									expandedMethod = method;
+									arguments = new List<WrappedVariable>(method.ParameterCount);
+									for (int i = 0; i < method.ParameterCount; i++)
+									{
+										Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
+										object defaultValue = TypeUtility.GetDefaultValue(type);
+										
+										WrappedParameter parameter = method.Parameters[i];
+										arguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
+									}
+								}
+								else
+								{
+									expandedMethod = null;
+									arguments = null;
+								}
+							}
+                            else if (isMethodExpanded)
+							{
+								EditorGUI.indentLevel++;
+								foreach (var argument in arguments)
+								{
+									argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
+								}
+								
+								Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
+								buttonRect = EditorGUI.IndentedRect(buttonRect);
+								
+								if (GUI.Button(buttonRect, "Fire"))
+								{
+									SendToPlayers(new InvokeMethodRequest(component.InstanceID, method.MethodName, arguments.ToArray()));
+								}
+								EditorGUI.indentLevel--;
+								
+								GUILayout.Space(10);
+							}
+						}
                     }
                     Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
                     rect.xMin -= 10;

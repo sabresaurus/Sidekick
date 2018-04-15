@@ -11,6 +11,7 @@ namespace Sabresaurus.Sidekick
     {
         string methodName;
         DataType returnType;
+        VariableAttributes returnTypeAttributes = VariableAttributes.None;
         List<WrappedParameter> parameters = new List<WrappedParameter>();
 
         public string MethodName
@@ -18,11 +19,6 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return methodName;
-            }
-
-            set
-            {
-                methodName = value;
             }
         }
 
@@ -32,10 +28,13 @@ namespace Sabresaurus.Sidekick
             {
                 return returnType;
             }
+        }
 
-            set
+        public VariableAttributes ReturnTypeAttributes
+        {
+            get
             {
-                returnType = value;
+                return returnTypeAttributes;
             }
         }
 
@@ -65,6 +64,11 @@ namespace Sabresaurus.Sidekick
             {
                 parameters.Add(new WrappedParameter(parameterInfo));
             }
+
+            if(methodInfo.ReturnType.IsValueType)
+            {
+                returnTypeAttributes |= VariableAttributes.IsValueType;
+            }
         }
 
         // Deserialisation constructor
@@ -72,6 +76,7 @@ namespace Sabresaurus.Sidekick
         {
             this.methodName = br.ReadString();
             this.returnType = (DataType)br.ReadByte();
+            this.returnTypeAttributes = (VariableAttributes)br.ReadByte();
             int parameterCount = br.ReadInt32();
             parameters.Clear();
             for (int i = 0; i < parameterCount; i++)
@@ -84,6 +89,7 @@ namespace Sabresaurus.Sidekick
         {
             bw.Write(methodName);
             bw.Write((byte)returnType);
+            bw.Write((byte)returnTypeAttributes);
             bw.Write(parameters.Count);
             for (int i = 0; i < parameters.Count; i++)
             {

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using Sabresaurus.Sidekick.Requests;
 
 namespace Sabresaurus.Sidekick
@@ -14,6 +15,8 @@ namespace Sabresaurus.Sidekick
 
         public InspectionConnection InspectionConnection = InspectionConnection.LocalEditor;
         public InfoFlags GetGameObjectFlags = InfoFlags.Fields | InfoFlags.Properties;
+
+        public List<string> CollapsedTypeNames = new List<string>();
 
         //public bool RotationsAsEuler = true; // Whether Quaternions are edited as a euler triplet, or their 4D base
         //public bool IncludeInherited = false; // Whether reflection uses the declared type only or recurses down

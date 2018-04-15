@@ -15,6 +15,7 @@ namespace Sabresaurus.Sidekick
         IsStatic = 2,
         IsLiteral = 4, // e.g. const
         IsArrayOrList = 8,
+        IsValueType = 16,
     }
 
     /// <summary>
@@ -131,6 +132,10 @@ namespace Sabresaurus.Sidekick
             {
                 this.attributes |= VariableAttributes.IsLiteral;
             }
+            if (fieldInfo.FieldType.IsValueType)
+            {
+                this.attributes |= VariableAttributes.IsValueType;
+            }
         }
 
         public WrappedVariable(PropertyInfo propertyInfo, object objectValue)
@@ -147,11 +152,19 @@ namespace Sabresaurus.Sidekick
             {
                 this.attributes |= VariableAttributes.IsStatic;
             }
+            if(propertyInfo.PropertyType.IsValueType)
+            {
+                this.attributes |= VariableAttributes.IsValueType;
+            }
         }
 
         public WrappedVariable(ParameterInfo parameterInfo, object objectValue)
             : this(parameterInfo.Name, objectValue, parameterInfo.ParameterType, true)
         {
+            if (parameterInfo.ParameterType.IsValueType)
+            {
+                this.attributes |= VariableAttributes.IsValueType;
+            }
         }
 
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
