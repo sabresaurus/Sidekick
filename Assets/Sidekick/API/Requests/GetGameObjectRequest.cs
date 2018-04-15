@@ -63,10 +63,8 @@ namespace Sabresaurus.Sidekick.Requests
             {
                 InstanceIDMap.AddObject(component);
 
-                ComponentDescription description = new ComponentDescription();
+                ComponentDescription description = new ComponentDescription(component);
                 Type componentType = component.GetType();
-                description.TypeName = componentType.FullName;
-                description.InstanceID = component.GetInstanceID();
 
                 if ((flags & InfoFlags.Fields) == InfoFlags.Fields)
                 {

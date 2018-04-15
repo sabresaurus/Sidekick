@@ -149,7 +149,7 @@ namespace Sabresaurus.Sidekick
                 foreach (var component in gameObjectResponse.Components)
                 {
                     stringBuilder.Append(" ");
-                    stringBuilder.AppendLine(component.TypeName);
+                    stringBuilder.AppendLine(component.TypeFullName);
                     foreach (var field in component.Fields)
                     {
                         stringBuilder.Append("  ");
@@ -281,13 +281,13 @@ namespace Sabresaurus.Sidekick
                     GUIStyle style = new GUIStyle(EditorStyles.foldout);
                     style.fontStyle = FontStyle.Bold;
 
-                    Texture icon = IconLookup.GetIcon(component.TypeName);
-                    GUIContent content = new GUIContent(component.TypeName, icon, "Instance ID: " + component.InstanceID.ToString());
+                    Texture icon = IconLookup.GetIcon(component.TypeFullName);
+                    GUIContent content = new GUIContent(component.TypeShortName, icon, "Instance ID: " + component.InstanceID.ToString());
                     float labelWidth = EditorGUIUtility.labelWidth; // Cache label width
                     // Temporarily set the label width to full width so the icon is not squashed with long strings
                     EditorGUIUtility.labelWidth = position.width / 2f;
 
-                    bool wasComponentExpanded = !settings.CollapsedTypeNames.Contains(component.TypeName);
+                    bool wasComponentExpanded = !settings.CollapsedTypeNames.Contains(component.TypeFullName);
                     bool isComponentExpanded = EditorGUILayout.Foldout(wasComponentExpanded, content, style);
 					EditorGUIUtility.labelWidth = labelWidth; // Restore label width
                     if(isComponentExpanded != wasComponentExpanded )
@@ -295,12 +295,12 @@ namespace Sabresaurus.Sidekick
                         if(isComponentExpanded == false)
                         {
                             // Not expanded, so collapse it
-							settings.CollapsedTypeNames.Add(component.TypeName);
+							settings.CollapsedTypeNames.Add(component.TypeFullName);
                         }
                         else
                         {
                             // Expanded, remove it from collapse list
-							settings.CollapsedTypeNames.Remove(component.TypeName);
+							settings.CollapsedTypeNames.Remove(component.TypeFullName);
                         }
                     }
 

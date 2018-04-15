@@ -1,25 +1,32 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using System;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
 	public class ComponentDescription
     {
-        string typeName;
+        string typeFullName;
+        string typeShortName;
         int instanceID;
         List<WrappedVariable> fields = new List<WrappedVariable>();
         List<WrappedVariable> properties = new List<WrappedVariable>();
         List<WrappedMethod> methods = new List<WrappedMethod>();
 
-        public ComponentDescription()
+        public ComponentDescription(Object component)
         {
-
+            Type componentType = component.GetType();
+            this.typeFullName = componentType.FullName;
+            this.typeShortName = componentType.Name;
+            this.instanceID = component.GetInstanceID();
         }
 
         public ComponentDescription(BinaryReader br)
         {
-            typeName = br.ReadString();
+            typeFullName = br.ReadString();
+            typeShortName = br.ReadString();
             instanceID = br.ReadInt32();
             // Fields
             int fieldCount = br.ReadInt32();
@@ -43,7 +50,8 @@ namespace Sabresaurus.Sidekick
 
         public void Write(BinaryWriter bw)
         {
-            bw.Write(typeName);
+            bw.Write(typeFullName);
+            bw.Write(typeShortName);
             bw.Write(instanceID);
             bw.Write(fields.Count);
             // Fields
@@ -65,16 +73,19 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public string TypeName
+        public string TypeFullName
         {
             get
             {
-                return typeName;
+                return typeFullName;
             }
+        }
 
-            set
+        public string TypeShortName
+        {
+            get
             {
-                typeName = value;
+                return typeShortName;
             }
         }
 
@@ -83,11 +94,6 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return instanceID;
-            }
-
-            set
-            {
-                instanceID = value;
             }
         }
 
