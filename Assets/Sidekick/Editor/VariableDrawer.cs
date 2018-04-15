@@ -198,10 +198,10 @@ public static class VariableDrawer
         {
             newValue = (Color32)EditorGUILayout.ColorField(fieldName, (Color32)fieldValue);
         }
-        //else if (fieldType == typeof(Gradient))
-        //{
-        //    //newValue = EditorGUILayout.grad(fieldName, (AnimationCurve)fieldValue);
-        //}
+        else if (fieldType == typeof(Gradient))
+        {
+            newValue = InternalEditorGUILayout.GradientField(new GUIContent(fieldName), (Gradient)fieldValue);
+        }
         else if (fieldType == typeof(AnimationCurve))
         {
             newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve)fieldValue);

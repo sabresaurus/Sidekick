@@ -13,7 +13,7 @@ namespace Sabresaurus.Sidekick
         // Array
         Void, // Method return type
         String,
-		Char,
+        Char,
         Boolean,
         Integer, // Signed 32 bit
         Long, // Signed 64 bit
@@ -35,7 +35,7 @@ namespace Sabresaurus.Sidekick
         LayerMask,
         Enum,
         AnimationCurve,
-        //Gradient,
+        Gradient,
         ExposedReference,
         FixedBufferSize,
 
@@ -65,7 +65,7 @@ namespace Sabresaurus.Sidekick
             {typeof(RectInt), DataType.RectInt},
             {typeof(Bounds), DataType.Bounds},
             {typeof(BoundsInt), DataType.BoundsInt},
-            //{typeof(Gradient), DataType.Gradient},
+            {typeof(Gradient), DataType.Gradient},
             {typeof(AnimationCurve), DataType.AnimationCurve},
             {typeof(Color), DataType.Color},
             {typeof(Color32), DataType.Color32},
@@ -79,7 +79,7 @@ namespace Sabresaurus.Sidekick
                 return mappings[type];
             }
             //else if (type.IsAssignableFrom(typeof(UnityEngine.Object)))
-            else if(typeof(UnityEngine.Object).IsAssignableFrom(type))
+            else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             {
                 return DataType.UnityObjectReference;
             }
@@ -98,7 +98,7 @@ namespace Sabresaurus.Sidekick
             // TODO support enums and UnityEngine.Objects
             foreach (var mapping in mappings)
             {
-                if(mapping.Value == dataType)
+                if (mapping.Value == dataType)
                 {
                     return mapping.Key;
                 }
@@ -197,11 +197,27 @@ namespace Sabresaurus.Sidekick
                 }
                 value = new AnimationCurve(keyframes);
             }
+            else if (dataType == DataType.Gradient)
+            {
+                GradientMode gradientMode = (GradientMode)br.ReadByte();
+                GradientAlphaKey[] alphaKeys = new GradientAlphaKey[br.ReadInt32()];
+                for (int i = 0; i < alphaKeys.Length; i++)
+                {
+                    alphaKeys[i] = new GradientAlphaKey(br.ReadSingle(), br.ReadSingle());
+                }
+                GradientColorKey[] colorKeys = new GradientColorKey[br.ReadInt32()];
+
+                for (int i = 0; i < colorKeys.Length; i++)
+                {
+                    colorKeys[i] = new GradientColorKey(new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle()), br.ReadSingle());
+                }
+                value = new Gradient() { mode = gradientMode, alphaKeys = alphaKeys, colorKeys = colorKeys };
+            }
             else if (dataType == DataType.Enum)
             {
                 value = br.ReadInt32();
             }
-            else if(dataType == DataType.UnityObjectReference)
+            else if (dataType == DataType.UnityObjectReference)
             {
                 value = br.ReadInt32(); // Read instance ID
             }
@@ -357,19 +373,41 @@ namespace Sabresaurus.Sidekick
                     bw.Write(key.outTangent);
                 }
             }
+            else if (dataType == DataType.Gradient)
+            {
+                Gradient gradient = (Gradient)value;
+                bw.Write((byte)gradient.mode);
+                bw.Write(gradient.alphaKeys.Length);
+                for (int i = 0; i < gradient.alphaKeys.Length; i++)
+                {
+                    var key = gradient.alphaKeys[i];
+                    bw.Write(key.alpha);
+                    bw.Write(key.time);
+                }
+                bw.Write(gradient.colorKeys.Length);
+                for (int i = 0; i < gradient.colorKeys.Length; i++)
+                {
+                    var key = gradient.colorKeys[i];
+                    bw.Write(key.color.r);
+                    bw.Write(key.color.g);
+                    bw.Write(key.color.b);
+                    bw.Write(key.color.a);
+                    bw.Write(key.time);
+                }
+            }
             else if (dataType == DataType.Enum)
             {
                 bw.Write((int)value);
             }
-            else if(dataType == DataType.UnityObjectReference)
+            else if (dataType == DataType.UnityObjectReference)
             {
-                if(value is UnityEngine.Object || value == null)
+                if (value is UnityEngine.Object || value == null)
                 {
-					UnityEngine.Object unityObject = value as UnityEngine.Object;
-					if (unityObject != null)
-						bw.Write(unityObject.GetInstanceID());
-					else
-						bw.Write(0);
+                    UnityEngine.Object unityObject = value as UnityEngine.Object;
+                    if (unityObject != null)
+                        bw.Write(unityObject.GetInstanceID());
+                    else
+                        bw.Write(0);
                 }
                 else
                 {
