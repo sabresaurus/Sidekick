@@ -31,9 +31,13 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] TestEnum testEnum = TestEnum.Foo;
     [SerializeField] int[] testArray = { 1, 2, 3, 4 };
     [SerializeField] List<int> testList = new List<int>() { 5, 6, 7, 8 };
-    [SerializeField] char character = 'a';
-    [SerializeField] AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-    [SerializeField] GameObject assetPrefab;
+    [SerializeField] char testCharacter = 'a';
+    [SerializeField] AnimationCurve testCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [SerializeField] GameObject testAssetPrefab;
+    [SerializeField] Matrix4x4 testMatrix = Matrix4x4.identity;
+
+
+
     readonly string readonlyString = "readonly";
     const string constString = "const";
     static string staticString = "static";

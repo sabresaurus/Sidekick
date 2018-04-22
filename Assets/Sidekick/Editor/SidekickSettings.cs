@@ -8,6 +8,7 @@ namespace Sabresaurus.Sidekick
     [Serializable]
     public class SidekickSettings
     {
+        public bool LocalDevMode = false; // TODO: if def this
         public bool NiceifyNames = false; // Whether to turn names like "m_cameraSpeed" into "Camera Speed"
 
         public bool AutoRefreshRemote = false;

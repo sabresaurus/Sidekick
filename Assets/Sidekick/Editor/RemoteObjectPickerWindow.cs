@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
-    public class RemotePickerWindow : EditorWindow
+    public class RemoteObjectPickerWindow : EditorWindow
     {
         ComponentDescription componentDescription;
         Action<ComponentDescription, WrappedVariable, UnityObjectDescription> onValueChanged;
@@ -107,7 +107,7 @@ namespace Sabresaurus.Sidekick
 
         public static void Show(ComponentDescription componentDescription, UnityObjectDescription[] objectDescriptions, WrappedVariable variable, Action<ComponentDescription, WrappedVariable, UnityObjectDescription> onValueChanged)
         {
-            RemotePickerWindow window = new RemotePickerWindow();
+            RemoteObjectPickerWindow window = new RemoteObjectPickerWindow();
             window.componentDescription = componentDescription;
             window.objectDescriptions = objectDescriptions;
             window.variable = variable;

@@ -52,6 +52,10 @@ You can either download the latest version directly from the repository [here](h
 
 Once you have downloaded the zip, for installation into existing projects copy the contents of the extracted Assets folder into your project's Assets folder.
 
+# Get Involved
+
+Sidekick is built by design to be optimised for extending. Want to help? Take a look at the issues page to see tasks that are good to start on, if you're unsure about one or want advice just post a comment on one of those issues.
+
 # License
 
 Sidekick is licensed under MIT, see **LICENSE** for details.
