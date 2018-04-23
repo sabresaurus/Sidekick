@@ -7,11 +7,19 @@ using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick
 {
+    [Flags]
+    public enum MethodAttributes : byte
+    {
+        None = 0,
+        Obsolete = 1,
+    }
+
     public class WrappedMethod
     {
         string methodName;
         DataType returnType;
         VariableAttributes returnTypeAttributes = VariableAttributes.None;
+		MethodAttributes methodAttributes = MethodAttributes.None;
         List<WrappedParameter> parameters = new List<WrappedParameter>();
 
         public string MethodName
@@ -35,6 +43,14 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return returnTypeAttributes;
+            }
+        }
+
+        public MethodAttributes MethodAttributes
+        {
+            get
+            {
+                return methodAttributes;
             }
         }
 
@@ -69,6 +85,10 @@ namespace Sabresaurus.Sidekick
             {
                 returnTypeAttributes |= VariableAttributes.IsValueType;
             }
+            if (AttributeHelper.IsObsolete(methodInfo.GetCustomAttributes(false)))
+            {
+                this.methodAttributes |= MethodAttributes.Obsolete;
+            }
         }
 
         // Deserialisation constructor
@@ -77,6 +97,7 @@ namespace Sabresaurus.Sidekick
             this.methodName = br.ReadString();
             this.returnType = (DataType)br.ReadByte();
             this.returnTypeAttributes = (VariableAttributes)br.ReadByte();
+            this.methodAttributes = (MethodAttributes)br.ReadByte();
             int parameterCount = br.ReadInt32();
             parameters.Clear();
             for (int i = 0; i < parameterCount; i++)
@@ -90,6 +111,7 @@ namespace Sabresaurus.Sidekick
             bw.Write(methodName);
             bw.Write((byte)returnType);
             bw.Write((byte)returnTypeAttributes);
+            bw.Write((byte)methodAttributes);
             bw.Write(parameters.Count);
             for (int i = 0; i < parameters.Count; i++)
             {

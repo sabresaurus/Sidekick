@@ -39,7 +39,15 @@ namespace Sabresaurus.Sidekick.Requests
 
 		public override void Write(BinaryWriter bw)
 		{
-            base.Write(bw);
+            bw.Write(this.instanceID);
+            bw.Write(this.methodName);
+            int parameterCount = this.wrappedParameters.Length;
+
+            bw.Write(parameterCount);
+            for (int i = 0; i < parameterCount; i++)
+            {
+                wrappedParameters[i].Write(bw);
+            }
 		}
 
 

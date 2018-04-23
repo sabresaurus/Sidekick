@@ -32,11 +32,18 @@ namespace Sabresaurus.Sidekick
 
         double timeLastRefreshed = 0;
 
+        string methodOutput = "";
+        float opacity = 0f;
+
 
         public CommonContext CommonContext
         {
             get
             {
+                if (commonContext == null)
+                {
+                    commonContext = new CommonContext();
+                }
                 return commonContext;
             }
         }
@@ -62,7 +69,7 @@ namespace Sabresaurus.Sidekick
 
             searchField2 = new SearchField();
 
-            if(commonContext == null)
+            if (commonContext == null)
             {
                 commonContext = new CommonContext();
             }
@@ -87,7 +94,7 @@ namespace Sabresaurus.Sidekick
 
         void OnDisable()
         {
-			commonContext.SelectionManager.SelectionChanged -= OnSelectionChanged;
+            commonContext.SelectionManager.SelectionChanged -= OnSelectionChanged;
             commonContext.APIManager.ResponseReceived -= OnResponseReceived;
             EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
             EditorConnection.instance.DisconnectAll();
@@ -153,7 +160,8 @@ namespace Sabresaurus.Sidekick
             else if (response is InvokeMethodResponse)
             {
                 InvokeMethodResponse invokeMethodResponse = (InvokeMethodResponse)response;
-                Debug.Log(invokeMethodResponse.MethodName + "() returned " + invokeMethodResponse.ReturnedVariable.Value);
+                methodOutput = invokeMethodResponse.MethodName + " () returned:\n" + invokeMethodResponse.ReturnedVariable.Value;
+                opacity = 1f;
             }
             else if (response is GetUnityObjectsResponse)
             {
@@ -177,13 +185,19 @@ namespace Sabresaurus.Sidekick
                     if (!string.IsNullOrEmpty(commonContext.SelectionManager.SelectedPath)) // Valid path?
                     {
                         commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(commonContext.SelectionManager.SelectedPath, commonContext.Settings.GetGameObjectFlags));
-                    }   
+                    }
                 }
             }
         }
 
         void OnGUI()
         {
+            // Frame rate tracking
+            if (Event.current.type == EventType.Repaint)
+            {
+                AnimationHelper.UpdateTime();
+            }
+
             GUILayout.Space(9);
 
             SidekickSettings settings = commonContext.Settings;
@@ -201,7 +215,7 @@ namespace Sabresaurus.Sidekick
 
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
             GUILayout.Space(3);
-			settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
+            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
@@ -246,6 +260,12 @@ namespace Sabresaurus.Sidekick
                                 // Active search term not matched, skip it
                                 continue;
                             }
+
+                            if (settings.IgnoreObsolete && (field.Attributes & VariableAttributes.Obsolete) == VariableAttributes.Obsolete)
+                            {
+                                // Skip obsolete entries if that setting is enabled
+                                continue;
+                            }
                             EditorGUI.BeginChangeCheck();
                             object newValue = VariableDrawer.Draw(component, field, OnOpenObjectPicker);
                             if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
@@ -266,6 +286,13 @@ namespace Sabresaurus.Sidekick
                                 // Active search term not matched, skip it
                                 continue;
                             }
+
+                            if (settings.IgnoreObsolete && (property.Attributes & VariableAttributes.Obsolete) == VariableAttributes.Obsolete)
+                            {
+                                // Skip obsolete entries if that setting is enabled
+                                continue;
+                            }
+
                             EditorGUI.BeginChangeCheck();
                             object newValue = VariableDrawer.Draw(component, property, OnOpenObjectPicker);
                             if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
@@ -298,6 +325,13 @@ namespace Sabresaurus.Sidekick
                                 // Active search term not matched, skip it
                                 continue;
                             }
+
+                            if (settings.IgnoreObsolete && (method.MethodAttributes & MethodAttributes.Obsolete) == MethodAttributes.Obsolete)
+                            {
+                                // Skip obsolete entries if that setting is enabled
+                                continue;
+                            }
+
                             GUILayout.BeginHorizontal();
                             if (method.ReturnType == DataType.Void)
                                 labelStyle.normal.textColor = Color.grey;
@@ -380,6 +414,38 @@ namespace Sabresaurus.Sidekick
                 }
             }
             EditorGUILayout.EndScrollView();
+
+            DrawOutputBox();
+        }
+
+        public void DrawOutputBox()
+        {
+            GUILayout.TextArea(methodOutput, GUILayout.Height(50));
+
+            if (opacity > 0)
+            {
+                Rect lastRect = GUILayoutUtility.GetLastRect();
+                //              Color baseColor = new Color(1,0.9f,0);
+                Color baseColor = new Color(0, 0, 1);
+                baseColor.a = 0.3f * opacity;
+                GUI.color = baseColor;
+                GUI.DrawTexture(lastRect, EditorGUIUtility.whiteTexture);
+
+                baseColor.a = 0.8f * opacity;
+                GUI.color = baseColor;
+                float lineThickness = 2;
+
+                GUI.DrawTexture(new Rect(lastRect.xMin, lastRect.yMin, lineThickness, lastRect.height), EditorGUIUtility.whiteTexture);
+                GUI.DrawTexture(new Rect(lastRect.xMax - lineThickness, lastRect.yMin, lineThickness, lastRect.height), EditorGUIUtility.whiteTexture);
+
+                GUI.DrawTexture(new Rect(lastRect.xMin + lineThickness, lastRect.yMin, lastRect.width - lineThickness * 2, lineThickness), EditorGUIUtility.whiteTexture);
+                GUI.DrawTexture(new Rect(lastRect.xMin + lineThickness, lastRect.yMax - lineThickness, lastRect.width - lineThickness * 2, lineThickness), EditorGUIUtility.whiteTexture);
+                GUI.color = Color.white;
+                opacity -= AnimationHelper.DeltaTime;
+
+                AnimationHelper.SetAnimationActive();
+                Repaint();
+            }
         }
 
 

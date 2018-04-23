@@ -16,6 +16,7 @@ namespace Sabresaurus.Sidekick
         IsLiteral = 4, // e.g. const
         IsArrayOrList = 8,
         IsValueType = 16,
+        Obsolete = 32,
     }
 
     /// <summary>
@@ -136,6 +137,10 @@ namespace Sabresaurus.Sidekick
             {
                 this.attributes |= VariableAttributes.IsValueType;
             }
+            if(AttributeHelper.IsObsolete(fieldInfo.GetCustomAttributes(false)))
+            {
+                this.attributes |= VariableAttributes.Obsolete;
+            }
         }
 
         public WrappedVariable(PropertyInfo propertyInfo, object objectValue)
@@ -155,6 +160,10 @@ namespace Sabresaurus.Sidekick
             if(propertyInfo.PropertyType.IsValueType)
             {
                 this.attributes |= VariableAttributes.IsValueType;
+            }
+            if (AttributeHelper.IsObsolete(propertyInfo.GetCustomAttributes(false)))
+            {
+                this.attributes |= VariableAttributes.Obsolete;
             }
         }
 
