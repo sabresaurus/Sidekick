@@ -188,6 +188,7 @@ namespace Sabresaurus.Sidekick
 
             SidekickSettings settings = commonContext.Settings;
 
+
             EditorGUI.BeginChangeCheck();
             settings.InspectionConnection = (InspectionConnection)GUILayout.Toolbar((int)settings.InspectionConnection, new string[] { "Local", "Remote" }, new GUIStyle("LargeButton"));
             if (EditorGUI.EndChangeCheck())
@@ -200,6 +201,7 @@ namespace Sabresaurus.Sidekick
 
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
             GUILayout.Space(3);
+			settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 

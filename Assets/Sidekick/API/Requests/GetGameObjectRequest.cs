@@ -89,8 +89,9 @@ namespace Sabresaurus.Sidekick.Requests
                     PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
                     foreach (PropertyInfo property in properties)
                     {
-                        if (property.DeclaringType == typeof(Component)
-                            || property.DeclaringType == typeof(UnityEngine.Object))
+                        Type declaringType = property.DeclaringType;
+                        if (declaringType == typeof(Component)
+                            || declaringType == typeof(UnityEngine.Object))
                         {
                             continue;
                         }
@@ -101,6 +102,28 @@ namespace Sabresaurus.Sidekick.Requests
                         {
                             continue;
                         }
+
+						// Skip properties that cause exceptions at edit time
+                        if(Application.isPlaying == false)
+                        {
+                            if (typeof(MeshFilter).IsAssignableFrom(declaringType))
+                            {
+                                if(property.Name == "mesh")
+                                {
+                                    continue;
+                                }
+                            }
+
+                            if (typeof(Renderer).IsAssignableFrom(declaringType))
+                            {
+                                if (property.Name == "material" || property.Name == "materials")
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+
+
 
                         string propertyName = property.Name;
 

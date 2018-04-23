@@ -171,7 +171,7 @@ namespace Sabresaurus.Sidekick
         {
             this.variableName = variableName;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
-            this.value = value;
+        	this.value = value;
 
             bool isArray = type.IsArray;
             bool isGenericList = TypeUtility.IsGenericList(type);
@@ -187,6 +187,13 @@ namespace Sabresaurus.Sidekick
                 //Debug.Log(elementType);
                 this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
                 //do something
+            }
+
+            // Root data type or element type of collection is unknown
+            if (this.dataType == DataType.Unknown)
+            {
+                // Let's just use the type of the value to help us debug
+                this.value = type.Name;
             }
 
             if (generateMetadata)
@@ -289,7 +296,7 @@ namespace Sabresaurus.Sidekick
                 //}
                 else
                 {
-                    throw new NotImplementedException("Array serialisation has not been implemented for this array type");
+                    throw new NotImplementedException("Array serialisation has not been implemented for this array type: " + value.GetType());
                 }
             }
             else

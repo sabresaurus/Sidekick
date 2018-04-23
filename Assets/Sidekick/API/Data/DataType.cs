@@ -221,6 +221,10 @@ namespace Sabresaurus.Sidekick
             {
                 value = br.ReadInt32(); // Read instance ID
             }
+            else if(dataType == DataType.Unknown)
+            {
+                value = br.ReadString(); // Read Type name
+            }
             else
             {
                 Debug.LogWarning("Could not read " + dataType);
@@ -413,6 +417,10 @@ namespace Sabresaurus.Sidekick
                 {
                     bw.Write((int)value);
                 }
+            }
+            else if (dataType == DataType.Unknown)
+            {
+                bw.Write((string)value); // Write Type name
             }
             else
             {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 #pragma warning disable 0414
 /// <summary>
@@ -37,6 +38,20 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] Matrix4x4 testMatrix = Matrix4x4.identity;
 
 
+    [Obsolete("Test Message", false)]
+    public int ObsoleteNoError
+    {
+        get;
+        set;
+    }
+
+    // This should be ignored by Sidekick
+    [Obsolete("Test Message", true)]
+    public int ObsoleteWithError
+    {
+        get;
+        set;
+    }
 
     readonly string readonlyString = "readonly";
     const string constString = "const";

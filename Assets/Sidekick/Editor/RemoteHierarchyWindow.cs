@@ -23,33 +23,37 @@ namespace Sabresaurus.Sidekick
 
         void OnEnable()
         {
-            if (parentWindow == null)
+            SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
+            if (windows.Length > 0)
             {
-                parentWindow = EditorWindow.GetWindow<SidekickInspectorWindow>();
+                parentWindow = windows[0];
+
+                UpdateTitleContent();
+
+                // Check if we already had a serialized view state (state 
+                // that survived assembly reloading)
+                if (treeViewState == null)
+                {
+                    treeViewState = new TreeViewState();
+
+                }
+
+                treeView = new SimpleTreeView(treeViewState);
+                treeView.OnSelectionChanged += OnHierarchySelectionChanged;
+
+                hierarchySearchField = new SearchField();
+                hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
+
+                parentWindow.CommonContext.APIManager.ResponseReceived += OnResponseReceived;
             }
-
-            UpdateTitleContent();
-
-            // Check if we already had a serialized view state (state 
-            // that survived assembly reloading)
-            if (treeViewState == null)
-            {
-                treeViewState = new TreeViewState();
-
-            }
-
-            treeView = new SimpleTreeView(treeViewState);
-            treeView.OnSelectionChanged += OnHierarchySelectionChanged;
-
-            hierarchySearchField = new SearchField();
-            hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
-
-            parentWindow.CommonContext.APIManager.ResponseReceived += OnResponseReceived;
         }
 
         void OnDisable()
         {
-            parentWindow.CommonContext.APIManager.ResponseReceived -= OnResponseReceived;
+            if(parentWindow != null)
+            {
+				parentWindow.CommonContext.APIManager.ResponseReceived -= OnResponseReceived;
+            }
         }
 
         void OnHierarchySelectionChanged(IList<int> selectedIds)
@@ -99,45 +103,63 @@ namespace Sabresaurus.Sidekick
 
         void OnGUI()
         {
-            GUILayout.Space(9);
+            GUIStyle centerMessageStyle = new GUIStyle(GUI.skin.label);
+            centerMessageStyle.alignment = TextAnchor.MiddleCenter;
+            centerMessageStyle.wordWrap = true;
 
             if (parentWindow == null)
             {
-                parentWindow = EditorWindow.GetWindow<SidekickInspectorWindow>();
-            }
-
-            SidekickSettings settings = parentWindow.CommonContext.Settings;
-
-            if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
-            {
-                int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
-
-
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine(string.Format("{0} players connected.", playerCount));
-                int count = 0;
-                foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
+                SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
+                if(windows.Length > 0)
                 {
-                    builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+                    parentWindow = windows[0];
                 }
-                EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
-                settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
+                else
+                {
+                    GUILayout.Label("Sidekick Inspector window must be open to use remote hierarchy", centerMessageStyle, GUILayout.ExpandHeight(true));
+
+                    return;
+                }
             }
 
-            settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);
-            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
-
-
-            if (GUILayout.Button("Refresh Hierarchy"))
+            if (parentWindow.CommonContext.Settings.InspectionConnection == InspectionConnection.RemotePlayer)
             {
-                parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
-            }
+                GUILayout.Space(9);
 
-            if (parentWindow.CommonContext.Settings.InspectionConnection == InspectionConnection.RemotePlayer
-               || parentWindow.CommonContext.Settings.LocalDevMode)
-            {
+                SidekickSettings settings = parentWindow.CommonContext.Settings;
+
+                if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
+                {
+                    int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
+
+
+                    StringBuilder builder = new StringBuilder();
+                    builder.AppendLine(string.Format("{0} players connected.", playerCount));
+                    int count = 0;
+                    foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
+                    {
+                        builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+                    }
+                    EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
+                    settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
+                }
+
+                settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);
+
+
+
+                if (GUILayout.Button("Refresh Hierarchy"))
+                {
+                    parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
+                }
+
+
                 DoToolbar();
                 DoTreeView();
+            }
+            else
+            {                
+                GUILayout.Label("Remote hierarchy is only visible in remote mode", centerMessageStyle, GUILayout.ExpandHeight(true));
             }
         }
 
