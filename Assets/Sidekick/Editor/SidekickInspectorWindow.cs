@@ -59,8 +59,23 @@ namespace Sabresaurus.Sidekick
 
         void FindOrCreateRemoteHierarchyWindow()
         {
-            remoteHierarchyWindow = EditorWindow.GetWindow<RemoteHierarchyWindow>("Hierarchy");
+            remoteHierarchyWindow = EditorWindow.GetWindow<RemoteHierarchyWindow>("Remote");
             remoteHierarchyWindow.Show();
+            remoteHierarchyWindow.UpdateTitleContent();
+        }
+
+        protected void UpdateTitleContent()
+        {
+            string[] guids = AssetDatabase.FindAssets("SidekickIcon t:Texture");
+            if (guids.Length >= 1)
+            {
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                titleContent = new GUIContent("Sidekick", texture);
+            }
+            else
+            {
+                titleContent = new GUIContent("Sidekick");
+            }
         }
 
         void OnEnable()
@@ -340,7 +355,14 @@ namespace Sabresaurus.Sidekick
                             else
                                 labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
 
-                            if (GUILayout.Button(method.MethodName + " (" + method.ParameterCount + ")", normalButtonStyle))
+                            string displayText = method.MethodName + " (" + method.ParameterCount + ")";
+
+                            if((method.MethodAttributes & MethodAttributes.Static) == MethodAttributes.Static)
+                            {
+                                displayText += " [Static]";
+                            }
+
+                            if (GUILayout.Button(displayText, normalButtonStyle))
                             {
                                 List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
 

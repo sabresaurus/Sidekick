@@ -56,6 +56,20 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        public void UpdateTitleContent()
+        {
+            string[] guids = AssetDatabase.FindAssets("HierarchyIcon t:Texture");
+            if (guids.Length >= 1)
+            {
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                titleContent = new GUIContent("Remote", texture);
+            }
+            else
+            {
+                titleContent = new GUIContent("Remote");
+            }
+        }
+
         void OnHierarchySelectionChanged(IList<int> selectedIds)
         {
             if (selectedIds.Count >= 1)

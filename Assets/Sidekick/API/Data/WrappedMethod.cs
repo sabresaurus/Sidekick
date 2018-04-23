@@ -11,7 +11,9 @@ namespace Sabresaurus.Sidekick
     public enum MethodAttributes : byte
     {
         None = 0,
-        Obsolete = 1,
+        Static = 1,
+        Obsolete = 2,
+
     }
 
     public class WrappedMethod
@@ -84,6 +86,10 @@ namespace Sabresaurus.Sidekick
             if(methodInfo.ReturnType.IsValueType)
             {
                 returnTypeAttributes |= VariableAttributes.IsValueType;
+            }
+            if(methodInfo.IsStatic)
+            {
+                this.methodAttributes |= MethodAttributes.Static;
             }
             if (AttributeHelper.IsObsolete(methodInfo.GetCustomAttributes(false)))
             {
