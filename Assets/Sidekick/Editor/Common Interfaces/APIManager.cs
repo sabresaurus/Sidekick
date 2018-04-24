@@ -30,34 +30,40 @@ namespace Sabresaurus.Sidekick
 
         public int SendToPlayers(BaseRequest request)
         {
-            byte[] bytes;
-            using (MemoryStream ms = new MemoryStream())
+            lastRequestID++;
+            if(commonContext.Settings.InspectionConnection == InspectionConnection.LocalEditor)
             {
-                using (BinaryWriter bw = new BinaryWriter(ms))
-                {
-                    lastRequestID++;
-                    bw.Write(lastRequestID);
-
-                    bw.Write(request.GetType().Name);
-                    request.Write(bw);
-                }
-                bytes = ms.ToArray();
-            }
-            if (commonContext.Settings.InspectionConnection == InspectionConnection.LocalEditor
-                || commonContext.Settings.LocalDevMode)
-            {
-                byte[] testResponse = SidekickRequestProcessor.Process(bytes);
-                MessageEventArgs messageEvent = new MessageEventArgs();
-                messageEvent.data = testResponse;
-                BaseResponse response = SidekickResponseProcessor.Process(testResponse);
-                ResponseReceived(response);
+                ResponseReceived(request.GenerateResponse());
             }
             else
             {
-                EditorConnection.instance.Send(RuntimeSidekick.kMsgSendEditorToPlayer, bytes);
-            }
-            return lastRequestID;
-        }
+                byte[] bytes;
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (BinaryWriter bw = new BinaryWriter(ms))
+                    {
+                        bw.Write(lastRequestID);
 
+                        bw.Write(request.GetType().Name);
+                        request.Write(bw);
+                    }
+                    bytes = ms.ToArray();
+                }
+
+                if (commonContext.Settings.LocalDevMode)
+                {
+                    byte[] testResponse = SidekickRequestProcessor.Process(bytes);
+                    MessageEventArgs messageEvent = new MessageEventArgs();
+                    messageEvent.data = testResponse;
+                    BaseResponse response = SidekickResponseProcessor.Process(testResponse);
+                    ResponseReceived(response);
+                }
+                else
+                {
+                    EditorConnection.instance.Send(RuntimeSidekick.kMsgSendEditorToPlayer, bytes);
+                }
+            }
+			return lastRequestID;
+        }
 	}
 }

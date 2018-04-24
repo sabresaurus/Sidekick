@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Sabresaurus.Sidekick;
 using Sabresaurus.Sidekick.Responses;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -10,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace Sabresaurus.Sidekick.Requests
 {
     [Flags]
-    public enum InfoFlags
+    public enum InfoFlags : byte
     {
         None = 0,
         Fields = 1,

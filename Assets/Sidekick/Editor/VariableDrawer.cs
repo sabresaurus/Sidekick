@@ -6,7 +6,7 @@ using System;
 
 public static class VariableDrawer
 {
-    public static object Draw(ComponentDescription componentDescription, WrappedVariable variable, Action<ComponentDescription, WrappedVariable> onObjectPicker)
+    public static object Draw(ComponentDescription componentDescription, WrappedVariable variable, Action<int, WrappedVariable> onObjectPicker)
     {
         string name = variable.VariableName;
 
@@ -27,11 +27,6 @@ public static class VariableDrawer
 
         if (variable.DataType != DataType.Unknown)
         {
-            if (variable.Value == null)
-            {
-                Debug.LogError(name + " is null");
-            }
-
             if (variable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
             {
                 GUILayout.Label(name);
@@ -59,7 +54,16 @@ public static class VariableDrawer
             }
             else
             {
-                newValue = DrawIndividualVariable(componentDescription, variable, name, variable.Value.GetType(), variable.Value, onObjectPicker);
+                Type type;
+                if(variable.Value != null)
+                {
+                    type = variable.Value.GetType();
+                }
+                else
+                {
+                    type = variable.LocalModeType;
+                }
+                newValue = DrawIndividualVariable(componentDescription, variable, name, type, variable.Value, onObjectPicker);
             }
         }
         else
@@ -76,7 +80,7 @@ public static class VariableDrawer
 
     }
 
-    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<ComponentDescription, WrappedVariable> onObjectPicker)
+    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<int, WrappedVariable> onObjectPicker)
     {
         object newValue;
         if (variable.DataType == DataType.Enum)
@@ -85,28 +89,38 @@ public static class VariableDrawer
         }
         else if (variable.DataType == DataType.UnityObjectReference)
         {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel(fieldName);
-            if ((int)fieldValue != 0)
+            if (fieldValue is int)
             {
-                EditorGUILayout.TextField(variable.ValueDisplayName);
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(fieldName);
+                if ((int)fieldValue != 0)
+                {
+                    EditorGUILayout.TextField(variable.ValueDisplayName);
+                }
+                else
+                {
+                    EditorGUILayout.TextField("None (" + variable.TypeFullName + ")");
+                }
+                if (componentDescription != null)
+                {
+                    if (GUILayout.Button("...", GUILayout.Width(30)))
+                    {
+                        onObjectPicker(componentDescription.InstanceID, variable);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                newValue = fieldValue;
+            }
+            else if(typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
+            {
+                newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, fieldType, true);
             }
             else
             {
-                EditorGUILayout.TextField("None (" + variable.TypeFullName + ")");
+                throw new NotSupportedException();
             }
-            if (componentDescription != null)
-            {
-                if (GUILayout.Button("...", GUILayout.Width(30)))
-                {
-                    onObjectPicker(componentDescription, variable);
-                }
-            }
-            EditorGUILayout.EndHorizontal();
-
-            newValue = fieldValue;
-
-            //newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
         else if (fieldType == typeof(int)
             || (fieldType.IsSubclassOf(typeof(Enum)) && OldInspectorSidekick.Current.Settings.TreatEnumsAsInts))

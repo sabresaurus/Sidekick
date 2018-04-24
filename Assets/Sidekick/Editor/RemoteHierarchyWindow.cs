@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using Sabresaurus.Sidekick.Requests;
 using Sabresaurus.Sidekick.Responses;
@@ -8,7 +6,6 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
-using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {

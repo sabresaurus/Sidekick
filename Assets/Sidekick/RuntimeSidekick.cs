@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 namespace Sabresaurus.Sidekick
 {
+    public enum InspectionConnection : byte { LocalEditor, RemotePlayer }
+
     public class RuntimeSidekick : MonoBehaviour
     {
         public static readonly Guid kMsgSendEditorToPlayer = new Guid("8bc8811663b74007ab8f4868ad9f7cab");

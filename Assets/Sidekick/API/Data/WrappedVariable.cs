@@ -34,6 +34,7 @@ namespace Sabresaurus.Sidekick
         string[] enumNames;
         int[] enumValues;
 
+        Type localModeType; // Only used in local mode
         string typeFullName;
         string assemblyName;
         string valueDisplayName;
@@ -76,6 +77,14 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return enumValues;
+            }
+        }
+
+        public Type LocalModeType
+        {
+            get
+            {
+                return localModeType;
             }
         }
 
@@ -204,6 +213,8 @@ namespace Sabresaurus.Sidekick
                 // Let's just use the type of the value to help us debug
                 this.value = type.Name;
             }
+
+            localModeType = elementType;
 
             if (generateMetadata)
             {

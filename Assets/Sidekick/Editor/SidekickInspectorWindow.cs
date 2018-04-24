@@ -11,8 +11,6 @@ using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
-    public enum InspectionConnection { LocalEditor, RemotePlayer };
-
     public class SidekickInspectorWindow : BaseWindow
     {
         const float AUTO_REFRESH_FREQUENCY = 2f;
@@ -182,7 +180,7 @@ namespace Sabresaurus.Sidekick
             {
                 GetUnityObjectsResponse castResponse = (GetUnityObjectsResponse)response;
 
-                RemoteObjectPickerWindow.Show(castResponse.ComponentDescription, castResponse.ObjectDescriptions, castResponse.Variable, OnObjectPickerChanged);
+                RemoteObjectPickerWindow.Show(castResponse.ComponentInstanceID, castResponse.ObjectDescriptions, castResponse.Variable, OnObjectPickerChanged);
             }
         }
 
@@ -471,16 +469,16 @@ namespace Sabresaurus.Sidekick
         }
 
 
-        public void OnOpenObjectPicker(ComponentDescription componentDescription, WrappedVariable variable)
+        public void OnOpenObjectPicker(int componentInstanceID, WrappedVariable variable)
         {
-            commonContext.APIManager.SendToPlayers(new GetUnityObjectsRequest(variable, componentDescription));
+            commonContext.APIManager.SendToPlayers(new GetUnityObjectsRequest(variable, componentInstanceID));
         }
 
-        public void OnObjectPickerChanged(ComponentDescription componentDescription, WrappedVariable variable, UnityObjectDescription objectDescription)
+        public void OnObjectPickerChanged(int componentInstanceID, WrappedVariable variable, UnityObjectDescription objectDescription)
         {
             Debug.Log("OnObjectPickerChanged");
             variable.Value = (objectDescription != null) ? objectDescription.InstanceID : 0;
-            commonContext.APIManager.SendToPlayers(new SetVariableRequest(componentDescription.InstanceID, variable));
+            commonContext.APIManager.SendToPlayers(new SetVariableRequest(componentInstanceID, variable));
 
             //SendToPlayers(APIRequest.GetUnityObjects, componentDescription, variable.TypeFullName, variable.AssemblyName);
         }

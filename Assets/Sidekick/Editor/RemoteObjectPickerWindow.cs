@@ -9,8 +9,8 @@ namespace Sabresaurus.Sidekick
 {
     public class RemoteObjectPickerWindow : EditorWindow
     {
-        ComponentDescription componentDescription;
-        Action<ComponentDescription, WrappedVariable, UnityObjectDescription> onValueChanged;
+        int componentInstanceID;
+        Action<int, WrappedVariable, UnityObjectDescription> onValueChanged;
         Vector2 scrollPosition = Vector2.zero;
         WrappedVariable variable;
         UnityObjectDescription[] objectDescriptions;
@@ -68,7 +68,7 @@ namespace Sabresaurus.Sidekick
                         if (e.button == 0)
                         {
                             index = i;
-                            onValueChanged(componentDescription, variable, ActiveObjectDescription);
+                            onValueChanged(componentInstanceID, variable, ActiveObjectDescription);
 
                             Repaint();
                         }
@@ -82,13 +82,13 @@ namespace Sabresaurus.Sidekick
                 {
                     e.Use();
                     index--;
-                    onValueChanged(componentDescription, variable, ActiveObjectDescription);
+                    onValueChanged(componentInstanceID, variable, ActiveObjectDescription);
                 }
                 else if (e.keyCode == KeyCode.DownArrow)
                 {
                     e.Use();
                     index++;
-                    onValueChanged(componentDescription, variable, ActiveObjectDescription);
+                    onValueChanged(componentInstanceID, variable, ActiveObjectDescription);
                 }
                 else if (e.keyCode == KeyCode.Escape)
                 {
@@ -105,10 +105,10 @@ namespace Sabresaurus.Sidekick
             //Repaint();
         }
 
-        public static void Show(ComponentDescription componentDescription, UnityObjectDescription[] objectDescriptions, WrappedVariable variable, Action<ComponentDescription, WrappedVariable, UnityObjectDescription> onValueChanged)
+        public static void Show(int componentInstanceID, UnityObjectDescription[] objectDescriptions, WrappedVariable variable, Action<int, WrappedVariable, UnityObjectDescription> onValueChanged)
         {
             RemoteObjectPickerWindow window = new RemoteObjectPickerWindow();
-            window.componentDescription = componentDescription;
+            window.componentInstanceID = componentInstanceID;
             window.objectDescriptions = objectDescriptions;
             window.variable = variable;
             window.onValueChanged = onValueChanged;
