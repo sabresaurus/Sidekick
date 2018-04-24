@@ -47,9 +47,9 @@ namespace Sabresaurus.Sidekick
 
         void OnDisable()
         {
-            if(parentWindow != null)
+            if (parentWindow != null)
             {
-				parentWindow.CommonContext.APIManager.ResponseReceived -= OnResponseReceived;
+                parentWindow.CommonContext.APIManager.ResponseReceived -= OnResponseReceived;
             }
         }
 
@@ -121,7 +121,7 @@ namespace Sabresaurus.Sidekick
             if (parentWindow == null)
             {
                 SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
-                if(windows.Length > 0)
+                if (windows.Length > 0)
                 {
                     parentWindow = windows[0];
                 }
@@ -149,7 +149,12 @@ namespace Sabresaurus.Sidekick
                     int count = 0;
                     foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
                     {
+#if UNITY_2017_3_OR_NEWER
+                        // ConnectedPlayer interface changed in 2017.3
                         builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+#else
+                        builder.AppendLine(string.Format("[{0}] - {1}, count++, p.PlayerId));
+#endif
                     }
                     EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
                     settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);

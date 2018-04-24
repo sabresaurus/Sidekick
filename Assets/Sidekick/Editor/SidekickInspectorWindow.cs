@@ -228,7 +228,12 @@ namespace Sabresaurus.Sidekick
 
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
             GUILayout.Space(3);
+#if UNITY_2017_3_OR_NEWER
+            // EnumFlagsField was introduced in 2017.3
             settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
+#else
+            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.MaskField((int)settings.GetGameObjectFlags, Enum.GetNames(typeof(InfoFlags)));
+#endif
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 

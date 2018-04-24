@@ -11,7 +11,6 @@ namespace Sabresaurus.Sidekick.Requests
     [Flags]
     public enum InfoFlags : byte
     {
-        None = 0,
         Fields = 1,
         Properties = 2,
         Methods = 4,
