@@ -243,6 +243,7 @@ namespace Sabresaurus.Sidekick
 
                 foreach (var component in gameObjectResponse.Components)
                 {
+                    SidekickEditorGUI.DrawSplitter();
                     GUIStyle style = new GUIStyle(EditorStyles.foldout);
                     style.fontStyle = FontStyle.Bold;
 
@@ -253,7 +254,9 @@ namespace Sabresaurus.Sidekick
                     EditorGUIUtility.labelWidth = position.width / 2f;
 
                     bool wasComponentExpanded = !settings.CollapsedTypeNames.Contains(component.TypeFullName);
-                    bool isComponentExpanded = EditorGUILayout.Foldout(wasComponentExpanded, content, style);
+                    bool isComponentExpanded = wasComponentExpanded;
+                    if (SidekickEditorGUI.DrawHeaderWithFoldout(content, isComponentExpanded))
+                        isComponentExpanded = !isComponentExpanded;
                     EditorGUIUtility.labelWidth = labelWidth; // Restore label width
                     if (isComponentExpanded != wasComponentExpanded)
                     {
@@ -430,13 +433,8 @@ namespace Sabresaurus.Sidekick
                             }
                         }
                     }
-                    Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
-                    rect.xMin -= 10;
-                    rect.xMax += 10;
-                    GUI.color = new Color(0.5f, 0.5f, 0.5f);
-                    GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
-                    GUI.color = Color.white;
                 }
+                SidekickEditorGUI.DrawSplitter();
             }
             EditorGUILayout.EndScrollView();
 
