@@ -21,7 +21,8 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class GetGameObjectRequest : BaseRequest
     {
-        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        //public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         string gameObjectPath;
         InfoFlags flags;

@@ -78,6 +78,7 @@ namespace Sabresaurus.Sidekick
 
         void OnEnable()
         {
+            Debug.Log("SidekickInspectorWindow OnEnable()");
             UpdateTitleContent();
 
             searchField2 = new SearchField();
@@ -102,11 +103,17 @@ namespace Sabresaurus.Sidekick
             {
                 commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags));
             }
+            else
+            {
+                commonContext.APIManager.ResponseReceived(new GetGameObjectResponse());
+            }
             Repaint();
         }
 
         void OnDisable()
         {
+            Debug.Log("SidekickInspectorWindow OnDisable()");
+
             commonContext.SelectionManager.SelectionChanged -= OnSelectionChanged;
             commonContext.APIManager.ResponseReceived -= OnResponseReceived;
             EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
@@ -385,7 +392,7 @@ namespace Sabresaurus.Sidekick
                             lastRect.xMax = normalButtonStyle.padding.left;
                             GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
 
-                            bool wasMethodExpanded = (expandedMethod == method);
+                            bool wasMethodExpanded = (method.Equals(expandedMethod));
                             bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
                             GUILayout.EndHorizontal();
                             if (isMethodExpanded != wasMethodExpanded) // has changed

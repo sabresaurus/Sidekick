@@ -6,6 +6,8 @@ namespace Sabresaurus.Sidekick
 {
 	public static class TransformHelper
     {
+        static Scene dontDestroyOnLoadScene;
+
         public static Transform GetFromPath(string path)
         {
             int firstIndex = path.IndexOf('/');
@@ -31,7 +33,24 @@ namespace Sabresaurus.Sidekick
                 rootGameObject = pathInScene;
             }
 
-            Scene scene = SceneManager.GetSceneByName(sceneName);
+            Scene scene;
+            if(sceneName == "DontDestroyOnLoad")
+            {
+                if(!dontDestroyOnLoadScene.IsValid())
+                {
+                    GameObject tempObject = new GameObject();
+                    Object.DontDestroyOnLoad(tempObject);
+                    // Cache the scene ref
+                    dontDestroyOnLoadScene = tempObject.scene;
+
+                    Object.Destroy(tempObject);
+                }
+				scene = dontDestroyOnLoadScene;
+            }
+            else
+            {
+                scene = SceneManager.GetSceneByName(sceneName);
+            }
             if(scene.IsValid())
             {
                 var rootGameObjects = scene.GetRootGameObjects();

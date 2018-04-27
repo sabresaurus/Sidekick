@@ -30,12 +30,16 @@ namespace Sabresaurus.Sidekick
 
         public void OnEnable(CommonContext commonContext)
         {
+            Debug.Log("SelectionManager OnEnable()");
+
             this.commonContext = commonContext;
             Selection.selectionChanged += OnEditorSelectionChanged;
         }
 
         public void OnDisable()
         {
+            Debug.Log("SelectionManager OnDisable()");
+
             Selection.selectionChanged -= OnEditorSelectionChanged;
         }
 

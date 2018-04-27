@@ -124,5 +124,38 @@ namespace Sabresaurus.Sidekick
                 parameters[i].Write(bw);
             }
         }
-    }
+
+		public override bool Equals(object obj)
+		{
+            if(obj is WrappedMethod)
+            {
+                WrappedMethod otherMethod = (WrappedMethod)obj;
+
+                if(this.methodName != otherMethod.methodName
+                   || this.returnType != otherMethod.returnType
+                   || this.returnTypeAttributes != otherMethod.returnTypeAttributes
+                   || this.methodAttributes != otherMethod.methodAttributes
+                   || this.ParameterCount != otherMethod.ParameterCount
+                  )
+                {
+                    return false;
+                }
+
+                // Check all parameters match
+                for (int i = 0; i < this.ParameterCount; i++)
+                {
+                    if(!this.parameters[i].Equals(otherMethod.parameters[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+		}
+	}
 }

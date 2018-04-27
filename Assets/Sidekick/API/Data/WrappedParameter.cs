@@ -140,5 +140,26 @@ namespace Sabresaurus.Sidekick
                 }
             }
         }
+        public override bool Equals(object obj)
+        {
+            if (obj is WrappedParameter)
+            {
+                WrappedParameter otherParameter = (WrappedParameter)obj;
+
+                if (this.variableName != otherParameter.variableName
+                    || this.attributes != otherParameter.attributes
+                    || this.dataType != otherParameter.dataType
+                  )
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }
