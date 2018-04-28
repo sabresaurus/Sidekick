@@ -219,7 +219,11 @@ namespace Sabresaurus.Sidekick
             }
             else if (dataType == DataType.UnityObjectReference)
             {
-                value = br.ReadInt32(); // Read instance ID
+                string guidString = br.ReadString();
+                if (string.IsNullOrEmpty(guidString))
+                    value = Guid.Empty;
+                else
+					value = new Guid(guidString); // Read guid
             }
             else if(dataType == DataType.Unknown)
             {
@@ -409,13 +413,13 @@ namespace Sabresaurus.Sidekick
                 {
                     UnityEngine.Object unityObject = value as UnityEngine.Object;
                     if (unityObject != null)
-                        bw.Write(unityObject.GetInstanceID());
+                        bw.Write(ObjectMap.AddOrGetObject(unityObject).ToString());
                     else
                         bw.Write(0);
                 }
                 else
                 {
-                    bw.Write((int)value);
+                    bw.Write(((Guid)value).ToString());
                 }
             }
             else if (dataType == DataType.Unknown)

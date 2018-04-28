@@ -21,8 +21,8 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class GetGameObjectRequest : BaseRequest
     {
-        //public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        //public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         string gameObjectPath;
         InfoFlags flags;
@@ -60,7 +60,7 @@ namespace Sabresaurus.Sidekick.Requests
             getGOResponse.Components = new List<ComponentDescription>(components.Count);
             foreach (Object component in components)
             {
-                InstanceIDMap.AddObject(component);
+                Guid guid = ObjectMap.AddOrGetObject(component);
 
                 ComponentDescription description = new ComponentDescription(component);
                 Type componentType = component.GetType();

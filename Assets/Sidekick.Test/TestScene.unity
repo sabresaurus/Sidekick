@@ -145,7 +145,7 @@ MonoBehaviour:
   testInt: 2147483647
   testLong: 12345678912345678
   testFloat: 0.1234
-  testDouble: 0.1234000027179718
+  testDouble: 0.12345678359270096
   testVector2: {x: 1, y: 2}
   testVector3: {x: 1, y: 2, z: 3}
   testVector4: {x: 1, y: 2, z: 3, w: 4}
@@ -171,18 +171,18 @@ MonoBehaviour:
     height: 60
   testGradient:
     serializedVersion: 2
-    key0: {r: 0.25490198, g: 0.4, b: 0.8235294, a: 1}
-    key1: {r: 0.3529412, g: 0.8117647, b: 1, a: 1}
-    key2: {r: 0.43137255, g: 0.654902, b: 0.32156864, a: 0}
-    key3: {r: 1, g: 1, b: 1, a: 0}
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 38165
-    ctime2: 40092
-    ctime3: 65535
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
     ctime4: 0
     ctime5: 0
     ctime6: 0
@@ -196,7 +196,7 @@ MonoBehaviour:
     atime6: 0
     atime7: 0
     m_Mode: 0
-    m_NumColorKeys: 4
+    m_NumColorKeys: 2
     m_NumAlphaKeys: 2
   testColor: {r: 0, g: 0, b: 1, a: 1}
   testColor32:
@@ -224,8 +224,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  testAssetPrefab: {fileID: 1664005826203514, guid: 0b8816e3cf61a4d45818be18f83ad7ce,
-    type: 2}
+  testAssetPrefab: {fileID: 0}
   testMatrix:
     e00: 1
     e01: 0
@@ -250,7 +249,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 515967489}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -290,8 +289,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 100}
+  m_AnchoredPosition: {x: 0, y: 34.2}
+  m_SizeDelta: {x: 0, y: 101.8}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &886457527
 MonoBehaviour:

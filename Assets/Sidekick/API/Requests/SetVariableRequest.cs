@@ -13,18 +13,18 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class SetVariableRequest : BaseRequest
     {
-        int instanceID;
+        Guid guid;
         WrappedVariable wrappedVariable;
 
-        public SetVariableRequest(int instanceID, WrappedVariable wrappedVariable)
+        public SetVariableRequest(Guid guid, WrappedVariable wrappedVariable)
         {
-            this.instanceID = instanceID;
+            this.guid = guid;
             this.wrappedVariable = wrappedVariable;
         }
 
         public SetVariableRequest(BinaryReader br)
         {
-            this.instanceID = br.ReadInt32();
+            this.guid = new Guid(br.ReadString());
             this.wrappedVariable = new WrappedVariable(br);
         }
 
@@ -32,13 +32,13 @@ namespace Sabresaurus.Sidekick.Requests
 		{
             base.Write(bw);
 
-            bw.Write(instanceID);
+            bw.Write(guid.ToString());
             wrappedVariable.Write(bw);
 		}
 
 		public override BaseResponse GenerateResponse()
 		{
-            Object targetObject = InstanceIDMap.GetObjectFromInstanceID(instanceID);
+            object targetObject = ObjectMap.GetObjectFromGUID(guid);
 
             if (targetObject != null)
             {
@@ -67,7 +67,7 @@ namespace Sabresaurus.Sidekick.Requests
                         object value = wrappedVariable.Value;
                         if (wrappedVariable.DataType == DataType.UnityObjectReference)
                         {
-                            value = InstanceIDMap.GetObjectFromInstanceID((int)value);
+                            value = ObjectMap.GetObjectFromGUID((Guid)value);
                         }
                         setMethod.Invoke(targetObject, new object[] { value });
                     }
@@ -105,13 +105,6 @@ namespace Sabresaurus.Sidekick.Requests
                 }
                 return newList;
             }
-            
         }
-
-
-
-
-
     }
-
 }

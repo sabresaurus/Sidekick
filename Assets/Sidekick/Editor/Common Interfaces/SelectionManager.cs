@@ -9,7 +9,7 @@ namespace Sabresaurus.Sidekick
     /// </summary>
     public class SelectionManager : ICommonContextComponent
     {
-		CommonContext commonContext;
+		//CommonContext commonContext;
         string selectedPath;
 
 		public Action<string> SelectionChanged;
@@ -32,7 +32,7 @@ namespace Sabresaurus.Sidekick
         {
             Debug.Log("SelectionManager OnEnable()");
 
-            this.commonContext = commonContext;
+            //this.commonContext = commonContext;
             Selection.selectionChanged += OnEditorSelectionChanged;
         }
 

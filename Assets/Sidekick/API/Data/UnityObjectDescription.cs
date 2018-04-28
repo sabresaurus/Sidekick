@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.IO;
@@ -7,14 +8,14 @@ namespace Sabresaurus.Sidekick
     public class UnityObjectDescription
     {
         //string typeName;
-        int instanceID;
+        Guid guid;
         string objectName;
 
-        public int InstanceID
+        public Guid Guid
         {
             get
             {
-                return instanceID;
+                return guid;
             }
         }
 
@@ -28,19 +29,19 @@ namespace Sabresaurus.Sidekick
 
         public UnityObjectDescription(UnityEngine.Object sourceObject)
         {
-            this.instanceID = sourceObject.GetInstanceID();
+            this.guid = ObjectMap.AddOrGetObject(sourceObject);
             this.objectName = sourceObject.name;
         }
 
         public UnityObjectDescription(BinaryReader br)
         {
-            instanceID = br.ReadInt32();
+            guid = new Guid(br.ReadString());
             objectName = br.ReadString();
         }
 
         public void Write(BinaryWriter bw)
         {
-            bw.Write(instanceID);
+            bw.Write(guid.ToString());
             bw.Write(objectName);
         }
     }

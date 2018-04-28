@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
     {
         string typeFullName;
         string typeShortName;
-        int instanceID;
+        Guid guid;
         List<WrappedVariable> fields = new List<WrappedVariable>();
         List<WrappedVariable> properties = new List<WrappedVariable>();
         List<WrappedMethod> methods = new List<WrappedMethod>();
@@ -20,14 +20,14 @@ namespace Sabresaurus.Sidekick
             Type componentType = component.GetType();
             this.typeFullName = componentType.FullName;
             this.typeShortName = componentType.Name;
-            this.instanceID = component.GetInstanceID();
+            this.guid = ObjectMap.AddOrGetObject(component);
         }
 
         public ComponentDescription(BinaryReader br)
         {
             typeFullName = br.ReadString();
             typeShortName = br.ReadString();
-            instanceID = br.ReadInt32();
+            guid = new Guid(br.ReadString());
             // Fields
             int fieldCount = br.ReadInt32();
             for (int i = 0; i < fieldCount; i++)
@@ -52,7 +52,7 @@ namespace Sabresaurus.Sidekick
         {
             bw.Write(typeFullName);
             bw.Write(typeShortName);
-            bw.Write(instanceID);
+            bw.Write(guid.ToString());
             bw.Write(fields.Count);
             // Fields
             for (int i = 0; i < fields.Count; i++)
@@ -89,11 +89,11 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public int InstanceID
+        public Guid Guid
         {
             get
             {
-                return instanceID;
+                return guid;
             }
         }
 

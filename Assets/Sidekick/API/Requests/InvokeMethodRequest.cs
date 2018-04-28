@@ -9,24 +9,24 @@ using System.IO;
 namespace Sabresaurus.Sidekick.Requests
 {
     /// <summary>
-    /// Fires a method with supplied arguments on the Unity object that instanceID maps to
+    /// Fires a method with supplied arguments on the object that Guid maps to
     /// </summary>
     public class InvokeMethodRequest : BaseRequest
     {
-        int instanceID;
+        Guid guid;
         string methodName;
         WrappedVariable[] wrappedParameters;
 
-        public InvokeMethodRequest(int instanceID, string methodName, WrappedVariable[] wrappedParameters)
+        public InvokeMethodRequest(Guid guid, string methodName, WrappedVariable[] wrappedParameters)
         {
-            this.instanceID = instanceID;
+            this.guid = guid;
             this.methodName = methodName;
             this.wrappedParameters = wrappedParameters;
         }
 
         public InvokeMethodRequest(BinaryReader br)
         {
-            this.instanceID = br.ReadInt32();
+            this.guid = new Guid(br.ReadString());
             this.methodName = br.ReadString();
             int parameterCount = br.ReadInt32();
 
@@ -39,7 +39,7 @@ namespace Sabresaurus.Sidekick.Requests
 
 		public override void Write(BinaryWriter bw)
 		{
-            bw.Write(this.instanceID);
+            bw.Write(this.guid.ToString());
             bw.Write(this.methodName);
             int parameterCount = this.wrappedParameters.Length;
 
@@ -53,7 +53,7 @@ namespace Sabresaurus.Sidekick.Requests
 
 		public override BaseResponse GenerateResponse()
 		{
-            Object targetObject = InstanceIDMap.GetObjectFromInstanceID(instanceID);
+            object targetObject = ObjectMap.GetObjectFromGUID(guid);
             WrappedVariable returnedVariable = null;
             if (targetObject != null)
             {

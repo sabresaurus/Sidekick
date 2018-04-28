@@ -10,18 +10,18 @@ namespace Sabresaurus.Sidekick.Requests
     public class GetUnityObjectsRequest : BaseRequest
     {
         WrappedVariable variable;
-        int componentInstanceID;
+        Guid componentGuid;
 
-        public GetUnityObjectsRequest(WrappedVariable variable, int componentInstanceID)
+        public GetUnityObjectsRequest(WrappedVariable variable, Guid componentGuid)
         {
             this.variable = variable;
-            this.componentInstanceID = componentInstanceID;
+            this.componentGuid = componentGuid;
         }
 
         public GetUnityObjectsRequest(BinaryReader br)
         {
-            this.variable = new WrappedVariable(br);
-            this.componentInstanceID = br.ReadInt32();
+			this.variable = new WrappedVariable(br);
+            this.componentGuid = new Guid(br.ReadString());
         }
 
         public override void Write(BinaryWriter bw)
@@ -29,7 +29,7 @@ namespace Sabresaurus.Sidekick.Requests
             base.Write(bw);
 
             variable.Write(bw);
-            bw.Write(componentInstanceID);
+            bw.Write(componentGuid.ToString());
         }
 
         public override BaseResponse GenerateResponse()
@@ -37,7 +37,7 @@ namespace Sabresaurus.Sidekick.Requests
             Type type = Assembly.Load(variable.AssemblyName).GetType(variable.TypeFullName);
             Object[] objects = Resources.FindObjectsOfTypeAll(type);
 
-            return new GetUnityObjectsResponse(variable, componentInstanceID, objects);
+            return new GetUnityObjectsResponse(variable, componentGuid, objects);
         }
     }
 }

@@ -6,7 +6,7 @@ using System;
 
 public static class VariableDrawer
 {
-    public static object Draw(ComponentDescription componentDescription, WrappedVariable variable, Action<int, WrappedVariable> onObjectPicker)
+    public static object Draw(ComponentDescription componentDescription, WrappedVariable variable, Action<Guid, WrappedVariable> onObjectPicker)
     {
         string name = variable.VariableName;
 
@@ -80,7 +80,7 @@ public static class VariableDrawer
 
     }
 
-    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<int, WrappedVariable> onObjectPicker)
+    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<Guid, WrappedVariable> onObjectPicker)
     {
         object newValue;
         if (variable.DataType == DataType.Enum)
@@ -89,7 +89,7 @@ public static class VariableDrawer
         }
         else if (variable.DataType == DataType.UnityObjectReference)
         {
-            if (fieldValue is int)
+            if (fieldValue is Guid)
             {
 
                 EditorGUILayout.BeginHorizontal();
@@ -106,7 +106,7 @@ public static class VariableDrawer
                 {
                     if (GUILayout.Button("...", GUILayout.Width(30)))
                     {
-                        onObjectPicker(componentDescription.InstanceID, variable);
+                        onObjectPicker(componentDescription.Guid, variable);
                     }
                 }
                 EditorGUILayout.EndHorizontal();
