@@ -415,7 +415,7 @@ namespace Sabresaurus.Sidekick
                     if (unityObject != null)
                         bw.Write(ObjectMap.AddOrGetObject(unityObject).ToString());
                     else
-                        bw.Write(0);
+                        bw.Write(Guid.Empty.ToString());
                 }
                 else
                 {

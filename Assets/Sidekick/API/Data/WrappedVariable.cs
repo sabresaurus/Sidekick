@@ -210,8 +210,24 @@ namespace Sabresaurus.Sidekick
             // Root data type or element type of collection is unknown
             if (this.dataType == DataType.Unknown)
             {
-                // Let's just use the type of the value to help us debug
-                this.value = type.Name;
+                if (isArray || isGenericList)
+                {
+                    IList list = (IList)value;
+                    int count = list.Count;
+
+                    List<string> unknownList = new List<string>(count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        unknownList.Add(type.Name);
+                    }
+
+                    this.value = unknownList;
+                }
+                else
+                {
+					// Let's just use the type of the value to help us debug
+					this.value = type.Name;
+                }
             }
 
             localModeType = elementType;

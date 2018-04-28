@@ -94,7 +94,7 @@ public static class VariableDrawer
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(fieldName);
-                if ((int)fieldValue != 0)
+                if ((Guid)fieldValue != Guid.Empty)
                 {
                     EditorGUILayout.TextField(variable.ValueDisplayName);
                 }
