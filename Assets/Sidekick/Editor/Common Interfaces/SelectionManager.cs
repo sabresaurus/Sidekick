@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
     [System.Serializable]
     public class SelectionManager : ICommonContextComponent
     {
-		//CommonContext commonContext;
+        //[NonSerialized] CommonContext commonContext;
         string selectedPath;
 
 

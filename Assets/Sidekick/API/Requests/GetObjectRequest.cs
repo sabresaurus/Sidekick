@@ -21,9 +21,6 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class GetObjectRequest : BaseRequest
     {
-        //public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-
         string gameObjectPath;
         InfoFlags flags;
 
@@ -67,7 +64,7 @@ namespace Sabresaurus.Sidekick.Requests
 
                 if ((flags & InfoFlags.Fields) == InfoFlags.Fields)
                 {
-                    FieldInfo[] fieldInfos = componentType.GetFields(BINDING_FLAGS);
+                    FieldInfo[] fieldInfos = componentType.GetFields(GetGameObjectRequest.BINDING_FLAGS);
                     foreach (FieldInfo fieldInfo in fieldInfos)
                     {
                         if (TypeUtility.IsBackingField(fieldInfo, componentType))
@@ -85,7 +82,7 @@ namespace Sabresaurus.Sidekick.Requests
 
                 if ((flags & InfoFlags.Properties) == InfoFlags.Properties)
                 {
-                    PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
+                    PropertyInfo[] properties = componentType.GetProperties(GetGameObjectRequest.BINDING_FLAGS);
                     foreach (PropertyInfo property in properties)
                     {
                         Type declaringType = property.DeclaringType;
@@ -139,7 +136,7 @@ namespace Sabresaurus.Sidekick.Requests
 
                 if ((flags & InfoFlags.Methods) == InfoFlags.Methods)
                 {
-                    MethodInfo[] methodInfos = componentType.GetMethods(BINDING_FLAGS);
+                    MethodInfo[] methodInfos = componentType.GetMethods(GetGameObjectRequest.BINDING_FLAGS);
                     foreach (var methodInfo in methodInfos)
                     {
                         if (TypeUtility.IsPropertyMethod(methodInfo, componentType))

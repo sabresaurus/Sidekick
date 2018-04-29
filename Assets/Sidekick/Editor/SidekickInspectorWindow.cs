@@ -254,7 +254,7 @@ namespace Sabresaurus.Sidekick
                     style.fontStyle = FontStyle.Bold;
 
                     Texture icon = IconLookup.GetIcon(component.TypeFullName);
-                    GUIContent content = new GUIContent(component.TypeShortName, icon, "Instance ID: " + component.Guid.ToString());
+                    GUIContent content = new GUIContent(component.TypeShortName, icon, "Object Map ID: " + component.Guid.ToString());
                     float labelWidth = EditorGUIUtility.labelWidth; // Cache label width
                     // Temporarily set the label width to full width so the icon is not squashed with long strings
                     EditorGUIUtility.labelWidth = position.width / 2f;

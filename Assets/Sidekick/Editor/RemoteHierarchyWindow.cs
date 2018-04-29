@@ -158,20 +158,20 @@ namespace Sabresaurus.Sidekick
                     }
                     EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
                     settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
+
+                    settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);
+                    bool connected = playerCount > 0;
+                    if (connected || settings.LocalDevMode)
+                    {
+                        if (GUILayout.Button("Refresh Hierarchy"))
+                        {
+                            parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
+                        }
+
+                        DoToolbar();
+                        DoTreeView();
+                    }
                 }
-
-                settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);
-
-
-
-                if (GUILayout.Button("Refresh Hierarchy"))
-                {
-                    parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
-                }
-
-
-                DoToolbar();
-                DoTreeView();
             }
             else
             {                

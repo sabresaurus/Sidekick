@@ -1,18 +1,18 @@
-using UnityEngine;
-using System.Collections;
-using UnityEditor.Networking.PlayerConnection;
 using System;
-using Sabresaurus.Sidekick.Responses;
-using UnityEngine.Networking.PlayerConnection;
-using Sabresaurus.Sidekick.Requests;
+using System.Collections;
 using System.IO;
+using Sabresaurus.Sidekick.Requests;
+using Sabresaurus.Sidekick.Responses;
+using UnityEditor.Networking.PlayerConnection;
+using UnityEngine;
+using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
     [System.Serializable]
     public class APIManager : ICommonContextComponent
     {
-		CommonContext commonContext;
+        [NonSerialized] CommonContext commonContext;
         int lastRequestID = 0;
 
         public Action<BaseResponse> ResponseReceived;

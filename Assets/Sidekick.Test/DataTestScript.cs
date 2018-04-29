@@ -81,4 +81,9 @@ public class DataTestScript : MonoBehaviour
             testList = value;
         }
     }
+
+    public int PickRandomNumber()
+    {
+        return UnityEngine.Random.Range(0, 1000);
+    }
 }
