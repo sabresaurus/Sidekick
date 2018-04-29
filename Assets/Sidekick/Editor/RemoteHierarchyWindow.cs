@@ -89,7 +89,7 @@ namespace Sabresaurus.Sidekick
         void OnResponseReceived(BaseResponse response)
         {
             Repaint();
-            Debug.Log("Hierarchy OnResponseReceived");
+            //Debug.Log("Hierarchy OnResponseReceived");
 
             if (response is GetHierarchyResponse)
             {

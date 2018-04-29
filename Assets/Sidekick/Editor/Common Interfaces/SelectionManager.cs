@@ -7,10 +7,13 @@ namespace Sabresaurus.Sidekick
     /// <summary>
     /// Wraps selection logic for local and remote targets
     /// </summary>
+    [System.Serializable]
     public class SelectionManager : ICommonContextComponent
     {
 		//CommonContext commonContext;
         string selectedPath;
+
+
 
 		public Action<string> SelectionChanged;
 

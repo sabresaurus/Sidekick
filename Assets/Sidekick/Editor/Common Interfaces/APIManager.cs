@@ -9,6 +9,7 @@ using System.IO;
 
 namespace Sabresaurus.Sidekick
 {
+    [System.Serializable]
     public class APIManager : ICommonContextComponent
     {
 		CommonContext commonContext;

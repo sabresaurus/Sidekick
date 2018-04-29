@@ -3,6 +3,7 @@ using System.Collections;
 
 namespace Sabresaurus.Sidekick
 {
+    [System.Serializable]
     public class CommonContext
     {
         SidekickSettings settings = new SidekickSettings();

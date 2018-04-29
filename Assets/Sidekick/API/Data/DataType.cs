@@ -95,7 +95,12 @@ namespace Sabresaurus.Sidekick
 
         public static Type GetSystemTypeFromWrappedDataType(DataType dataType)
         {
-            // TODO support enums and UnityEngine.Objects
+            if(dataType == DataType.UnityObjectReference)
+            {
+                // For now just return the base Object type
+                return typeof(UnityEngine.Object);
+            }
+            // TODO support enums
             foreach (var mapping in mappings)
             {
                 if (mapping.Value == dataType)
