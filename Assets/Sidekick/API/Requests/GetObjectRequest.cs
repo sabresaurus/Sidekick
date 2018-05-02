@@ -57,7 +57,8 @@ namespace Sabresaurus.Sidekick.Requests
             getGOResponse.Components = new List<ComponentDescription>(components.Count);
             foreach (Object component in components)
             {
-                Guid guid = ObjectMap.AddOrGetObject(component);
+                //Guid guid = ObjectMap.AddOrGetObject(component);
+                ObjectMap.AddOrGetObject(component);
 
                 ComponentDescription description = new ComponentDescription(component);
                 Type componentType = component.GetType();

@@ -21,22 +21,25 @@ namespace Sabresaurus.Sidekick.Requests
     /// </summary>
     public class GetGameObjectRequest : BaseRequest
     {
-        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-        //public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        //public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         string gameObjectPath;
         InfoFlags flags;
+        bool includeInherited;
 
-        public GetGameObjectRequest(string gameObjectPath, InfoFlags flags)
+        public GetGameObjectRequest(string gameObjectPath, InfoFlags flags, bool includeInherited)
         {
             this.gameObjectPath = gameObjectPath;
             this.flags = flags;
+            this.includeInherited = includeInherited;
         }
 
         public GetGameObjectRequest(BinaryReader br)
         {
             this.gameObjectPath = br.ReadString();
             this.flags = (InfoFlags)br.ReadInt32();
+            this.includeInherited = br.ReadBoolean();
         }
 
         public override void Write(BinaryWriter bw)
@@ -45,6 +48,7 @@ namespace Sabresaurus.Sidekick.Requests
 
             bw.Write(gameObjectPath);
             bw.Write((int)flags);
+            bw.Write(includeInherited);
         }
 
 		public override BaseResponse GenerateResponse()
@@ -60,7 +64,8 @@ namespace Sabresaurus.Sidekick.Requests
             getGOResponse.Components = new List<ComponentDescription>(components.Count);
             foreach (Object component in components)
             {
-                Guid guid = ObjectMap.AddOrGetObject(component);
+                //Guid guid = ObjectMap.AddOrGetObject(component);
+                ObjectMap.AddOrGetObject(component);
 
                 ComponentDescription description = new ComponentDescription(component);
                 Type componentType = component.GetType();

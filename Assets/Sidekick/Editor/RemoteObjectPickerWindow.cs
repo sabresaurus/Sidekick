@@ -107,7 +107,7 @@ namespace Sabresaurus.Sidekick
 
         public static void Show(Guid componentGuid, UnityObjectDescription[] objectDescriptions, WrappedVariable variable, Action<Guid, WrappedVariable, UnityObjectDescription> onValueChanged)
         {
-            RemoteObjectPickerWindow window = new RemoteObjectPickerWindow();
+            RemoteObjectPickerWindow window = EditorWindow.GetWindow<RemoteObjectPickerWindow>(true);
             window.componentGuid = componentGuid;
             window.objectDescriptions = objectDescriptions;
             window.variable = variable;

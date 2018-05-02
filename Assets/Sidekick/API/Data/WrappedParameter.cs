@@ -9,13 +9,12 @@ namespace Sabresaurus.Sidekick
     /// </summary>
     public class WrappedParameter
     {
-        string variableName;
+        readonly string variableName;
         VariableAttributes attributes = VariableAttributes.None;
         DataType dataType;
 
-        // TODO: Consider moving these elsewhere, maybe into an object
-        string[] enumNames;
-        int[] enumValues;
+        // Meta data
+        VariableMetaData metaData;
 
         #region Properties
         public string VariableName
@@ -42,19 +41,27 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public string[] EnumNames
+        public VariableMetaData MetaData
         {
             get
             {
-                return enumNames;
+                return metaData;
             }
         }
 
-        public int[] EnumValues
+        public object DefaultValue
         {
             get
             {
-                return enumValues;
+                if(DataType == DataType.Enum)
+                {
+                    return 0;
+                }
+                else
+                {
+					Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType);
+					return TypeUtility.GetDefaultValue(type);
+                }
             }
         }
 
@@ -70,15 +77,16 @@ namespace Sabresaurus.Sidekick
             this.variableName = variableName;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
 
-            bool isArray = type.IsArray;
-            bool isGenericList = TypeUtility.IsGenericList(type);
+            bool isArrayOrList = TypeUtility.IsArrayOrList(type);
 
             this.attributes = VariableAttributes.None;
 
-            if (isArray || isGenericList)
+            Type elementType = type;
+
+            if (isArrayOrList)
             {
                 this.attributes |= VariableAttributes.IsArrayOrList;
-                Type elementType = TypeUtility.GetElementType(type);
+                elementType = TypeUtility.GetElementType(type);
                 //Debug.Log(elementType);
                 this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
                 //do something
@@ -86,16 +94,7 @@ namespace Sabresaurus.Sidekick
 
             if (generateMetadata)
             {
-                if (dataType == DataType.Enum)
-                {
-                    this.enumNames = Enum.GetNames(type);
-                    this.enumValues = new int[this.enumNames.Length];
-                    Array enumValuesArray = Enum.GetValues(type);
-                    for (int i = 0; i < enumNames.Length; i++)
-                    {
-                        this.enumValues[i] = (int)enumValuesArray.GetValue(i);
-                    }
-                }
+                metaData = VariableMetaData.Create(dataType, elementType, null, isArrayOrList);
             }
         }
 
@@ -105,19 +104,10 @@ namespace Sabresaurus.Sidekick
             this.attributes = (VariableAttributes)br.ReadByte();
             this.dataType = (DataType)br.ReadByte();
 
-            if (dataType == DataType.Enum)
+            bool hasMetaData = br.ReadBoolean();
+            if(hasMetaData)
             {
-                int enumNameCount = br.ReadInt32();
-                enumNames = new string[enumNameCount];
-                enumValues = new int[enumNameCount];
-                for (int i = 0; i < enumNameCount; i++)
-                {
-                    enumNames[i] = br.ReadString();
-                }
-                for (int i = 0; i < enumNameCount; i++)
-                {
-                    enumValues[i] = br.ReadInt32();
-                }
+				metaData = new VariableMetaData(br, dataType);
             }
         }
 
@@ -127,17 +117,10 @@ namespace Sabresaurus.Sidekick
             bw.Write((byte)attributes);
             bw.Write((byte)dataType);
 
-            if (dataType == DataType.Enum)
+            bw.Write(metaData != null);
+            if(metaData != null)
             {
-                bw.Write(enumNames.Length);
-                for (int i = 0; i < enumNames.Length; i++)
-                {
-                    bw.Write(enumNames[i]);
-                }
-                for (int i = 0; i < enumNames.Length; i++)
-                {
-                    bw.Write(enumValues[i]);
-                }
+				metaData.Write(bw, dataType);
             }
         }
         public override bool Equals(object obj)
@@ -161,5 +144,10 @@ namespace Sabresaurus.Sidekick
                 return false;
             }
         }
-    }
+
+		public override int GetHashCode()
+		{
+            return variableName.GetHashCode();
+		}
+	}
 }

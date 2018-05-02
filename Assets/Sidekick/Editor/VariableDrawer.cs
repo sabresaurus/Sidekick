@@ -47,7 +47,7 @@ public static class VariableDrawer
 
                 for (int i = 0; i < list.Count; i++)
                 {
-                    list[i] = DrawIndividualVariable(componentDescription, variable, name, type, list[i], onObjectPicker);
+                    list[i] = DrawIndividualVariable(componentDescription, variable, "Element " + i, type, list[i], onObjectPicker);
                 }
                 newValue = list;
                 EditorGUI.indentLevel--;
@@ -61,7 +61,7 @@ public static class VariableDrawer
                 }
                 else
                 {
-                    type = variable.LocalModeType;
+                    type = variable.MetaData.LocalModeType;
                 }
                 newValue = DrawIndividualVariable(componentDescription, variable, name, type, variable.Value, onObjectPicker);
             }
@@ -85,7 +85,7 @@ public static class VariableDrawer
         object newValue;
         if (variable.DataType == DataType.Enum)
         {
-            newValue = EditorGUILayout.IntPopup(fieldName, (int)variable.Value, variable.EnumNames, variable.EnumValues);
+            newValue = EditorGUILayout.IntPopup(fieldName, (int)fieldValue, variable.MetaData.EnumNames, variable.MetaData.EnumValues);
         }
         else if (variable.DataType == DataType.UnityObjectReference)
         {
@@ -96,11 +96,11 @@ public static class VariableDrawer
                 EditorGUILayout.PrefixLabel(fieldName);
                 if ((Guid)fieldValue != Guid.Empty)
                 {
-                    EditorGUILayout.TextField(variable.ValueDisplayName);
+                    EditorGUILayout.TextField(variable.MetaData.ValueDisplayName);
                 }
                 else
                 {
-                    EditorGUILayout.TextField("None (" + variable.TypeFullName + ")");
+                    EditorGUILayout.TextField("None (" + variable.MetaData.TypeFullName + ")");
                 }
                 if (componentDescription != null)
                 {
@@ -115,7 +115,7 @@ public static class VariableDrawer
             }
             else if(typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
             {
-                newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, fieldType, true);
+                newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, variable.MetaData.LocalModeType, true);
             }
             else
             {

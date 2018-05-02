@@ -18,7 +18,7 @@ namespace Sabresaurus.Sidekick
 
     public class WrappedMethod
     {
-        string methodName;
+        readonly string methodName;
         DataType returnType;
         VariableAttributes returnTypeAttributes = VariableAttributes.None;
 		MethodAttributes methodAttributes = MethodAttributes.None;
@@ -156,6 +156,11 @@ namespace Sabresaurus.Sidekick
             {
                 return false;
             }
+		}
+
+		public override int GetHashCode()
+		{
+            return methodName.GetHashCode();
 		}
 	}
 }

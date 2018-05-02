@@ -30,14 +30,7 @@ namespace Sabresaurus.Sidekick
         object value;
 
         // Meta data
-        // TODO: Consider moving these elsewhere, maybe into an object
-        string[] enumNames;
-        int[] enumValues;
-
-        Type localModeType; // Only used in local mode
-        string typeFullName;
-        string assemblyName;
-        string valueDisplayName;
+        VariableMetaData metaData;
 
         #region Properties
         public string VariableName
@@ -64,51 +57,11 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public string[] EnumNames
+        public VariableMetaData MetaData
         {
             get
             {
-                return enumNames;
-            }
-        }
-
-        public int[] EnumValues
-        {
-            get
-            {
-                return enumValues;
-            }
-        }
-
-        public Type LocalModeType
-        {
-            get
-            {
-                return localModeType;
-            }
-        }
-
-        public string TypeFullName
-        {
-            get
-            {
-                return typeFullName;
-            }
-        }
-
-        public string AssemblyName
-        {
-            get
-            {
-                return assemblyName;
-            }
-        }
-
-        public string ValueDisplayName
-        {
-            get
-            {
-                return valueDisplayName;
+                return metaData;
             }
         }
 
@@ -176,41 +129,30 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public WrappedVariable(ParameterInfo parameterInfo, object objectValue)
-            : this(parameterInfo.Name, objectValue, parameterInfo.ParameterType, true)
-        {
-            if (parameterInfo.ParameterType.IsValueType)
-            {
-                this.attributes |= VariableAttributes.IsValueType;
-            }
-        }
-
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
         {
             this.variableName = variableName;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
         	this.value = value;
 
-            bool isArray = type.IsArray;
-            bool isGenericList = TypeUtility.IsGenericList(type);
+            bool isArrayOrList = TypeUtility.IsArrayOrList(type);
 
             this.attributes = VariableAttributes.None;
 
             Type elementType = type;
 
-            if (isArray || isGenericList)
+            if (isArrayOrList)
             {
                 this.attributes |= VariableAttributes.IsArrayOrList;
                 elementType = TypeUtility.GetElementType(type);
                 //Debug.Log(elementType);
                 this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
-                //do something
             }
 
             // Root data type or element type of collection is unknown
             if (this.dataType == DataType.Unknown)
             {
-                if (isArray || isGenericList)
+                if (isArrayOrList)
                 {
                     IList list = (IList)value;
                     int count = list.Count;
@@ -230,36 +172,9 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            localModeType = elementType;
-
             if (generateMetadata)
             {
-                if (dataType == DataType.Enum)
-                {
-                    this.enumNames = Enum.GetNames(type);
-                    this.enumValues = new int[this.enumNames.Length];
-                    Array enumValuesArray = Enum.GetValues(type);
-                    for (int i = 0; i < enumNames.Length; i++)
-                    {
-                        this.enumValues[i] = (int)enumValuesArray.GetValue(i);
-                    }
-                }
-                else if (dataType == DataType.UnityObjectReference)
-                {
-                    typeFullName = elementType.FullName;
-                    assemblyName = elementType.Assembly.FullName;
-                    if (value != null && (isArray || isGenericList))
-                    {
-                        if (isArray || isGenericList)
-                            valueDisplayName = "Array/List";
-                        else
-                            valueDisplayName = ((UnityEngine.Object)value).name;
-                    }
-                    else
-                    {
-                        valueDisplayName = "null";
-                    }
-                }
+                metaData = VariableMetaData.Create(dataType, elementType, value, isArrayOrList);
             }
         }
 
@@ -285,26 +200,10 @@ namespace Sabresaurus.Sidekick
                 this.value = DataTypeHelper.ReadFromBinary(dataType, br);
             }
 
-
-            if (dataType == DataType.Enum)
+            bool hasMetaData = br.ReadBoolean();
+            if (hasMetaData)
             {
-                int enumNameCount = br.ReadInt32();
-                enumNames = new string[enumNameCount];
-                enumValues = new int[enumNameCount];
-                for (int i = 0; i < enumNameCount; i++)
-                {
-                    enumNames[i] = br.ReadString();
-                }
-                for (int i = 0; i < enumNameCount; i++)
-                {
-                    enumValues[i] = br.ReadInt32();
-                }
-            }
-            else if (dataType == DataType.UnityObjectReference)
-            {
-                typeFullName = br.ReadString();
-                assemblyName = br.ReadString();
-                valueDisplayName = br.ReadString();
+                metaData = new VariableMetaData(br, dataType);
             }
         }
 
@@ -340,23 +239,10 @@ namespace Sabresaurus.Sidekick
                 DataTypeHelper.WriteToBinary(dataType, value, bw);
             }
 
-            if (dataType == DataType.Enum)
+            bw.Write(metaData != null);
+            if (metaData != null)
             {
-                bw.Write(enumNames.Length);
-                for (int i = 0; i < enumNames.Length; i++)
-                {
-                    bw.Write(enumNames[i]);
-                }
-                for (int i = 0; i < enumNames.Length; i++)
-                {
-                    bw.Write(enumValues[i]);
-                }
-            }
-            else if (dataType == DataType.UnityObjectReference)
-            {
-                bw.Write(typeFullName);
-                bw.Write(assemblyName);
-                bw.Write(valueDisplayName);
+                metaData.Write(bw, dataType);
             }
         }
     }

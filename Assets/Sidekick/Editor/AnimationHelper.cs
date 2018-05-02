@@ -20,7 +20,8 @@ namespace Sabresaurus.Sidekick
 		{
 			get
 			{
-				return currentFrameDelta;
+                // Cap delta time in case there's a long frame
+				return Mathf.Min(currentFrameDelta, 0.1f);
 			}
 		}
 

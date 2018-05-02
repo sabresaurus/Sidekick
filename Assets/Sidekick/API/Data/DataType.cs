@@ -83,7 +83,7 @@ namespace Sabresaurus.Sidekick
             {
                 return DataType.UnityObjectReference;
             }
-            else if (type.IsEnum)
+            else if (type.IsEnum || type == typeof(Enum))
             {
                 return DataType.Enum;
             }
@@ -100,7 +100,11 @@ namespace Sabresaurus.Sidekick
                 // For now just return the base Object type
                 return typeof(UnityEngine.Object);
             }
-            // TODO support enums
+            else if(dataType == DataType.Enum)
+            {
+                return typeof(System.Enum);
+            }
+
             foreach (var mapping in mappings)
             {
                 if (mapping.Value == dataType)

@@ -11,6 +11,7 @@ namespace Sabresaurus.Sidekick
 			int oldSize = list.Count;
 			if(list.IsFixedSize)
 			{
+                Debug.LogError("Resizing fixed arrays is not currently implemented");
 			}
 			else
 			{

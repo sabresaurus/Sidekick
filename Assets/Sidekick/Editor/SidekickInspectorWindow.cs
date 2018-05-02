@@ -101,7 +101,7 @@ namespace Sabresaurus.Sidekick
         {
             if (!string.IsNullOrEmpty(newPath)) // Valid path?
             {
-                commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags));
+                commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
             }
             else
             {
@@ -182,6 +182,7 @@ namespace Sabresaurus.Sidekick
                 InvokeMethodResponse invokeMethodResponse = (InvokeMethodResponse)response;
                 methodOutput = invokeMethodResponse.MethodName + " () returned:\n" + invokeMethodResponse.ReturnedVariable.Value;
                 opacity = 1f;
+                Repaint();
             }
             else if (response is GetUnityObjectsResponse)
             {
@@ -204,7 +205,7 @@ namespace Sabresaurus.Sidekick
                     commonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
                     if (!string.IsNullOrEmpty(commonContext.SelectionManager.SelectedPath)) // Valid path?
                     {
-                        commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(commonContext.SelectionManager.SelectedPath, commonContext.Settings.GetGameObjectFlags));
+                        commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(commonContext.SelectionManager.SelectedPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
                     }
                 }
             }
@@ -237,9 +238,9 @@ namespace Sabresaurus.Sidekick
             GUILayout.Space(3);
 #if UNITY_2017_3_OR_NEWER
             // EnumFlagsField was introduced in 2017.3
-            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField(settings.GetGameObjectFlags);
+            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField("Display", settings.GetGameObjectFlags);
 #else
-            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.MaskField((int)settings.GetGameObjectFlags, Enum.GetNames(typeof(InfoFlags)));
+			settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.MaskField("Display", (int)settings.GetGameObjectFlags, Enum.GetNames(typeof(InfoFlags)));
 #endif
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
@@ -382,10 +383,9 @@ namespace Sabresaurus.Sidekick
                                 for (int i = 0; i < method.ParameterCount; i++)
                                 {
                                     Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
-                                    object defaultValue = TypeUtility.GetDefaultValue(type);
 
                                     WrappedParameter parameter = method.Parameters[i];
-                                    defaultArguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
+                                    defaultArguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, false));
                                 }
 
                                 commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
@@ -395,48 +395,55 @@ namespace Sabresaurus.Sidekick
                             lastRect.xMax = normalButtonStyle.padding.left;
                             GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
 
-                            bool wasMethodExpanded = (method.Equals(expandedMethod));
-                            bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
-                            GUILayout.EndHorizontal();
-                            if (isMethodExpanded != wasMethodExpanded) // has changed
+                            if(method.ParameterCount > 0)
                             {
-                                if (isMethodExpanded)
-                                {
-                                    expandedMethod = method;
-                                    arguments = new List<WrappedVariable>(method.ParameterCount);
-                                    for (int i = 0; i < method.ParameterCount; i++)
-                                    {
-                                        Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
-                                        object defaultValue = TypeUtility.GetDefaultValue(type);
+								bool wasMethodExpanded = (method.Equals(expandedMethod));
+								bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
+                                GUILayout.EndHorizontal();
 
-                                        WrappedParameter parameter = method.Parameters[i];
-                                        arguments.Add(new WrappedVariable(parameter.VariableName, defaultValue, type, false));
-                                    }
-                                }
-                                else
-                                {
-                                    expandedMethod = null;
-                                    arguments = null;
-                                }
+								if (isMethodExpanded != wasMethodExpanded) // has changed
+								{
+									if (isMethodExpanded)
+									{
+										expandedMethod = method;
+										arguments = new List<WrappedVariable>(method.ParameterCount);
+										for (int i = 0; i < method.ParameterCount; i++)
+										{
+											Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
+                                            Debug.Assert(type != null);
+											WrappedParameter parameter = method.Parameters[i];
+                                            arguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, false));
+										}
+									}
+									else
+									{
+										expandedMethod = null;
+										arguments = null;
+									}
+								}
+								else if (isMethodExpanded)
+								{
+									EditorGUI.indentLevel++;
+									foreach (var argument in arguments)
+									{
+										argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
+									}
+									
+									Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
+									buttonRect = EditorGUI.IndentedRect(buttonRect);
+									
+									if (GUI.Button(buttonRect, "Fire"))
+									{
+										commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
+									}
+									EditorGUI.indentLevel--;
+									
+									GUILayout.Space(10);
+								}
                             }
-                            else if (isMethodExpanded)
+                            else
                             {
-                                EditorGUI.indentLevel++;
-                                foreach (var argument in arguments)
-                                {
-                                    argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
-                                }
-
-                                Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
-                                buttonRect = EditorGUI.IndentedRect(buttonRect);
-
-                                if (GUI.Button(buttonRect, "Fire"))
-                                {
-                                    commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
-                                }
-                                EditorGUI.indentLevel--;
-
-                                GUILayout.Space(10);
+                                GUILayout.EndHorizontal();
                             }
                         }
                     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 
 #pragma warning disable 0414
+
 /// <summary>
 /// Includes common data types that Sidekick should test against commonly
 /// </summary>
@@ -36,6 +37,8 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] AnimationCurve testCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     [SerializeField] GameObject testAssetPrefab;
     [SerializeField] Matrix4x4 testMatrix = Matrix4x4.identity;
+    [SerializeField] TestEnum[] testEnumArray;
+    [SerializeField] List<Texture2D> testTextureList;
 
 
     [Obsolete("Test Message", false)]
@@ -85,5 +88,15 @@ public class DataTestScript : MonoBehaviour
     public int PickRandomNumber()
     {
         return UnityEngine.Random.Range(0, 1000);
+    }
+
+    public TestEnum PrintEnum(TestEnum testEnum)
+    {
+        return testEnum;
+    }
+
+    public TestEnum PrintRandomEnumValue(TestEnum[] testEnums)
+    {
+        return testEnums[UnityEngine.Random.Range(0, testEnums.Length)];
     }
 }
