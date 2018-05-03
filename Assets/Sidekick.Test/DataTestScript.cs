@@ -99,4 +99,14 @@ public class DataTestScript : MonoBehaviour
     {
         return testEnums[UnityEngine.Random.Range(0, testEnums.Length)];
     }
+
+    public int PrintRandomValue(List<int> testNumbers)
+    {
+        return testNumbers[UnityEngine.Random.Range(0, testNumbers.Count)];
+    }
+
+    public UnityEngine.Object PrintRandomValue(List<UnityEngine.Object> testObjects)
+    {
+        return testObjects[UnityEngine.Random.Range(0, testObjects.Count)];
+    }
 }

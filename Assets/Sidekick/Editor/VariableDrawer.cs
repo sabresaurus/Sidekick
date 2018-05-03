@@ -31,23 +31,32 @@ public static class VariableDrawer
             {
                 GUILayout.Label(name);
                 EditorGUI.indentLevel++;
-                IList list = (IList)variable.Value;
+                IList list = null;
+                int size = 0;
+                if (variable.Value != null)
+                {
+                    list = (IList)variable.Value;
+                    size = list.Count;
+                }
 
                 Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(variable.DataType);
 
-                int newSize = Mathf.Max(0, EditorGUILayout.IntField("Size", list.Count));
-                if (newSize != list.Count)
+                int newSize = Mathf.Max(0, EditorGUILayout.IntField("Size", size));
+                if (newSize != size)
                 {
                     if (list == null)
                     {
-                        list = (IList)Activator.CreateInstance(type);
+                        list = new ArrayList();
+                        //list = (IList)Activator.CreateInstance(type);
                     }
                     CollectionUtility.Resize(ref list, type, newSize);
                 }
-
-                for (int i = 0; i < list.Count; i++)
+                if(list != null)
                 {
-                    list[i] = DrawIndividualVariable(componentDescription, variable, "Element " + i, type, list[i], onObjectPicker);
+					for (int i = 0; i < list.Count; i++)
+					{
+						list[i] = DrawIndividualVariable(componentDescription, variable, "Element " + i, type, list[i], onObjectPicker);
+					}
                 }
                 newValue = list;
                 EditorGUI.indentLevel--;
@@ -55,7 +64,7 @@ public static class VariableDrawer
             else
             {
                 Type type;
-                if(variable.Value != null)
+                if (variable.Value != null)
                 {
                     type = variable.Value.GetType();
                 }
@@ -113,7 +122,7 @@ public static class VariableDrawer
 
                 newValue = fieldValue;
             }
-            else if(typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
+            else if (typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
             {
                 newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, variable.MetaData.LocalModeType, true);
             }

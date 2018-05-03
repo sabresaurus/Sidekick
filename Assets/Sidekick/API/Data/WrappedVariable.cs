@@ -129,11 +129,24 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        public WrappedVariable(WrappedParameter parameter)
+            : this(parameter.VariableName, parameter.DefaultValue, DataTypeHelper.GetSystemTypeFromWrappedDataType(parameter.DataType), parameter.MetaData)
+        {
+            this.attributes = parameter.Attributes;
+            //arguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, parameter.MetaData));
+        }
+
+        public WrappedVariable(string variableName, object value, Type type, VariableMetaData metaData)
+            : this(variableName, value, type, false)
+        {
+            this.metaData = metaData;
+        }
+
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
         {
             this.variableName = variableName;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
-        	this.value = value;
+            this.value = value;
 
             bool isArrayOrList = TypeUtility.IsArrayOrList(type);
 
@@ -167,8 +180,8 @@ namespace Sabresaurus.Sidekick
                 }
                 else
                 {
-					// Let's just use the type of the value to help us debug
-					this.value = type.Name;
+                    // Let's just use the type of the value to help us debug
+                    this.value = type.Name;
                 }
             }
 

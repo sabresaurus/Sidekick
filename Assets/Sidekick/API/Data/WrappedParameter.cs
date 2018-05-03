@@ -53,14 +53,21 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
-                if(DataType == DataType.Enum)
+                if (attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
                 {
-                    return 0;
+                    return null;
                 }
                 else
                 {
-					Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType);
-					return TypeUtility.GetDefaultValue(type);
+                    if (DataType == DataType.Enum)
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType);
+                        return TypeUtility.GetDefaultValue(type);
+                    }
                 }
             }
         }

@@ -78,7 +78,7 @@ namespace Sabresaurus.Sidekick
 
         void OnEnable()
         {
-            Debug.Log("SidekickInspectorWindow OnEnable()");
+            //Debug.Log("SidekickInspectorWindow OnEnable()");
             UpdateTitleContent();
 
             searchField2 = new SearchField();
@@ -112,7 +112,7 @@ namespace Sabresaurus.Sidekick
 
         void OnDisable()
         {
-            Debug.Log("SidekickInspectorWindow OnDisable()");
+            //Debug.Log("SidekickInspectorWindow OnDisable()");
 
             commonContext.SelectionManager.SelectionChanged -= OnSelectionChanged;
             commonContext.APIManager.ResponseReceived -= OnResponseReceived;
@@ -385,7 +385,7 @@ namespace Sabresaurus.Sidekick
                                     Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
 
                                     WrappedParameter parameter = method.Parameters[i];
-                                    defaultArguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, false));
+                                    defaultArguments.Add(new WrappedVariable(parameter));
                                 }
 
                                 commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
@@ -409,10 +409,8 @@ namespace Sabresaurus.Sidekick
 										arguments = new List<WrappedVariable>(method.ParameterCount);
 										for (int i = 0; i < method.ParameterCount; i++)
 										{
-											Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
-                                            Debug.Assert(type != null);
 											WrappedParameter parameter = method.Parameters[i];
-                                            arguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, false));
+                                            arguments.Add(new WrappedVariable(parameter));
 										}
 									}
 									else
@@ -426,7 +424,8 @@ namespace Sabresaurus.Sidekick
 									EditorGUI.indentLevel++;
 									foreach (var argument in arguments)
 									{
-										argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
+                                        argument.Value = VariableDrawer.Draw(null, argument, OnOpenObjectPicker);
+										//argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
 									}
 									
 									Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);

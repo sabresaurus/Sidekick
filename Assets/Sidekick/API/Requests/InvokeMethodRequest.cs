@@ -63,12 +63,12 @@ namespace Sabresaurus.Sidekick.Requests
                     parameterTypes[i] = DataTypeHelper.GetSystemTypeFromWrappedDataType(wrappedParameters[i].DataType);
                 }
                 MethodInfo methodInfo = targetObject.GetType().GetMethod(methodName, GetGameObjectRequest.BINDING_FLAGS, null, parameterTypes, null);
+				Debug.Assert(methodInfo != null, "Couldn't find a matching method for signature");
                 object[] parameters = new object[wrappedParameters.Length];
                 for (int i = 0; i < wrappedParameters.Length; i++)
                 {
                     parameters[i] = wrappedParameters[i].Value;
                 }
-
                 object returnedValue = methodInfo.Invoke(targetObject, parameters);
                 if (methodInfo.ReturnType == typeof(IEnumerator) && targetObject is MonoBehaviour)
                 {
