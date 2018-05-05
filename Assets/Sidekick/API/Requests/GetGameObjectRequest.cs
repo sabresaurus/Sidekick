@@ -134,6 +134,15 @@ namespace Sabresaurus.Sidekick.Requests
                         MethodInfo getMethod = property.GetGetMethod(true);
                         if (getMethod != null)
                         {
+                            MethodImplAttributes methodImplAttributes = getMethod.GetMethodImplementationFlags();
+#pragma warning disable RECS0016 // Bitwise operation on enum which has no [Flags] attribute
+                            if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
+#pragma warning restore RECS0016 // Bitwise operation on enum which has no [Flags] attribute
+                            {
+                                continue;
+                            }
+
+
                             object objectValue = getMethod.Invoke(component, null);
 
                             WrappedVariable wrappedVariable = new WrappedVariable(property, objectValue);
@@ -153,6 +162,13 @@ namespace Sabresaurus.Sidekick.Requests
                             continue;
                         }
 
+                        MethodImplAttributes methodImplAttributes = methodInfo.GetMethodImplementationFlags();
+#pragma warning disable RECS0016 // Bitwise operation on enum which has no [Flags] attribute
+                        if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
+#pragma warning restore RECS0016 // Bitwise operation on enum which has no [Flags] attribute
+                        {
+                            continue;
+                        }
                         WrappedMethod wrappedMethod = new WrappedMethod(methodInfo);
                         description.Methods.Add(wrappedMethod);
                     }

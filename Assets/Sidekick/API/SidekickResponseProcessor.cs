@@ -17,6 +17,9 @@ namespace Sabresaurus.Sidekick
                     int requestId = br.ReadInt32();
                     string requestType = br.ReadString();
 
+#if DEBUG_RESPONSES
+                    File.WriteAllBytes(Path.Combine(Application.persistentDataPath, requestType + "Response.bytes"), input);
+#endif
                     if (requestType.EndsWith("Request", StringComparison.InvariantCulture))
                     {
                         string responseType = requestType.Replace("Request", "Response");

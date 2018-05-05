@@ -382,7 +382,7 @@ namespace Sabresaurus.Sidekick
 
                                 for (int i = 0; i < method.ParameterCount; i++)
                                 {
-                                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
+                                    //Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
 
                                     WrappedParameter parameter = method.Parameters[i];
                                     defaultArguments.Add(new WrappedVariable(parameter));
