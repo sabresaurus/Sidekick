@@ -27,7 +27,8 @@ public static class VariableDrawer
 
         if (variable.DataType != DataType.Unknown)
         {
-            if (variable.Attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+            if (variable.Attributes.HasFlagByte(VariableAttributes.IsArray)
+                || variable.Attributes.HasFlagByte(VariableAttributes.IsList))
             {
                 GUILayout.Label(name);
                 EditorGUI.indentLevel++;
@@ -39,7 +40,7 @@ public static class VariableDrawer
                     size = list.Count;
                 }
 
-                Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(variable.DataType);
+                Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(variable.DataType, variable.MetaData);
 
                 int newSize = Mathf.Max(0, EditorGUILayout.IntField("Size", size));
                 if (newSize != size)

@@ -157,13 +157,6 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public static bool IsArrayOrList(Type type)
-        {
-            bool isArray = type.IsArray;
-            bool isGenericList = TypeUtility.IsGenericList(type);
-            return (isArray || isGenericList);
-        }
-
 		public static bool IsGenericList(Type type)
 		{
 			// Check if it's a List<T>

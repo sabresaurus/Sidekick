@@ -93,27 +93,59 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public static Type GetSystemTypeFromWrappedDataType(DataType dataType)
+        public static Type GetSystemTypeFromWrappedDataType(DataType dataType, VariableMetaData metaData)
         {
-            if(dataType == DataType.UnityObjectReference)
+            Type elementType = null;
+            if (dataType == DataType.UnityObjectReference || dataType == DataType.Enum)
             {
-                // For now just return the base Object type
-                return typeof(UnityEngine.Object);
-            }
-            else if(dataType == DataType.Enum)
-            {
-                return typeof(System.Enum);
+                elementType = metaData.GetTypeFromMetaData();
             }
 
-            foreach (var mapping in mappings)
+            foreach (KeyValuePair<Type, DataType> mapping in mappings)
             {
                 if (mapping.Value == dataType)
                 {
-                    return mapping.Key;
+                    elementType = mapping.Key;
+                    break;
                 }
             }
-            // None matched
-            return null;
+
+            if (elementType != null)
+            {
+                return elementType;
+            }
+            else
+            {
+                // None matched
+                return null;
+            }
+        }
+
+        public static Type GetSystemTypeFromWrappedDataType(DataType dataType, VariableMetaData metaData, VariableAttributes attributes)
+        {
+            Type elementType = GetSystemTypeFromWrappedDataType(dataType, metaData);
+
+            if(elementType != null)
+            {
+                if(attributes.HasFlagByte(VariableAttributes.IsArray))
+                {
+                    return elementType.MakeArrayType();
+                }
+                else if(attributes.HasFlagByte(VariableAttributes.IsList))
+                {
+                    Type listType = typeof(List<>);
+                    return listType.MakeGenericType(elementType);
+                }
+                else
+                {
+					return elementType;
+                }
+            }
+            else
+            {
+				// None matched
+				return null;
+            }
         }
 
         public static object ReadFromBinary(DataType dataType, BinaryReader br)

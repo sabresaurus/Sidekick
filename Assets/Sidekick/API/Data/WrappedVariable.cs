@@ -11,12 +11,13 @@ namespace Sabresaurus.Sidekick
     public enum VariableAttributes : byte
     {
         None = 0,
-        ReadOnly = 1,
-        IsStatic = 2,
-        IsLiteral = 4, // e.g. const
-        IsArrayOrList = 8,
-        IsValueType = 16,
-        Obsolete = 32,
+        ReadOnly = 1 << 0,
+        IsStatic = 1 << 1,
+        IsLiteral = 1 << 2, // e.g. const
+        IsArray = 1 << 3,
+        IsList = 1 << 4,
+        IsValueType = 1 << 5,
+        Obsolete = 1 << 6,
     }
 
     /// <summary>
@@ -76,6 +77,37 @@ namespace Sabresaurus.Sidekick
                 this.value = value;
             }
         }
+
+        public object ValueNative
+        {
+            get
+            {
+                if (dataType == DataType.UnityObjectReference)
+                {
+                    // TODO support array of Unity Objects
+
+                    if (value is UnityEngine.Object || value == null)
+                    {
+                        UnityEngine.Object unityObject = value as UnityEngine.Object;
+                        return unityObject;
+                    }
+                    else
+                    {
+                        return ObjectMap.GetObjectFromGUID((Guid)value);
+                    }
+                }
+
+                if (attributes.HasFlagByte(VariableAttributes.IsArray)
+                        || attributes.HasFlagByte(VariableAttributes.IsList))
+                {
+                    return CollectionUtility.ConvertArrayOrList(this, DataTypeHelper.GetSystemTypeFromWrappedDataType(dataType, metaData, attributes));
+                }
+                else
+                {
+                    return Value;
+                }
+            }
+        }
         #endregion
 
         public WrappedVariable(FieldInfo fieldInfo, object objectValue)
@@ -130,7 +162,7 @@ namespace Sabresaurus.Sidekick
         }
 
         public WrappedVariable(WrappedParameter parameter)
-            : this(parameter.VariableName, parameter.DefaultValue, DataTypeHelper.GetSystemTypeFromWrappedDataType(parameter.DataType), parameter.MetaData)
+            : this(parameter.VariableName, parameter.DefaultValue, DataTypeHelper.GetSystemTypeFromWrappedDataType(parameter.DataType, parameter.MetaData, parameter.Attributes), parameter.MetaData)
         {
             this.attributes = parameter.Attributes;
             //arguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, parameter.MetaData));
@@ -148,15 +180,23 @@ namespace Sabresaurus.Sidekick
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
             this.value = value;
 
-            bool isArrayOrList = TypeUtility.IsArrayOrList(type);
+            bool isArray = type.IsArray;
+            bool isGenericList = TypeUtility.IsGenericList(type);
 
             this.attributes = VariableAttributes.None;
 
             Type elementType = type;
 
-            if (isArrayOrList)
+            if (isArray || isGenericList)
             {
-                this.attributes |= VariableAttributes.IsArrayOrList;
+                if (isArray)
+                {
+                    this.attributes |= VariableAttributes.IsArray;
+                }
+                else if (isGenericList)
+                {
+                    this.attributes |= VariableAttributes.IsList;
+                }
                 elementType = TypeUtility.GetElementType(type);
                 //Debug.Log(elementType);
                 this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
@@ -165,7 +205,7 @@ namespace Sabresaurus.Sidekick
             // Root data type or element type of collection is unknown
             if (this.dataType == DataType.Unknown)
             {
-                if (isArrayOrList)
+                if (isArray || isGenericList)
                 {
                     IList list = (IList)value;
                     int count = list.Count;
@@ -187,7 +227,7 @@ namespace Sabresaurus.Sidekick
 
             if (generateMetadata)
             {
-                metaData = VariableMetaData.Create(dataType, elementType, value, isArrayOrList);
+                metaData = VariableMetaData.Create(dataType, elementType, value, attributes);
             }
         }
 
@@ -197,7 +237,17 @@ namespace Sabresaurus.Sidekick
             this.attributes = (VariableAttributes)br.ReadByte();
             this.dataType = (DataType)br.ReadByte();
 
-            if (this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+            if (this.attributes.HasFlagByte(VariableAttributes.IsArray))
+            {
+                int count = br.ReadInt32();
+                object[] array = new object[count];
+                for (int i = 0; i < count; i++)
+                {
+                    array[i] = DataTypeHelper.ReadFromBinary(dataType, br);
+                }
+                this.value = array;
+            }
+            else if (this.attributes.HasFlagByte(VariableAttributes.IsList))
             {
                 int count = br.ReadInt32();
 
@@ -226,7 +276,8 @@ namespace Sabresaurus.Sidekick
             bw.Write((byte)attributes);
             bw.Write((byte)dataType);
 
-            if (this.attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+            if (this.attributes.HasFlagByte(VariableAttributes.IsArray)
+                || this.attributes.HasFlagByte(VariableAttributes.IsList))
             {
                 if (value is IList)
                 {

@@ -34,7 +34,7 @@ namespace Sabresaurus.Sidekick.Requests
 
         public override BaseResponse GenerateResponse()
         {
-            Type type = Assembly.Load(variable.MetaData.AssemblyName).GetType(variable.MetaData.TypeFullName);
+            Type type = variable.MetaData.GetTypeFromMetaData();
             Object[] objects = Resources.FindObjectsOfTypeAll(type);
 
             return new GetUnityObjectsResponse(variable, componentGuid, objects);

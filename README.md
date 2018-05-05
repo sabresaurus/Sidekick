@@ -8,8 +8,8 @@ Sidekick is a set of tools that allow you to edit fields, properties and invoke 
 
 Inspect and edit the hierarchy on device through a connected editor, particularly useful for those working with mobile only features, VR devices and console. If you want to inspect an object's state to debug a device only SDK or tune a value that only works on device this will help a lot!
 
-## Edit all fields and properties 
-Inspect and edit all fields and properties on components, including statics
+## Edit fields and properties 
+Inspect and edit fields and properties on components, including statics and many more than natively supported in Unity's inspector
 
 ## Fire methods
 

@@ -53,7 +53,8 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
-                if (attributes.HasFlagByte(VariableAttributes.IsArrayOrList))
+                if (attributes.HasFlagByte(VariableAttributes.IsArray)
+                    || attributes.HasFlagByte(VariableAttributes.IsList))
                 {
                     return null;
                 }
@@ -65,7 +66,7 @@ namespace Sabresaurus.Sidekick
                     }
                     else
                     {
-                        Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType);
+                        Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType, metaData, attributes);
                         return TypeUtility.GetDefaultValue(type);
                     }
                 }
@@ -84,15 +85,23 @@ namespace Sabresaurus.Sidekick
             this.variableName = variableName;
             this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
 
-            bool isArrayOrList = TypeUtility.IsArrayOrList(type);
+            bool isArray = type.IsArray;
+            bool isGenericList = TypeUtility.IsGenericList(type);
 
             this.attributes = VariableAttributes.None;
 
             Type elementType = type;
 
-            if (isArrayOrList)
+            if (isArray || isGenericList)
             {
-                this.attributes |= VariableAttributes.IsArrayOrList;
+                if(isArray)
+                {
+                    this.attributes |= VariableAttributes.IsArray;
+                }
+                else if(isGenericList)
+                {
+                    this.attributes |= VariableAttributes.IsList;
+                }
                 elementType = TypeUtility.GetElementType(type);
                 //Debug.Log(elementType);
                 this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
@@ -101,7 +110,7 @@ namespace Sabresaurus.Sidekick
 
             if (generateMetadata)
             {
-                metaData = VariableMetaData.Create(dataType, elementType, null, isArrayOrList);
+                metaData = VariableMetaData.Create(dataType, elementType, null, attributes);
             }
         }
 
