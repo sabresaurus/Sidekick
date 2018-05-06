@@ -99,7 +99,7 @@ namespace Sabresaurus.Sidekick
 
         private void OnSelectionChanged(string newPath)
         {
-            if (!string.IsNullOrEmpty(newPath)) // Valid path?
+            if (!string.IsNullOrEmpty(newPath) && newPath.Contains("/")) // Valid path?
             {
                 commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
             }

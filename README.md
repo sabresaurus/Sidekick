@@ -54,6 +54,8 @@ You can either download the latest version directly from the repository [here](h
 
 Once you have downloaded the zip, for installation into existing projects copy the contents of the extracted Assets folder into your project's Assets folder.
 
+Sidekick supports Unity 2017.2 and above. It has been tested in editor, on mobile, WebGL and on console. If you find a platform it doesn't support please create an [issue](https://github.com/sabresaurus/Sidekick/issues) and we'll add support.
+
 # Get Involved
 
 Sidekick is built by design to be optimised for extending. Want to help? Take a look at the [issues](https://github.com/sabresaurus/Sidekick/issues) page to see tasks that are good to start on, if you're unsure about one or want advice just post a comment on one of those issues.
