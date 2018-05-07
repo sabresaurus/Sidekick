@@ -20,29 +20,20 @@ namespace Sabresaurus.Sidekick
 
         void OnEnable()
         {
-            SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
-            if (windows.Length > 0)
+            // Check if we already had a serialized view state (state 
+            // that survived assembly reloading)
+            if (treeViewState == null)
             {
-                parentWindow = windows[0];
-
-                UpdateTitleContent();
-
-                // Check if we already had a serialized view state (state 
-                // that survived assembly reloading)
-                if (treeViewState == null)
-                {
-                    treeViewState = new TreeViewState();
-
-                }
-
-                treeView = new SimpleTreeView(treeViewState);
-                treeView.OnSelectionChanged += OnHierarchySelectionChanged;
-
-                hierarchySearchField = new SearchField();
-                hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
-
-                parentWindow.CommonContext.APIManager.ResponseReceived += OnResponseReceived;
+                treeViewState = new TreeViewState();
             }
+
+            treeView = new SimpleTreeView(treeViewState);
+            treeView.OnSelectionChanged += OnHierarchySelectionChanged;
+
+            hierarchySearchField = new SearchField();
+            hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
+
+            UpdateTitleContent();
         }
 
         void OnDisable()
@@ -50,6 +41,7 @@ namespace Sabresaurus.Sidekick
             if (parentWindow != null)
             {
                 parentWindow.CommonContext.APIManager.ResponseReceived -= OnResponseReceived;
+                parentWindow = null;
             }
         }
 
@@ -112,6 +104,22 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        bool AcquireParentWindowIfPossible()
+        {
+            SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
+            if (windows.Length > 0 && windows[0].CommonContext.Enabled)
+            {
+                parentWindow = windows[0];
+
+                parentWindow.CommonContext.APIManager.ResponseReceived += OnResponseReceived;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         void OnGUI()
         {
             GUIStyle centerMessageStyle = new GUIStyle(GUI.skin.label);
@@ -120,17 +128,14 @@ namespace Sabresaurus.Sidekick
 
             if (parentWindow == null)
             {
-                SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
-                if (windows.Length > 0)
-                {
-                    parentWindow = windows[0];
-                }
-                else
-                {
-                    GUILayout.Label("Sidekick Inspector window must be open to use remote hierarchy", centerMessageStyle, GUILayout.ExpandHeight(true));
+                AcquireParentWindowIfPossible();
+            }
 
-                    return;
-                }
+            if (parentWindow == null || parentWindow.CommonContext.Enabled == false)
+            {
+                GUILayout.Label("Sidekick Inspector window must be open to use remote hierarchy", centerMessageStyle, GUILayout.ExpandHeight(true));
+
+                return;
             }
 
             if (parentWindow.CommonContext.Settings.InspectionConnection == InspectionConnection.RemotePlayer)
@@ -174,7 +179,7 @@ namespace Sabresaurus.Sidekick
                 }
             }
             else
-            {                
+            {
                 GUILayout.Label("Remote hierarchy is only visible in remote mode", centerMessageStyle, GUILayout.ExpandHeight(true));
             }
         }

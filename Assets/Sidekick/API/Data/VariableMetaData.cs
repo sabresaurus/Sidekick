@@ -132,11 +132,11 @@ namespace Sabresaurus.Sidekick
         {
             if (dataType == DataType.Enum)
             {
-                return CreateFromEnum(type, value as UnityEngine.Object, attributes);
+                return CreateFromEnum(type, value, attributes);
             }
             else if (dataType == DataType.UnityObjectReference)
             {
-                return CreateFromUnityObject(type, value as UnityEngine.Object, attributes);
+                return CreateFromUnityObject(type, value, attributes);
             }
             else
             {
@@ -156,7 +156,7 @@ namespace Sabresaurus.Sidekick
             return type;
         }
 
-        private static VariableMetaData CreateFromEnum(Type elementType, UnityEngine.Object value, VariableAttributes attributes)
+        private static VariableMetaData CreateFromEnum(Type elementType, object value, VariableAttributes attributes)
         {
             VariableMetaData metaData = new VariableMetaData();
             metaData.ReadTypeMetaData(elementType);
@@ -170,18 +170,18 @@ namespace Sabresaurus.Sidekick
             return metaData;
         }
 
-        private static VariableMetaData CreateFromUnityObject(Type elementType, UnityEngine.Object value, VariableAttributes attributes)
+        private static VariableMetaData CreateFromUnityObject(Type elementType, object value, VariableAttributes attributes)
         {
             VariableMetaData metaData = new VariableMetaData();
             metaData.ReadTypeMetaData(elementType);
             if (value != null)
             {
-                if (attributes.HasFlagByte(VariableAttributes.IsArray))
-                    metaData.valueDisplayName = "Array";
-                else if (attributes.HasFlagByte(VariableAttributes.IsList))
-                    metaData.valueDisplayName = "List";
-                else
-                    metaData.valueDisplayName = (value).name;
+                //if (attributes.HasFlagByte(VariableAttributes.IsArray))
+                //    metaData.valueDisplayName = "Array";
+                //else if (attributes.HasFlagByte(VariableAttributes.IsList))
+                //    metaData.valueDisplayName = "List";
+                //else
+                metaData.valueDisplayName = "TODO";//(value).name;
             }
             else
             {

@@ -6,6 +6,8 @@ namespace Sabresaurus.Sidekick
     [System.Serializable]
     public class CommonContext
     {
+        bool enabled = false;
+
         SidekickSettings settings = new SidekickSettings();
         SelectionManager selectionManager;
         APIManager apiManager;
@@ -34,6 +36,14 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        public bool Enabled
+        {
+            get
+            {
+                return enabled;
+            }
+        }
+
         public void OnEnable()
         {
             if (selectionManager == null)
@@ -47,12 +57,16 @@ namespace Sabresaurus.Sidekick
 
             selectionManager.OnEnable(this);
             apiManager.OnEnable(this);
+
+            enabled = true;
         }
 
         public void OnDisable()
         {
             selectionManager.OnDisable();
             apiManager.OnDisable();
+
+            enabled = false;
         }
 
     }

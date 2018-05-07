@@ -38,10 +38,6 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
-                if (commonContext == null)
-                {
-                    commonContext = new CommonContext();
-                }
                 return commonContext;
             }
         }
@@ -236,12 +232,20 @@ namespace Sabresaurus.Sidekick
 
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
             GUILayout.Space(3);
+            EditorGUI.BeginChangeCheck();
 #if UNITY_2017_3_OR_NEWER
-            // EnumFlagsField was introduced in 2017.3
+            // EnumMaskField became EnumFlagsField in 2017.3
             settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField("Display", settings.GetGameObjectFlags);
 #else
-			settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.MaskField("Display", (int)settings.GetGameObjectFlags, Enum.GetNames(typeof(InfoFlags)));
+            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumMaskField("Display", settings.GetGameObjectFlags);
 #endif
+            if(EditorGUI.EndChangeCheck())
+            {
+                if (!string.IsNullOrEmpty(commonContext.SelectionManager.SelectedPath)) // Valid path?
+                {
+                    commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(commonContext.SelectionManager.SelectedPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
+                }
+            }
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
