@@ -9,15 +9,14 @@ namespace Sabresaurus.Sidekick
     [System.Serializable]
     public class VariableMetaData
     {
+        string typeFullName;
+        string assemblyName;
+
         // Enum
         string[] enumNames;
         int[] enumValues;
 
         // Unity Object Reference
-        Type localModeType; // Only use in local mode
-
-        string typeFullName;
-        string assemblyName;
         string valueDisplayName;
 
         public string[] EnumNames
@@ -33,14 +32,6 @@ namespace Sabresaurus.Sidekick
             get
             {
                 return enumValues;
-            }
-        }
-
-        public Type LocalModeType
-        {
-            get
-            {
-                return localModeType;
             }
         }
 
@@ -73,7 +64,7 @@ namespace Sabresaurus.Sidekick
 
         }
 
-        public VariableMetaData(BinaryReader br, DataType dataType)
+        public VariableMetaData(BinaryReader br, DataType dataType, VariableAttributes attributes)
         {
             if (dataType == DataType.Enum || dataType == DataType.UnityObjectReference)
             {
@@ -101,9 +92,9 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public void Write(BinaryWriter bw, DataType dataType)
+        public void Write(BinaryWriter bw, DataType dataType, VariableAttributes attributes)
         {
-            if(dataType == DataType.Enum || dataType == DataType.UnityObjectReference)
+            if (dataType == DataType.Enum || dataType == DataType.UnityObjectReference)
             {
                 bw.Write(typeFullName);
                 bw.Write(assemblyName);
@@ -123,31 +114,9 @@ namespace Sabresaurus.Sidekick
             }
             else if (dataType == DataType.UnityObjectReference)
             {
-                
+
                 bw.Write(valueDisplayName);
             }
-        }
-
-        public static VariableMetaData Create(DataType dataType, Type type, object value, VariableAttributes attributes)
-        {
-            if (dataType == DataType.Enum)
-            {
-                return CreateFromEnum(type, value, attributes);
-            }
-            else if (dataType == DataType.UnityObjectReference)
-            {
-                return CreateFromUnityObject(type, value, attributes);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private void ReadTypeMetaData(Type type)
-        {
-            typeFullName = type.FullName;
-            assemblyName = type.Assembly.FullName;
         }
 
         public Type GetTypeFromMetaData()
@@ -156,39 +125,52 @@ namespace Sabresaurus.Sidekick
             return type;
         }
 
-        private static VariableMetaData CreateFromEnum(Type elementType, object value, VariableAttributes attributes)
+        public static VariableMetaData Create(DataType dataType, Type elementType, object value, VariableAttributes attributes)
         {
-            VariableMetaData metaData = new VariableMetaData();
-            metaData.ReadTypeMetaData(elementType);
-            metaData.enumNames = Enum.GetNames(elementType);
-            metaData.enumValues = new int[metaData.enumNames.Length];
-            Array enumValuesArray = Enum.GetValues(elementType);
-            for (int i = 0; i < metaData.enumNames.Length; i++)
+            if (dataType == DataType.Enum || dataType == DataType.UnityObjectReference)
             {
-                metaData.enumValues[i] = (int)enumValuesArray.GetValue(i);
-            }
-            return metaData;
-        }
+				VariableMetaData metaData = new VariableMetaData();
 
-        private static VariableMetaData CreateFromUnityObject(Type elementType, object value, VariableAttributes attributes)
-        {
-            VariableMetaData metaData = new VariableMetaData();
-            metaData.ReadTypeMetaData(elementType);
-            if (value != null)
-            {
-                //if (attributes.HasFlagByte(VariableAttributes.IsArray))
-                //    metaData.valueDisplayName = "Array";
-                //else if (attributes.HasFlagByte(VariableAttributes.IsList))
-                //    metaData.valueDisplayName = "List";
-                //else
-                metaData.valueDisplayName = "TODO";//(value).name;
+                metaData.typeFullName = elementType.FullName;
+                metaData.assemblyName = elementType.Assembly.FullName;
+
+                if (dataType == DataType.Enum)
+                {
+                    metaData.enumNames = Enum.GetNames(elementType);
+                    metaData.enumValues = new int[metaData.enumNames.Length];
+                    Array enumValuesArray = Enum.GetValues(elementType);
+                    for (int i = 0; i < metaData.enumNames.Length; i++)
+                    {
+                        metaData.enumValues[i] = (int)enumValuesArray.GetValue(i);
+                    }
+                    return metaData;
+                }
+                else if (dataType == DataType.UnityObjectReference)
+                {
+                    if ((value as UnityEngine.Object) != null)
+                    {
+                        if (attributes.HasFlagByte(VariableAttributes.IsArray))
+                            metaData.valueDisplayName = "Array Element";
+                        else if (attributes.HasFlagByte(VariableAttributes.IsList))
+                            metaData.valueDisplayName = "List Element";
+                        else
+                            metaData.valueDisplayName = ((UnityEngine.Object)value).name;
+                    }
+                    else
+                    {
+                        metaData.valueDisplayName = "null";
+                    }
+                    return metaData;
+                }
+                else
+                {
+                    return null;
+                }
             }
             else
             {
-                metaData.valueDisplayName = "null";
+                return null;
             }
-            metaData.localModeType = elementType;
-            return metaData;
         }
     }
 }

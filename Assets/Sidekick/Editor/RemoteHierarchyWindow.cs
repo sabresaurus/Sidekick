@@ -180,6 +180,7 @@ namespace Sabresaurus.Sidekick
             }
             else
             {
+                treeView.SetDisplays(new List<TreeViewItem>());
                 GUILayout.Label("Remote hierarchy is only visible in remote mode", centerMessageStyle, GUILayout.ExpandHeight(true));
             }
         }

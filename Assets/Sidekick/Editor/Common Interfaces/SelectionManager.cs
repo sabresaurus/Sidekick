@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
     [System.Serializable]
     public class SelectionManager : ICommonContextComponent
     {
-        //[NonSerialized] CommonContext commonContext;
+        [NonSerialized] CommonContext commonContext;
         string selectedPath;
 
 
@@ -35,7 +35,7 @@ namespace Sabresaurus.Sidekick
         {
             //Debug.Log("SelectionManager OnEnable()");
 
-            //this.commonContext = commonContext;
+            this.commonContext = commonContext;
             Selection.selectionChanged += OnEditorSelectionChanged;
         }
 
@@ -48,14 +48,16 @@ namespace Sabresaurus.Sidekick
 
         private void OnEditorSelectionChanged()
         {
-            // TODO Get path from Selection.activeObject
-            if (Selection.activeGameObject != null)
+            if (commonContext.Settings.InspectionConnection == InspectionConnection.LocalEditor)
             {
-                SelectedPath = Selection.activeGameObject.scene.name + "/" + GetPath(Selection.activeGameObject.transform);
-            }
-            else
-            {
-                SelectedPath = "";
+                if (Selection.activeGameObject != null)
+                {
+                    SelectedPath = Selection.activeGameObject.scene.name + "/" + GetPath(Selection.activeGameObject.transform);
+                }
+                else
+                {
+                    SelectedPath = "";
+                }
             }
         }
 

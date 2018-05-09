@@ -224,6 +224,10 @@ namespace Sabresaurus.Sidekick
             settings.InspectionConnection = (InspectionConnection)GUILayout.Toolbar((int)settings.InspectionConnection, new string[] { "Local", "Remote" }, new GUIStyle("LargeButton"));
             if (EditorGUI.EndChangeCheck())
             {
+                // Reset
+                gameObjectResponse = null;
+                commonContext.SelectionManager.SelectedPath = null;
+
                 if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
                 {
                     FindOrCreateRemoteHierarchyWindow();

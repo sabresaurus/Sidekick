@@ -71,7 +71,7 @@ public static class VariableDrawer
                 }
                 else
                 {
-                    type = variable.MetaData.LocalModeType;
+                    type = variable.MetaData.GetTypeFromMetaData();
                 }
                 newValue = DrawIndividualVariable(componentDescription, variable, name, type, variable.Value, onObjectPicker);
             }
@@ -81,7 +81,7 @@ public static class VariableDrawer
             if (objectValue == null)
                 EditorGUILayout.TextField(name, "{null}");
             else
-                EditorGUILayout.TextField(name, variable.Value.ToString());
+                EditorGUILayout.TextField(name, "Unknown <" + variable.Value.ToString() + ">");
 
         }
         GUI.enabled = true;
@@ -125,7 +125,7 @@ public static class VariableDrawer
             }
             else if (typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
             {
-                newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, variable.MetaData.LocalModeType, true);
+                newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, variable.MetaData.GetTypeFromMetaData(), true);
             }
             else
             {

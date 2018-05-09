@@ -88,6 +88,13 @@ namespace Sabresaurus.Sidekick.Requests
                     }
                 }
 
+                if(component is GameObject)
+                {
+                    PropertyInfo nameProperty = componentType.GetProperty("name", BindingFlags.Public | BindingFlags.Instance);
+                    WrappedVariable wrappedName = new WrappedVariable(nameProperty, nameProperty.GetValue(component, null));
+                    description.Properties.Add(wrappedName);
+                }
+
                 if ((flags & InfoFlags.Properties) == InfoFlags.Properties)
                 {
                     PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
