@@ -159,17 +159,30 @@ namespace Sabresaurus.Sidekick
 
                     StringBuilder builder = new StringBuilder();
                     builder.AppendLine(string.Format("{0} players connected.", playerCount));
-                    int count = 0;
-                    foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
+
+                    if(playerCount == 0)
                     {
-#if UNITY_2017_3_OR_NEWER
-                        // ConnectedPlayer interface changed in 2017.3
-                        builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+#if UNITY_2017_1_OR_NEWER
+                        EditorGUILayout.HelpBox("No player connected, selected a Connected Player in the Console window or attach the Profiler to a remote player", MessageType.Warning);
 #else
-                        builder.AppendLine(string.Format("[{0}] - {1}, count++, p.PlayerId));
+                        EditorGUILayout.HelpBox("No player connected, attach the Profiler to a remote player", MessageType.Warning);
 #endif
                     }
+                    else
+                    {
+                        int count = 0;
+                        foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
+                        {
+#if UNITY_2017_3_OR_NEWER
+                            // ConnectedPlayer interface changed in 2017.3
+                            builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
+#else
+                            builder.AppendLine(string.Format("[{0}] - {1}", count++, p.PlayerId));
+#endif
+                        }
+
                     EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
+                    }
                     settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
 
                     settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);

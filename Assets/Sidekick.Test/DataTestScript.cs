@@ -20,13 +20,19 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] Vector2 testVector2 = new Vector2(1, 2);
     [SerializeField] Vector3 testVector3 = new Vector3(1, 2, 3);
     [SerializeField] Vector4 testVector4 = new Vector4(1, 2, 3, 4);
+#if UNITY_2017_2_OR_NEWERS
     [SerializeField] Vector2Int testVectorInt2 = new Vector2Int(1, 2);
     [SerializeField] Vector3Int testVectorInt3 = new Vector3Int(1, 2, 3);
+#endif
     [SerializeField] Bounds testBounds = new Bounds(new Vector3(1, 2, 3), new Vector3(4, 5, 6));
+#if UNITY_2017_2_OR_NEWER
     [SerializeField] BoundsInt testBoundsInt = new BoundsInt(new Vector3Int(1, 2, 3), new Vector3Int(4, 5, 6));
+#endif
     [SerializeField] Quaternion testQuaternion = Quaternion.identity;
     [SerializeField] Rect testRect = new Rect(10, 10, 100, 60);
+#if UNITY_2017_2_OR_NEWER
     [SerializeField] RectInt testRectInt = new RectInt(10, 10, 100, 60);
+#endif
     [SerializeField] Gradient testGradient = new Gradient();
     [SerializeField] Color testColor = Color.blue;
     [SerializeField] Color32 testColor32 = Color.blue;

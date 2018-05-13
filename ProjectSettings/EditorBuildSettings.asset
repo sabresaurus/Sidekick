@@ -6,5 +6,5 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scene.unity
+    path: Assets/Sidekick.Test/TestScene.unity
     guid: f8921e85374084c80a9700d8de0cb746

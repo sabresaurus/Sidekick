@@ -58,13 +58,19 @@ namespace Sabresaurus.Sidekick
             {typeof(Vector2), DataType.Vector2},
             {typeof(Vector3), DataType.Vector3},
             {typeof(Vector4), DataType.Vector4},
-            {typeof(Vector2Int), DataType.Vector2Int},
-            {typeof(Vector3Int), DataType.Vector3Int},
+#if UNITY_2017_2_OR_NEWER
+		    {typeof(Vector2Int), DataType.Vector2Int},
+            {typeof(Vector3Int), DataType.Vector3Int},  
+#endif
             {typeof(Quaternion), DataType.Quaternion},
             {typeof(Rect), DataType.Rect},
-            {typeof(RectInt), DataType.RectInt},
+#if UNITY_2017_2_OR_NEWER
+		    {typeof(RectInt), DataType.RectInt},
+#endif
             {typeof(Bounds), DataType.Bounds},
+#if UNITY_2017_2_OR_NEWER
             {typeof(BoundsInt), DataType.BoundsInt},
+#endif
             {typeof(Gradient), DataType.Gradient},
             {typeof(AnimationCurve), DataType.AnimationCurve},
             {typeof(Color), DataType.Color},
@@ -125,26 +131,26 @@ namespace Sabresaurus.Sidekick
         {
             Type elementType = GetSystemTypeFromWrappedDataType(dataType, metaData);
 
-            if(elementType != null)
+            if (elementType != null)
             {
-                if(attributes.HasFlagByte(VariableAttributes.IsArray))
+                if (attributes.HasFlagByte(VariableAttributes.IsArray))
                 {
                     return elementType.MakeArrayType();
                 }
-                else if(attributes.HasFlagByte(VariableAttributes.IsList))
+                else if (attributes.HasFlagByte(VariableAttributes.IsList))
                 {
                     Type listType = typeof(List<>);
                     return listType.MakeGenericType(elementType);
                 }
                 else
                 {
-					return elementType;
+                    return elementType;
                 }
             }
             else
             {
-				// None matched
-				return null;
+                // None matched
+                return null;
             }
         }
 
@@ -192,6 +198,7 @@ namespace Sabresaurus.Sidekick
             {
                 value = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
+#if UNITY_2017_2_OR_NEWER
             else if (dataType == DataType.Vector2Int)
             {
                 value = new Vector2Int(br.ReadInt32(), br.ReadInt32());
@@ -199,15 +206,18 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Vector3Int)
             {
                 value = new Vector3Int(br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
-            }
+            } 
+#endif
             else if (dataType == DataType.Bounds)
             {
                 value = new Bounds(new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()), new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()));
             }
+#if UNITY_2017_2_OR_NEWER
             else if (dataType == DataType.BoundsInt)
             {
                 value = new BoundsInt(new Vector3Int(br.ReadInt32(), br.ReadInt32(), br.ReadInt32()), new Vector3Int(br.ReadInt32(), br.ReadInt32(), br.ReadInt32()));
-            }
+            } 
+#endif
             else if (dataType == DataType.Quaternion)
             {
                 value = new Quaternion(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -216,10 +226,12 @@ namespace Sabresaurus.Sidekick
             {
                 value = new Rect(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             }
+#if UNITY_2017_2_OR_NEWER
             else if (dataType == DataType.RectInt)
             {
-                value = new Rect(br.ReadInt32(), br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
+                value = new RectInt(br.ReadInt32(), br.ReadInt32(), br.ReadInt32(), br.ReadInt32());
             }
+#endif
             else if (dataType == DataType.Color)
             {
                 value = new Color(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -264,9 +276,9 @@ namespace Sabresaurus.Sidekick
                 if (string.IsNullOrEmpty(guidString))
                     value = Guid.Empty;
                 else
-					value = new Guid(guidString); // Read guid
+                    value = new Guid(guidString); // Read guid
             }
-            else if(dataType == DataType.Unknown)
+            else if (dataType == DataType.Unknown)
             {
                 value = br.ReadString(); // Read Type name
             }
@@ -329,6 +341,7 @@ namespace Sabresaurus.Sidekick
                 bw.Write(vector.z);
                 bw.Write(vector.w);
             }
+#if UNITY_2017_2_OR_NEWER
             else if (dataType == DataType.Vector2Int)
             {
                 Vector2Int vector = (Vector2Int)value;
@@ -341,7 +354,8 @@ namespace Sabresaurus.Sidekick
                 bw.Write(vector.x);
                 bw.Write(vector.y);
                 bw.Write(vector.z);
-            }
+            } 
+#endif
             else if (dataType == DataType.Bounds)
             {
                 Bounds bounds = (Bounds)value;
@@ -355,6 +369,7 @@ namespace Sabresaurus.Sidekick
                 bw.Write(size.y);
                 bw.Write(size.z);
             }
+#if UNITY_2017_2_OR_NEWER
             else if (dataType == DataType.BoundsInt)
             {
                 BoundsInt bounds = (BoundsInt)value;
@@ -368,7 +383,8 @@ namespace Sabresaurus.Sidekick
                 bw.Write(size.x);
                 bw.Write(size.y);
                 bw.Write(size.z);
-            }
+            } 
+#endif
             else if (dataType == DataType.Quaternion)
             {
                 Quaternion rotation = (Quaternion)value;
@@ -385,6 +401,7 @@ namespace Sabresaurus.Sidekick
                 bw.Write(rect.width);
                 bw.Write(rect.height);
             }
+#if UNITY_2017_2_OR_NEWER
             else if (dataType == DataType.RectInt)
             {
                 RectInt rect = (RectInt)value;
@@ -392,7 +409,8 @@ namespace Sabresaurus.Sidekick
                 bw.Write(rect.y);
                 bw.Write(rect.width);
                 bw.Write(rect.height);
-            }
+            } 
+#endif
             else if (dataType == DataType.Color)
             {
                 Color color = (Color)value;

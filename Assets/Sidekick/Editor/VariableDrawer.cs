@@ -181,6 +181,7 @@ public static class VariableDrawer
         {
             newValue = EditorGUILayout.Vector4Field(fieldName, (Vector4)fieldValue);
         }
+#if UNITY_2017_2_OR_NEWER
         else if (fieldType == typeof(Vector2Int))
         {
             newValue = EditorGUILayout.Vector2IntField(fieldName, (Vector2Int)fieldValue);
@@ -188,7 +189,8 @@ public static class VariableDrawer
         else if (fieldType == typeof(Vector3Int))
         {
             newValue = EditorGUILayout.Vector3IntField(fieldName, (Vector3Int)fieldValue);
-        }
+        } 
+#endif
         else if (fieldType == typeof(Quaternion))
         {
             //if(InspectorSidekick.Current.Settings.RotationsAsEuler)
@@ -210,10 +212,12 @@ public static class VariableDrawer
         {
             newValue = EditorGUILayout.BoundsField(fieldName, (Bounds)fieldValue);
         }
+#if UNITY_2017_2_OR_NEWER
         else if (fieldType == typeof(BoundsInt))
         {
             newValue = EditorGUILayout.BoundsIntField(fieldName, (BoundsInt)fieldValue);
-        }
+        } 
+#endif
         else if (fieldType == typeof(Color))
         {
             newValue = EditorGUILayout.ColorField(fieldName, (Color)fieldValue);
@@ -238,10 +242,12 @@ public static class VariableDrawer
         {
             newValue = EditorGUILayout.RectField(fieldName, (Rect)fieldValue);
         }
+#if UNITY_2017_2_OR_NEWER
         else if (fieldType == typeof(RectInt))
         {
             newValue = EditorGUILayout.RectIntField(fieldName, (RectInt)fieldValue);
-        }
+        } 
+#endif
         else if (fieldType.IsSubclassOf(typeof(UnityEngine.Object)))
         {
             newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, fieldType, true);
