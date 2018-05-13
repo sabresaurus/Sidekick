@@ -147,7 +147,7 @@ namespace Sabresaurus.Sidekick
                 }
                 else if (dataType == DataType.UnityObjectReference)
                 {
-                    if ((value as UnityEngine.Object) != null)
+                    if ((value as UnityEngine.Object) != null || (value is UnityEngine.Object == false && value != null))
                     {
                         if (attributes.HasFlagByte(VariableAttributes.IsArray))
                             metaData.valueDisplayName = "Array Element";

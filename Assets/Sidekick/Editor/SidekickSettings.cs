@@ -8,7 +8,9 @@ namespace Sabresaurus.Sidekick
     [Serializable]
     public class SidekickSettings
     {
-        public bool LocalDevMode = false; // TODO: if def this
+#if SIDEKICK_DEBUG
+        public bool LocalDevMode = false;
+#endif
         public bool IgnoreObsolete = true; // When set fields, properties and methods with [Obsolete] attribute are ignored
         public bool NiceifyNames = false; // Whether to turn names like "m_cameraSpeed" into "Camera Speed"
 

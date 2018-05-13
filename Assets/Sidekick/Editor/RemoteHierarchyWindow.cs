@@ -160,7 +160,15 @@ namespace Sabresaurus.Sidekick
                     StringBuilder builder = new StringBuilder();
                     builder.AppendLine(string.Format("{0} players connected.", playerCount));
 
-                    if(playerCount == 0)
+                    bool validConnection = (playerCount > 0);
+
+#if UNITY_2017_1_OR_NEWER
+                    // If we're in Local Dev Mode also consider that a valid connection
+                    validConnection |= settings.LocalDevMode;
+#endif
+
+
+                    if (validConnection == false)
                     {
 #if UNITY_2017_1_OR_NEWER
                         EditorGUILayout.HelpBox("No player connected, selected a Connected Player in the Console window or attach the Profiler to a remote player", MessageType.Warning);
@@ -181,13 +189,14 @@ namespace Sabresaurus.Sidekick
 #endif
                         }
 
-                    EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
+                        EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
                     }
                     settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
 
+#if SIDEKICK_DEBUG
                     settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);
-                    bool connected = playerCount > 0;
-                    if (connected || settings.LocalDevMode)
+#endif
+                    if (validConnection)
                     {
                         if (GUILayout.Button("Refresh Hierarchy"))
                         {

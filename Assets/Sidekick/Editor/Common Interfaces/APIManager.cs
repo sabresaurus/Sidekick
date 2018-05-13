@@ -50,7 +50,7 @@ namespace Sabresaurus.Sidekick
                     }
                     bytes = ms.ToArray();
                 }
-
+#if SIDEKICK_DEBUG
                 if (commonContext.Settings.LocalDevMode)
                 {
                     byte[] testResponse = SidekickRequestProcessor.Process(bytes);
@@ -60,6 +60,7 @@ namespace Sabresaurus.Sidekick
                     ResponseReceived(response);
                 }
                 else
+#endif
                 {
                     EditorConnection.instance.Send(RuntimeSidekick.kMsgSendEditorToPlayer, bytes);
                 }
