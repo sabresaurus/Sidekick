@@ -20,7 +20,7 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] Vector2 testVector2 = new Vector2(1, 2);
     [SerializeField] Vector3 testVector3 = new Vector3(1, 2, 3);
     [SerializeField] Vector4 testVector4 = new Vector4(1, 2, 3, 4);
-#if UNITY_2017_2_OR_NEWERS
+#if UNITY_2017_2_OR_NEWER
     [SerializeField] Vector2Int testVectorInt2 = new Vector2Int(1, 2);
     [SerializeField] Vector3Int testVectorInt3 = new Vector3Int(1, 2, 3);
 #endif
@@ -42,6 +42,7 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] char testCharacter = 'a';
     [SerializeField] AnimationCurve testCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     [SerializeField] GameObject testAssetPrefab;
+    [SerializeField] GameObject[] testAssetPrefabs;
     [SerializeField] Matrix4x4 testMatrix = Matrix4x4.identity;
     [SerializeField] TestEnum[] testEnumArray;
     [SerializeField] List<Texture2D> testTextureList;

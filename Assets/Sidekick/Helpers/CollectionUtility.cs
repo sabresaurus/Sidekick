@@ -9,24 +9,41 @@ namespace Sabresaurus.Sidekick
         public static void Resize(ref IList list, Type elementType, int newSize)
         {
             int oldSize = list.Count;
+
+            // Unity's default behaviour when expanding a collection is to use the last element as the new element value
+            object objectToAdd = null;
+            if (newSize > oldSize)
+            {
+                if (oldSize >= 1)
+                {
+                    objectToAdd = list[oldSize - 1];
+                }
+                else
+                {
+                    objectToAdd = TypeUtility.GetDefaultValue(elementType);
+                }
+            }
+
             if (list.IsFixedSize)
             {
-                Debug.LogError("Resizing fixed arrays is not currently implemented - see https://github.com/sabresaurus/Sidekick/issues/24");
+                Array newArray = Array.CreateInstance(elementType, newSize);
+                Array.Copy((Array)list, newArray, Math.Min(oldSize, newArray.Length));
+
+                if (newSize > oldSize)
+                {
+                    int toAdd = newSize - oldSize;
+                    for (int i = 0; i < toAdd; i++)
+                    {
+                        newArray.SetValue(objectToAdd, oldSize + i);
+                    }
+                }
+
+                list = newArray;
             }
             else
             {
                 if (newSize > oldSize)
                 {
-                    object objectToAdd;
-                    if (oldSize >= 1)
-                    {
-                        objectToAdd = list[oldSize - 1];
-                    }
-                    else
-                    {
-                        objectToAdd = TypeUtility.GetDefaultValue(elementType);
-                    }
-
                     int toAdd = newSize - oldSize;
                     for (int i = 0; i < toAdd; i++)
                     {

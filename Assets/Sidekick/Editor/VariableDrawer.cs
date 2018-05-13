@@ -42,7 +42,7 @@ public static class VariableDrawer
 
                 Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(variable.DataType, variable.MetaData);
 
-                int newSize = Mathf.Max(0, EditorGUILayout.IntField("Size", size));
+                int newSize = Mathf.Max(0, EditorGUILayout.DelayedIntField("Size", size));
                 if (newSize != size)
                 {
                     if (list == null)

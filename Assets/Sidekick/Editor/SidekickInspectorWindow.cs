@@ -336,7 +336,7 @@ namespace Sabresaurus.Sidekick
                             }
                             EditorGUI.BeginChangeCheck();
                             object newValue = VariableDrawer.Draw(component, field, OnOpenObjectPicker);
-                            if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
+                            if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && field.DataType != DataType.Unknown)
                             {
                                 if (newValue != field.Value)
                                 {
@@ -363,7 +363,7 @@ namespace Sabresaurus.Sidekick
 
                             EditorGUI.BeginChangeCheck();
                             object newValue = VariableDrawer.Draw(component, property, OnOpenObjectPicker);
-                            if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None)
+                            if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && property.DataType != DataType.Unknown)
                             {
                                 if (newValue != property.Value)
                                 {
