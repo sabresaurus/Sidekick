@@ -164,7 +164,7 @@ namespace Sabresaurus.Sidekick
 
                     bool validConnection = (playerCount > 0);
 
-#if UNITY_2017_1_OR_NEWER
+#if SIDEKICK_DEBUG
                     // If we're in Local Dev Mode also consider that a valid connection
                     validConnection |= settings.LocalDevMode;
 #endif
