@@ -123,7 +123,7 @@ namespace Sabresaurus.Sidekick
             bool hasMetaData = br.ReadBoolean();
             if(hasMetaData)
             {
-				metaData = new VariableMetaData(br, dataType);
+                metaData = new VariableMetaData(br, dataType, attributes);
             }
         }
 
@@ -136,7 +136,7 @@ namespace Sabresaurus.Sidekick
             bw.Write(metaData != null);
             if(metaData != null)
             {
-				metaData.Write(bw, dataType);
+                metaData.Write(bw, dataType, attributes);
             }
         }
         public override bool Equals(object obj)
