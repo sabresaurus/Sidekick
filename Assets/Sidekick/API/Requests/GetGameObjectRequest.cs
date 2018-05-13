@@ -88,7 +88,7 @@ namespace Sabresaurus.Sidekick.Requests
                     }
                 }
 
-                if(component is GameObject)
+                if(component is GameObject) // Special handling for GameObject.name to always be included
                 {
                     PropertyInfo nameProperty = componentType.GetProperty("name", BindingFlags.Public | BindingFlags.Instance);
                     WrappedVariable wrappedName = new WrappedVariable(nameProperty, nameProperty.GetValue(component, null));

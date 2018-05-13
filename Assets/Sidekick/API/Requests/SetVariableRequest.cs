@@ -28,28 +28,35 @@ namespace Sabresaurus.Sidekick.Requests
             this.wrappedVariable = new WrappedVariable(br);
         }
 
-		public override void Write(BinaryWriter bw)
-		{
+        public override void Write(BinaryWriter bw)
+        {
             base.Write(bw);
 
             bw.Write(guid.ToString());
             wrappedVariable.Write(bw);
-		}
+        }
 
-		public override BaseResponse GenerateResponse()
-		{
+        public override BaseResponse GenerateResponse()
+        {
             object targetObject = ObjectMap.GetObjectFromGUID(guid);
 
             if (targetObject != null)
             {
-                FieldInfo fieldInfo = targetObject.GetType().GetField(wrappedVariable.VariableName, GetGameObjectRequest.BINDING_FLAGS);
+                BindingFlags bindingFlags = GetGameObjectRequest.BINDING_FLAGS;
+
+                if (targetObject.GetType() == typeof(GameObject) && wrappedVariable.VariableName == "name") // Special handling for GameObject.name to always be included
+                {
+                    bindingFlags = BindingFlags.Public | BindingFlags.Instance;
+                }
+
+                FieldInfo fieldInfo = targetObject.GetType().GetField(wrappedVariable.VariableName, bindingFlags);
                 if (fieldInfo != null)
                 {
                     fieldInfo.SetValue(targetObject, wrappedVariable.ValueNative);
                 }
                 else
                 {
-                    PropertyInfo propertyInfo = targetObject.GetType().GetProperty(wrappedVariable.VariableName, GetGameObjectRequest.BINDING_FLAGS);
+                    PropertyInfo propertyInfo = targetObject.GetType().GetProperty(wrappedVariable.VariableName, bindingFlags);
                     MethodInfo setMethod = propertyInfo.GetSetMethod();
 
                     setMethod.Invoke(targetObject, new object[] { wrappedVariable.ValueNative });
@@ -61,6 +68,6 @@ namespace Sabresaurus.Sidekick.Requests
             }
 
             return new SetVariableResponse();
-		}
+        }
     }
 }
