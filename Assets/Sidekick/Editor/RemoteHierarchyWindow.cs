@@ -87,10 +87,12 @@ namespace Sabresaurus.Sidekick
             {
                 GetHierarchyResponse hierarchyResponse = (GetHierarchyResponse)response;
                 List<TreeViewItem> displays = new List<TreeViewItem>();
+                
                 int index = 0;
                 foreach (var scene in hierarchyResponse.Scenes)
                 {
                     displays.Add(new TreeViewItem { id = index, depth = 0, displayName = scene.SceneName });
+                    treeView.SetExpanded(index, true);
                     index++;
 
                     foreach (var node in scene.HierarchyNodes)
