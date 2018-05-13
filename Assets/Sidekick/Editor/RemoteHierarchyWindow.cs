@@ -133,7 +133,15 @@ namespace Sabresaurus.Sidekick
 
             if (parentWindow == null || parentWindow.CommonContext.Enabled == false)
             {
-                GUILayout.Label("Sidekick Inspector window must be open to use remote hierarchy", centerMessageStyle, GUILayout.ExpandHeight(true));
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("Sidekick Inspector window must be open to use remote hierarchy", centerMessageStyle);
+                if (GUILayout.Button("Open Sidekick Inspector"))
+                {
+                    SidekickInspectorWindow.OpenWindow();
+                    AcquireParentWindowIfPossible();
+                }
+                GUILayout.FlexibleSpace();
+
 
                 return;
             }
@@ -181,7 +189,13 @@ namespace Sabresaurus.Sidekick
             else
             {
                 treeView.SetDisplays(new List<TreeViewItem>());
-                GUILayout.Label("Remote hierarchy is only visible in remote mode", centerMessageStyle, GUILayout.ExpandHeight(true));
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("Remote hierarchy is only visible in remote mode", centerMessageStyle);
+                if(GUILayout.Button("Set Remote Mode"))
+                {
+                    parentWindow.SetConnectionMode(InspectionConnection.RemotePlayer);
+                }
+                GUILayout.FlexibleSpace();
             }
         }
 

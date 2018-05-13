@@ -33,6 +33,7 @@ namespace Sabresaurus.Sidekick
         string methodOutput = "";
         float opacity = 0f;
 
+        bool messageHandlerRegistered = false;
 
         public CommonContext CommonContext
         {
@@ -43,7 +44,7 @@ namespace Sabresaurus.Sidekick
         }
 
         [MenuItem("Tools/Sidekick")]
-        static void Init()
+        public static void OpenWindow()
         {
             SidekickInspectorWindow window = EditorWindow.GetWindow<SidekickInspectorWindow>();
             window.Show();
@@ -56,6 +57,26 @@ namespace Sabresaurus.Sidekick
             remoteHierarchyWindow = EditorWindow.GetWindow<RemoteHierarchyWindow>("Remote");
             remoteHierarchyWindow.Show();
             remoteHierarchyWindow.UpdateTitleContent();
+        }
+
+        public void SetConnectionMode(InspectionConnection newConnectionMode)
+        {
+            SidekickSettings settings = commonContext.Settings;
+            settings.InspectionConnection = newConnectionMode;
+
+            // Reset
+            gameObjectResponse = null;
+            commonContext.SelectionManager.SelectedPath = null;
+
+            if (newConnectionMode == InspectionConnection.RemotePlayer)
+            {
+                EnableRemoteMode();
+                FindOrCreateRemoteHierarchyWindow();
+            }
+            else
+            {
+                DisableRemoteMode();
+            }
         }
 
         protected void UpdateTitleContent()
@@ -88,13 +109,21 @@ namespace Sabresaurus.Sidekick
         void EnableRemoteMode()
         {
             EditorConnection.instance.Initialize();
-            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+
+            if(messageHandlerRegistered == false)
+            {
+                EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+                messageHandlerRegistered = true;
+            }
         }
 
         void DisableRemoteMode()
         {
-            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-            //EditorConnection.instance.DisconnectAll();
+            if (messageHandlerRegistered == true)
+            {
+                EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+                messageHandlerRegistered = false;
+            }
         }
 
         void OnEnable()
@@ -230,22 +259,10 @@ namespace Sabresaurus.Sidekick
 
 
             EditorGUI.BeginChangeCheck();
-            settings.InspectionConnection = (InspectionConnection)GUILayout.Toolbar((int)settings.InspectionConnection, new string[] { "Local", "Remote" }, new GUIStyle("LargeButton"));
+            InspectionConnection newConnectionMode = (InspectionConnection)GUILayout.Toolbar((int)settings.InspectionConnection, new string[] { "Local", "Remote" }, new GUIStyle("LargeButton"));
             if (EditorGUI.EndChangeCheck())
             {
-                // Reset
-                gameObjectResponse = null;
-                commonContext.SelectionManager.SelectedPath = null;
-
-                if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
-                {
-                    EnableRemoteMode();
-                    FindOrCreateRemoteHierarchyWindow();
-                }
-                else
-                {
-                    DisableRemoteMode();
-                }
+                SetConnectionMode(newConnectionMode);                
             }
 
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
