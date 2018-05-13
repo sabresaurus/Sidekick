@@ -72,6 +72,31 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        private void OnSelectionChanged(string newPath)
+        {
+            if (!string.IsNullOrEmpty(newPath) && newPath.Contains("/")) // Valid path?
+            {
+                commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
+            }
+            else
+            {
+                commonContext.APIManager.ResponseReceived(new GetGameObjectResponse());
+            }
+            Repaint();
+        }
+
+        void EnableRemoteMode()
+        {
+            EditorConnection.instance.Initialize();
+            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+        }
+
+        void DisableRemoteMode()
+        {
+            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+            //EditorConnection.instance.DisconnectAll();
+        }
+
         void OnEnable()
         {
             //Debug.Log("SidekickInspectorWindow OnEnable()");
@@ -88,22 +113,7 @@ namespace Sabresaurus.Sidekick
             commonContext.SelectionManager.SelectionChanged += OnSelectionChanged;
             commonContext.APIManager.ResponseReceived += OnResponseReceived;
 
-            EditorConnection.instance.Initialize();
-            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-
-        }
-
-        private void OnSelectionChanged(string newPath)
-        {
-            if (!string.IsNullOrEmpty(newPath) && newPath.Contains("/")) // Valid path?
-            {
-                commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
-            }
-            else
-            {
-                commonContext.APIManager.ResponseReceived(new GetGameObjectResponse());
-            }
-            Repaint();
+            EnableRemoteMode();
         }
 
         void OnDisable()
@@ -112,8 +122,7 @@ namespace Sabresaurus.Sidekick
 
             commonContext.SelectionManager.SelectionChanged -= OnSelectionChanged;
             commonContext.APIManager.ResponseReceived -= OnResponseReceived;
-            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-            EditorConnection.instance.DisconnectAll();
+            DisableRemoteMode();
         }
 
         private void OnMessageEvent(MessageEventArgs args)
@@ -226,7 +235,12 @@ namespace Sabresaurus.Sidekick
             {
                 if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
                 {
+                    EnableRemoteMode();
                     FindOrCreateRemoteHierarchyWindow();
+                }
+                else
+                {
+                    DisableRemoteMode();
                 }
             }
 
