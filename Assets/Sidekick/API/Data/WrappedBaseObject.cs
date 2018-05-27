@@ -139,6 +139,14 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        protected WrappedBaseObject(string variableName, DataType dataType, VariableAttributes attributes, VariableMetaData metaData)
+        {
+            this.variableName = variableName;
+            this.dataType = dataType;
+            this.attributes = attributes;
+            this.metaData = metaData;
+        }
+
         public WrappedBaseObject(BinaryReader br)
         {
             this.variableName = br.ReadString();

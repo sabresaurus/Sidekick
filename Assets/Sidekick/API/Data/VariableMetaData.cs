@@ -123,12 +123,9 @@ namespace Sabresaurus.Sidekick
                     {
                         metaData.enumValues[i] = (int)enumValuesArray.GetValue(i);
                     }
-                    return metaData;
                 }
-                else
-                {
-                    return null;
-                }
+
+				return metaData;
             }
             else
             {

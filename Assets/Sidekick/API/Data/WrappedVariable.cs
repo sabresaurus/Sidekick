@@ -121,16 +121,9 @@ namespace Sabresaurus.Sidekick
         }
 
         public WrappedVariable(WrappedParameter parameter)
-            : this(parameter.VariableName, parameter.DefaultValue, DataTypeHelper.GetSystemTypeFromWrappedDataType(parameter.DataType, parameter.MetaData, parameter.Attributes), parameter.MetaData)
+            : base(parameter.VariableName, parameter.DataType, parameter.Attributes, parameter.MetaData)
         {
-            this.attributes = parameter.Attributes;
-            //arguments.Add(new WrappedVariable(parameter.VariableName, parameter.DefaultValue, type, parameter.MetaData));
-        }
-
-        public WrappedVariable(string variableName, object value, Type type, VariableMetaData metaData)
-            : this(variableName, value, type, false)
-        {
-            this.metaData = metaData;
+            this.value = parameter.DefaultValue;
         }
 
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
@@ -140,8 +133,6 @@ namespace Sabresaurus.Sidekick
 
             bool isArray = type.IsArray;
             bool isGenericList = TypeUtility.IsGenericList(type);
-
-            Type elementType = type;
 
             // Root data type or element type of collection is unknown
             if (this.dataType == DataType.Unknown)
