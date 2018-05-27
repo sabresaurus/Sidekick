@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Sabresaurus.Sidekick
 {
-    public class WrappedObject : MonoBehaviour
+    public abstract class WrappedObject
     {
         DataType dataType;
         object value;

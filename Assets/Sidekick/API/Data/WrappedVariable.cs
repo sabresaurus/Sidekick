@@ -78,24 +78,57 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        public object DefaultValue
+        {
+            get
+            {
+                if (attributes.HasFlagByte(VariableAttributes.IsArray)
+                    || attributes.HasFlagByte(VariableAttributes.IsList))
+                {
+                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType, metaData, attributes);
+                    return TypeUtility.GetDefaultValue(type);
+                }
+                else
+                {
+                    return DefaultElementValue;
+                }
+            }
+        }
+
+        public object DefaultElementValue
+        {
+            get
+            {
+                if (DataType == DataType.Enum)
+                {
+                    return 0;
+                }
+                else
+                {
+                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType, metaData);
+                    return TypeUtility.GetDefaultValue(type);
+                }
+            }
+        }
+
         public object ValueNative
         {
             get
             {
-                if (dataType == DataType.UnityObjectReference)
-                {
-                    // TODO support array of Unity Objects
+                //if (dataType == DataType.UnityObjectReference)
+                //{
+                //    // TODO support array of Unity Objects
 
-                    if (value is UnityEngine.Object || value == null)
-                    {
-                        UnityEngine.Object unityObject = value as UnityEngine.Object;
-                        return unityObject;
-                    }
-                    else
-                    {
-                        return ObjectMap.GetObjectFromGUID((Guid)value);
-                    }
-                }
+                //    if (value is UnityEngine.Object || value == null)
+                //    {
+                //        UnityEngine.Object unityObject = value as UnityEngine.Object;
+                //        return unityObject;
+                //    }
+                //    else
+                //    {
+                //        return ObjectMap.GetObjectFromGUID((Guid)value);
+                //    }
+                //}
 
                 if (attributes.HasFlagByte(VariableAttributes.IsArray)
                         || attributes.HasFlagByte(VariableAttributes.IsList))

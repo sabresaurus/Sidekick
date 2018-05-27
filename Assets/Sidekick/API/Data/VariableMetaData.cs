@@ -17,7 +17,7 @@ namespace Sabresaurus.Sidekick
         int[] enumValues;
 
         // Unity Object Reference
-        string valueDisplayName;
+        string[] valueDisplayNames;
 
         public string[] EnumNames
         {
@@ -51,11 +51,11 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public string ValueDisplayName
+        public string[] ValueDisplayNames
         {
             get
             {
-                return valueDisplayName;
+                return valueDisplayNames;
             }
         }
 
@@ -88,7 +88,11 @@ namespace Sabresaurus.Sidekick
             }
             else if (dataType == DataType.UnityObjectReference)
             {
-                valueDisplayName = br.ReadString();
+                valueDisplayNames = new string[br.ReadInt32()];
+                for (int i = 0; i < valueDisplayNames.Length; i++)
+                {
+                    valueDisplayNames[i] = br.ReadString();
+                }
             }
         }
 
@@ -114,8 +118,11 @@ namespace Sabresaurus.Sidekick
             }
             else if (dataType == DataType.UnityObjectReference)
             {
-
-                bw.Write(valueDisplayName);
+                bw.Write(valueDisplayNames.Length);
+                for (int i = 0; i < valueDisplayNames.Length; i++)
+                {
+                    bw.Write(valueDisplayNames[i]);
+                }
             }
         }
 
@@ -129,7 +136,7 @@ namespace Sabresaurus.Sidekick
         {
             if (dataType == DataType.Enum || dataType == DataType.UnityObjectReference)
             {
-				VariableMetaData metaData = new VariableMetaData();
+                VariableMetaData metaData = new VariableMetaData();
 
                 metaData.typeFullName = elementType.FullName;
                 metaData.assemblyName = elementType.Assembly.FullName;
@@ -149,16 +156,28 @@ namespace Sabresaurus.Sidekick
                 {
                     if ((value as UnityEngine.Object) != null || (value is UnityEngine.Object == false && value != null))
                     {
-                        if (attributes.HasFlagByte(VariableAttributes.IsArray))
-                            metaData.valueDisplayName = "Array Element";
-                        else if (attributes.HasFlagByte(VariableAttributes.IsList))
-                            metaData.valueDisplayName = "List Element";
+                        if (attributes.HasFlagByte(VariableAttributes.IsArray)
+                            ||attributes.HasFlagByte(VariableAttributes.IsList))
+                        {
+                            IList list = (IList)value;
+                            metaData.valueDisplayNames = new string[list.Count];
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                UnityEngine.Object castObject = ((UnityEngine.Object)list[i]);
+                                if (castObject != null)
+                                    metaData.valueDisplayNames[i] = castObject.name;
+                                else
+                                    metaData.valueDisplayNames[i] = "null";
+                            }
+                        }
                         else
-                            metaData.valueDisplayName = ((UnityEngine.Object)value).name;
+                        {
+							metaData.valueDisplayNames = new [] { ((UnityEngine.Object)value).name };
+                        }
                     }
                     else
                     {
-                        metaData.valueDisplayName = "null";
+                        metaData.valueDisplayNames = new [] { "null" };
                     }
                     return metaData;
                 }

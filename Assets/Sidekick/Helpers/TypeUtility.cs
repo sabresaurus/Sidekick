@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine.Assertions;
 
 namespace Sabresaurus.Sidekick
 {
@@ -9,6 +10,8 @@ namespace Sabresaurus.Sidekick
 	{
 		public static object GetDefaultValue(Type type)
 		{
+            Assert.IsNotNull(type);
+                
 			return type.IsValueType ? Activator.CreateInstance(type) : null;
 		}
 

@@ -40,8 +40,6 @@ public static class VariableDrawer
                     size = list.Count;
                 }
 
-                Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(variable.DataType, variable.MetaData);
-
                 int newSize = Mathf.Max(0, EditorGUILayout.DelayedIntField("Size", size));
                 if (newSize != size)
                 {
@@ -50,13 +48,13 @@ public static class VariableDrawer
                         list = new ArrayList();
                         //list = (IList)Activator.CreateInstance(type);
                     }
-                    CollectionUtility.Resize(ref list, type, newSize);
+                    CollectionUtility.Resize(ref list, variable.DefaultElementValue, newSize);
                 }
                 if(list != null)
                 {
 					for (int i = 0; i < list.Count; i++)
 					{
-						list[i] = DrawIndividualVariable(componentDescription, variable, "Element " + i, type, list[i], onObjectPicker);
+						list[i] = DrawIndividualVariable(componentDescription, variable, "Element " + i, list[i], onObjectPicker, i);
 					}
                 }
                 newValue = list;
@@ -64,25 +62,15 @@ public static class VariableDrawer
             }
             else
             {
-                Type type;
-                if (variable.Value != null)
-                {
-                    type = variable.Value.GetType();
-                }
-                else
-                {
-                    type = variable.MetaData.GetTypeFromMetaData();
-                }
-                newValue = DrawIndividualVariable(componentDescription, variable, name, type, variable.Value, onObjectPicker);
+                newValue = DrawIndividualVariable(componentDescription, variable, name, variable.Value, onObjectPicker);
             }
         }
         else
         {
-            if (objectValue == null)
-                EditorGUILayout.TextField(name, "{null}");
-            else
-                EditorGUILayout.TextField(name, "Unknown <" + variable.Value.ToString() + ">");
-
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(name);
+            GUILayout.Label("Unknown <" + variable.Value.ToString() + "> ");
+            EditorGUILayout.EndHorizontal();
         }
         GUI.enabled = true;
 
@@ -90,7 +78,7 @@ public static class VariableDrawer
 
     }
 
-    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, Type fieldType, object fieldValue, Action<Guid, WrappedVariable> onObjectPicker)
+    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, object fieldValue, Action<Guid, WrappedVariable> onObjectPicker, int index = 0)
     {
         object newValue;
         if (variable.DataType == DataType.Enum)
@@ -101,12 +89,11 @@ public static class VariableDrawer
         {
             if (fieldValue is Guid)
             {
-
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(fieldName);
-                if ((Guid)fieldValue != Guid.Empty)
+                if ((Guid)fieldValue != Guid.Empty && variable.MetaData.ValueDisplayNames.Length > index)
                 {
-                    EditorGUILayout.TextField(variable.MetaData.ValueDisplayName);
+                    EditorGUILayout.TextField(variable.MetaData.ValueDisplayNames[index]);
                 }
                 else
                 {
@@ -123,29 +110,24 @@ public static class VariableDrawer
 
                 newValue = fieldValue;
             }
-            else if (typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
+            else
             {
                 newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, variable.MetaData.GetTypeFromMetaData(), true);
             }
-            else
-            {
-                throw new NotSupportedException();
-            }
         }
-        else if (fieldType == typeof(int)
-            || (fieldType.IsSubclassOf(typeof(Enum)) && OldInspectorSidekick.Current.Settings.TreatEnumsAsInts))
+        else if (variable.DataType == DataType.Integer)
         {
             newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
         }
-        else if (fieldType == typeof(long))
+        else if (variable.DataType == DataType.Long)
         {
             newValue = EditorGUILayout.LongField(fieldName, (long)fieldValue);
         }
-        else if (fieldType == typeof(string))
+        else if (variable.DataType == DataType.String)
         {
             newValue = EditorGUILayout.TextField(fieldName, (string)fieldValue);
         }
-        else if (fieldType == typeof(char))
+        else if (variable.DataType == DataType.Char)
         {
             string newString = EditorGUILayout.TextField(fieldName, new string((char)fieldValue, 1));
             if (newString.Length == 1)
@@ -157,41 +139,41 @@ public static class VariableDrawer
                 newValue = fieldValue;
             }
         }
-        else if (fieldType == typeof(float))
+        else if (variable.DataType == DataType.Float)
         {
             newValue = EditorGUILayout.FloatField(fieldName, (float)fieldValue);
         }
-        else if (fieldType == typeof(double))
+        else if (variable.DataType == DataType.Double)
         {
             newValue = EditorGUILayout.DoubleField(fieldName, (double)fieldValue);
         }
-        else if (fieldType == typeof(bool))
+        else if (variable.DataType == DataType.Boolean)
         {
             newValue = EditorGUILayout.Toggle(fieldName, (bool)fieldValue);
         }
-        else if (fieldType == typeof(Vector2))
+        else if (variable.DataType == DataType.Vector2)
         {
             newValue = EditorGUILayout.Vector2Field(fieldName, (Vector2)fieldValue);
         }
-        else if (fieldType == typeof(Vector3))
+        else if (variable.DataType == DataType.Vector3)
         {
             newValue = EditorGUILayout.Vector3Field(fieldName, (Vector3)fieldValue);
         }
-        else if (fieldType == typeof(Vector4))
+        else if (variable.DataType == DataType.Vector4)
         {
             newValue = EditorGUILayout.Vector4Field(fieldName, (Vector4)fieldValue);
         }
 #if UNITY_2017_2_OR_NEWER
-        else if (fieldType == typeof(Vector2Int))
+        else if (variable.DataType == DataType.Vector2Int)
         {
             newValue = EditorGUILayout.Vector2IntField(fieldName, (Vector2Int)fieldValue);
         }
-        else if (fieldType == typeof(Vector3Int))
+        else if (variable.DataType == DataType.Vector3Int)
         {
             newValue = EditorGUILayout.Vector3IntField(fieldName, (Vector3Int)fieldValue);
         } 
 #endif
-        else if (fieldType == typeof(Quaternion))
+        else if (variable.DataType == DataType.Quaternion)
         {
             //if(InspectorSidekick.Current.Settings.RotationsAsEuler)
             //{
@@ -208,72 +190,47 @@ public static class VariableDrawer
                 newValue = new Quaternion(vector.x, vector.y, vector.z, vector.z);
             }
         }
-        else if (fieldType == typeof(Bounds))
+        else if (variable.DataType == DataType.Bounds)
         {
             newValue = EditorGUILayout.BoundsField(fieldName, (Bounds)fieldValue);
         }
 #if UNITY_2017_2_OR_NEWER
-        else if (fieldType == typeof(BoundsInt))
+        else if (variable.DataType == DataType.BoundsInt)
         {
             newValue = EditorGUILayout.BoundsIntField(fieldName, (BoundsInt)fieldValue);
         } 
 #endif
-        else if (fieldType == typeof(Color))
+        else if (variable.DataType == DataType.Color)
         {
             newValue = EditorGUILayout.ColorField(fieldName, (Color)fieldValue);
         }
-        else if (fieldType == typeof(Color32))
+        else if (variable.DataType == DataType.Color32)
         {
             newValue = (Color32)EditorGUILayout.ColorField(fieldName, (Color32)fieldValue);
         }
-        else if (fieldType == typeof(Gradient))
+        else if (variable.DataType == DataType.Gradient)
         {
             newValue = InternalEditorGUILayout.GradientField(new GUIContent(fieldName), (Gradient)fieldValue);
         }
-        else if (fieldType == typeof(AnimationCurve))
+        else if (variable.DataType == DataType.AnimationCurve)
         {
             newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve)fieldValue);
         }
-        else if (fieldType.IsSubclassOf(typeof(Enum)))
-        {
-            newValue = EditorGUILayout.EnumPopup(fieldName, (Enum)fieldValue);
-        }
-        else if (fieldType == typeof(Rect))
+        else if (variable.DataType == DataType.Rect)
         {
             newValue = EditorGUILayout.RectField(fieldName, (Rect)fieldValue);
         }
 #if UNITY_2017_2_OR_NEWER
-        else if (fieldType == typeof(RectInt))
+        else if (variable.DataType == DataType.RectInt)
         {
             newValue = EditorGUILayout.RectIntField(fieldName, (RectInt)fieldValue);
         } 
 #endif
-        else if (fieldType.IsSubclassOf(typeof(UnityEngine.Object)))
-        {
-            newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, fieldType, true);
-        }
         else
         {
-            GUILayout.Label(fieldType + " " + fieldName);
+            GUILayout.Label(fieldName);
             newValue = fieldValue;
         }
-
-
-
-        //          EditorGUILayout.BoundsField()
-        //          EditorGUILayout.ColorField
-        //          EditorGUILayout.CurveField
-        //          EditorGUILayout.EnumPopup
-        //          EditorGUILayout.EnumMaskField
-        //          EditorGUILayout.IntSlider // If there's a range attribute maybe?
-        //          EditorGUILayout.LabelField // what's this?
-        //          EditorGUILayout.ObjectField
-        //          EditorGUILayout.RectField
-        //          EditorGUILayout.TextArea
-        //          EditorGUILayout.TextField
-
-        // What's this? public static void HelpBox (string message, MessageType type, bool wide)
-        // What's this?         public static bool InspectorTitlebar (bool foldout, Object targetObj)
 
         return newValue;
     }

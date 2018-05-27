@@ -79,6 +79,18 @@ public class DataTestScript : MonoBehaviour
         set;
     }
 
+    public string NullString
+    {
+        get
+        {
+            return null;
+        }
+        set
+        {
+            
+        }
+    }
+
     public List<int> TestList
     {
         get

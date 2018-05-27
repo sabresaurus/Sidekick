@@ -338,7 +338,7 @@ namespace Sabresaurus.Sidekick
                             object newValue = VariableDrawer.Draw(component, field, OnOpenObjectPicker);
                             if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && field.DataType != DataType.Unknown)
                             {
-                                if (newValue != field.Value)
+                                if (newValue != field.Value || field.Attributes.HasFlagByte(VariableAttributes.IsList) || field.Attributes.HasFlagByte(VariableAttributes.IsArray))
                                 {
                                     field.Value = newValue;
                                     commonContext.APIManager.SendToPlayers(new SetVariableRequest(component.Guid, field));
@@ -365,7 +365,7 @@ namespace Sabresaurus.Sidekick
                             object newValue = VariableDrawer.Draw(component, property, OnOpenObjectPicker);
                             if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && property.DataType != DataType.Unknown)
                             {
-                                if (newValue != property.Value)
+                                if (newValue != property.Value || property.Attributes.HasFlagByte(VariableAttributes.IsList) || property.Attributes.HasFlagByte(VariableAttributes.IsArray))
                                 {
                                     property.Value = newValue;
                                     commonContext.APIManager.SendToPlayers(new SetVariableRequest(component.Guid, property));

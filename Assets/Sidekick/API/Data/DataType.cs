@@ -101,30 +101,25 @@ namespace Sabresaurus.Sidekick
 
         public static Type GetSystemTypeFromWrappedDataType(DataType dataType, VariableMetaData metaData)
         {
-            Type elementType = null;
-            if (dataType == DataType.UnityObjectReference || dataType == DataType.Enum)
+            if (dataType == DataType.UnityObjectReference)
             {
-                elementType = metaData.GetTypeFromMetaData();
+                return metaData.GetTypeFromMetaData();
+            }
+            else if(dataType == DataType.Enum)
+            {
+                return typeof(int);
             }
 
             foreach (KeyValuePair<Type, DataType> mapping in mappings)
             {
                 if (mapping.Value == dataType)
                 {
-                    elementType = mapping.Key;
-                    break;
+                    return mapping.Key;
                 }
             }
 
-            if (elementType != null)
-            {
-                return elementType;
-            }
-            else
-            {
-                // None matched
-                return null;
-            }
+            // None matched
+            return null;
         }
 
         public static Type GetSystemTypeFromWrappedDataType(DataType dataType, VariableMetaData metaData, VariableAttributes attributes)

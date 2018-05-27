@@ -6,7 +6,7 @@ namespace Sabresaurus.Sidekick
 {
     public static class CollectionUtility
     {
-        public static void Resize(ref IList list, Type elementType, int newSize)
+        public static void Resize(ref IList list, object defaultElementValue, int newSize)
         {
             int oldSize = list.Count;
 
@@ -20,13 +20,13 @@ namespace Sabresaurus.Sidekick
                 }
                 else
                 {
-                    objectToAdd = TypeUtility.GetDefaultValue(elementType);
+                    objectToAdd = defaultElementValue;
                 }
             }
 
             if (list.IsFixedSize)
             {
-                Array newArray = Array.CreateInstance(elementType, newSize);
+                Array newArray = Array.CreateInstance(typeof(object), newSize);
                 Array.Copy((Array)list, newArray, Math.Min(oldSize, newArray.Length));
 
                 if (newSize > oldSize)
@@ -61,6 +61,14 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        static object GetValue(WrappedVariable wrappedVariable, object value)
+        {
+            if (wrappedVariable.DataType == DataType.UnityObjectReference && value is Guid)
+                return ObjectMap.GetObjectFromGUID((Guid)value);
+            else
+                return value;
+        }
+
         public static object ConvertArrayOrList(WrappedVariable wrappedVariable, Type type)
         {
             // TODO: Investigate if this array copying could be simplified
@@ -72,7 +80,7 @@ namespace Sabresaurus.Sidekick
                 object newArray = Activator.CreateInstance(type, new object[] { count });
                 for (int i = 0; i < count; i++)
                 {
-                    ((Array)newArray).SetValue(sourceList[i], i);
+                    ((Array)newArray).SetValue(GetValue(wrappedVariable, sourceList[i]), i);
                 }
                 return newArray;
             }
@@ -81,7 +89,7 @@ namespace Sabresaurus.Sidekick
                 object newList = Activator.CreateInstance(type, new object[] { 0 });
                 for (int i = 0; i < count; i++)
                 {
-                    ((IList)newList).Add(sourceList[i]);
+                    ((IList)newList).Add(GetValue(wrappedVariable, sourceList[i]));
                 }
                 return newList;
             }
