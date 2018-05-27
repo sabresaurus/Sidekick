@@ -13,7 +13,7 @@ namespace Sabresaurus.Sidekick
         None = 0,
         Static = 1,
         Obsolete = 2,
-
+        ContainsGenericParameters = 4,
     }
 
     public class WrappedMethod
@@ -72,6 +72,32 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        /// <summary>
+        /// Reports if Sidekick understands this method well enough to be confident to invoke it without issues.
+        /// </summary>
+        public bool SafeToFire
+        {
+            get
+            {
+                foreach (WrappedParameter parameter in parameters)
+                {
+                    if(parameter.DataType == DataType.Unknown)
+                    {
+                        // Any unknown parameter is counted as not safe
+                        return false;
+                    }
+                }
+
+                if(methodAttributes.HasFlagByte(MethodAttributes.ContainsGenericParameters))
+                {
+                    // Generic parameters aren't supported right now
+                    return false;
+                }
+                // Found no reason it's not safe, assume it is
+                return true;
+            }
+        }
+
         public WrappedMethod(MethodInfo methodInfo)
         {
             this.methodName = methodInfo.Name;
@@ -94,6 +120,11 @@ namespace Sabresaurus.Sidekick
             if (AttributeHelper.IsObsolete(methodInfo.GetCustomAttributes(false)))
             {
                 this.methodAttributes |= MethodAttributes.Obsolete;
+            }
+
+            if(methodInfo.ContainsGenericParameters)
+            {
+                this.methodAttributes |= MethodAttributes.ContainsGenericParameters;
             }
         }
 

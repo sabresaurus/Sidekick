@@ -403,6 +403,11 @@ namespace Sabresaurus.Sidekick
                                 continue;
                             }
 
+                            if(method.SafeToFire == false)
+                            {
+                                EditorGUI.BeginDisabledGroup(true);
+                            }
+
                             GUILayout.BeginHorizontal();
                             if (method.ReturnType == DataType.Void)
                                 labelStyle.normal.textColor = Color.grey;
@@ -416,6 +421,11 @@ namespace Sabresaurus.Sidekick
                             if((method.MethodAttributes & MethodAttributes.Static) == MethodAttributes.Static)
                             {
                                 displayText += " [Static]";
+                            }
+
+                            if (method.SafeToFire == false)
+                            {
+                                displayText += " [Unsupported]";
                             }
 
                             bool wasMethodExpanded = (method.Equals(expandedMethod));
@@ -489,6 +499,11 @@ namespace Sabresaurus.Sidekick
                             else
                             {
                                 GUILayout.EndHorizontal();
+                            }
+
+                            if (method.SafeToFire == false)
+                            {
+                                EditorGUI.EndDisabledGroup();
                             }
                         }
                     }
