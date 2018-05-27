@@ -288,7 +288,15 @@ namespace Sabresaurus.Sidekick
         {
             if (dataType == DataType.String)
             {
-                bw.Write((string)value);
+                if(value == null)
+                {
+                    // Treat null strings as empty as that's what our inspector will default them to
+                    bw.Write("");
+                }
+                else
+                {
+					bw.Write((string)value);
+                }
             }
             else if (dataType == DataType.Char)
             {
