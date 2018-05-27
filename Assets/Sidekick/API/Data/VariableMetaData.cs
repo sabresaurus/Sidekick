@@ -16,9 +16,6 @@ namespace Sabresaurus.Sidekick
         string[] enumNames;
         int[] enumValues;
 
-        // Unity Object Reference
-        string[] valueDisplayNames;
-
         public string[] EnumNames
         {
             get
@@ -51,14 +48,6 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public string[] ValueDisplayNames
-        {
-            get
-            {
-                return valueDisplayNames;
-            }
-        }
-
         public VariableMetaData()
         {
 
@@ -86,14 +75,6 @@ namespace Sabresaurus.Sidekick
                     enumValues[i] = br.ReadInt32();
                 }
             }
-            else if (dataType == DataType.UnityObjectReference)
-            {
-                valueDisplayNames = new string[br.ReadInt32()];
-                for (int i = 0; i < valueDisplayNames.Length; i++)
-                {
-                    valueDisplayNames[i] = br.ReadString();
-                }
-            }
         }
 
         public void Write(BinaryWriter bw, DataType dataType, VariableAttributes attributes)
@@ -116,14 +97,6 @@ namespace Sabresaurus.Sidekick
                     bw.Write(enumValues[i]);
                 }
             }
-            else if (dataType == DataType.UnityObjectReference)
-            {
-                bw.Write(valueDisplayNames.Length);
-                for (int i = 0; i < valueDisplayNames.Length; i++)
-                {
-                    bw.Write(valueDisplayNames[i]);
-                }
-            }
         }
 
         public Type GetTypeFromMetaData()
@@ -132,7 +105,7 @@ namespace Sabresaurus.Sidekick
             return type;
         }
 
-        public static VariableMetaData Create(DataType dataType, Type elementType, object value, VariableAttributes attributes)
+        public static VariableMetaData Create(DataType dataType, Type elementType, VariableAttributes attributes)
         {
             if (dataType == DataType.Enum || dataType == DataType.UnityObjectReference)
             {
@@ -149,35 +122,6 @@ namespace Sabresaurus.Sidekick
                     for (int i = 0; i < metaData.enumNames.Length; i++)
                     {
                         metaData.enumValues[i] = (int)enumValuesArray.GetValue(i);
-                    }
-                    return metaData;
-                }
-                else if (dataType == DataType.UnityObjectReference)
-                {
-                    if ((value as UnityEngine.Object) != null || (value is UnityEngine.Object == false && value != null))
-                    {
-                        if (attributes.HasFlagByte(VariableAttributes.IsArray)
-                            ||attributes.HasFlagByte(VariableAttributes.IsList))
-                        {
-                            IList list = (IList)value;
-                            metaData.valueDisplayNames = new string[list.Count];
-                            for (int i = 0; i < list.Count; i++)
-                            {
-                                UnityEngine.Object castObject = ((UnityEngine.Object)list[i]);
-                                if (castObject != null)
-                                    metaData.valueDisplayNames[i] = castObject.name;
-                                else
-                                    metaData.valueDisplayNames[i] = "null";
-                            }
-                        }
-                        else
-                        {
-							metaData.valueDisplayNames = new [] { ((UnityEngine.Object)value).name };
-                        }
-                    }
-                    else
-                    {
-                        metaData.valueDisplayNames = new [] { "null" };
                     }
                     return metaData;
                 }

@@ -7,64 +7,17 @@ using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick
 {
-    [Flags]
-    public enum VariableAttributes : byte
-    {
-        None = 0,
-        ReadOnly = 1 << 0,
-        IsStatic = 1 << 1,
-        IsLiteral = 1 << 2, // e.g. const
-        IsArray = 1 << 3,
-        IsList = 1 << 4,
-        IsValueType = 1 << 5,
-        Obsolete = 1 << 6,
-    }
-
     /// <summary>
     /// Wraps a field or property so that it can be sent over the network
     /// </summary>
-    public class WrappedVariable
+    public class WrappedVariable : WrappedBaseObject
     {
-        string variableName;
-        VariableAttributes attributes = VariableAttributes.None;
-        DataType dataType;
         object value;
 
-        // Meta data
-        VariableMetaData metaData;
+        // Unity Object Reference
+        string[] valueDisplayNames;
 
         #region Properties
-        public string VariableName
-        {
-            get
-            {
-                return variableName;
-            }
-        }
-
-        public DataType DataType
-        {
-            get
-            {
-                return dataType;
-            }
-        }
-
-        public VariableAttributes Attributes
-        {
-            get
-            {
-                return attributes;
-            }
-        }
-
-        public VariableMetaData MetaData
-        {
-            get
-            {
-                return metaData;
-            }
-        }
 
         public object Value
         {
@@ -75,39 +28,6 @@ namespace Sabresaurus.Sidekick
             set
             {
                 this.value = value;
-            }
-        }
-
-        public object DefaultValue
-        {
-            get
-            {
-                if (attributes.HasFlagByte(VariableAttributes.IsArray)
-                    || attributes.HasFlagByte(VariableAttributes.IsList))
-                {
-                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType, metaData, attributes);
-                    return TypeUtility.GetDefaultValue(type);
-                }
-                else
-                {
-                    return DefaultElementValue;
-                }
-            }
-        }
-
-        public object DefaultElementValue
-        {
-            get
-            {
-                if (DataType == DataType.Enum)
-                {
-                    return 0;
-                }
-                else
-                {
-                    Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType, metaData);
-                    return TypeUtility.GetDefaultValue(type);
-                }
             }
         }
 
@@ -141,13 +61,19 @@ namespace Sabresaurus.Sidekick
                 }
             }
         }
+
+        public string[] ValueDisplayNames
+        {
+            get
+            {
+                return valueDisplayNames;
+            }
+        }
         #endregion
 
         public WrappedVariable(FieldInfo fieldInfo, object objectValue)
             : this(fieldInfo.Name, objectValue, fieldInfo.FieldType, true)
         {
-            this.variableName = fieldInfo.Name;
-
             if (fieldInfo.IsInitOnly)
             {
                 this.attributes |= VariableAttributes.ReadOnly;
@@ -208,32 +134,14 @@ namespace Sabresaurus.Sidekick
         }
 
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
+            : base(variableName, type, generateMetadata)
         {
-            this.variableName = variableName;
-            this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(type);
             this.value = value;
 
             bool isArray = type.IsArray;
             bool isGenericList = TypeUtility.IsGenericList(type);
 
-            this.attributes = VariableAttributes.None;
-
             Type elementType = type;
-
-            if (isArray || isGenericList)
-            {
-                if (isArray)
-                {
-                    this.attributes |= VariableAttributes.IsArray;
-                }
-                else if (isGenericList)
-                {
-                    this.attributes |= VariableAttributes.IsList;
-                }
-                elementType = TypeUtility.GetElementType(type);
-                //Debug.Log(elementType);
-                this.dataType = DataTypeHelper.GetWrappedDataTypeFromSystemType(elementType);
-            }
 
             // Root data type or element type of collection is unknown
             if (this.dataType == DataType.Unknown)
@@ -258,18 +166,39 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            if (generateMetadata)
+            if (dataType == DataType.UnityObjectReference)
             {
-                metaData = VariableMetaData.Create(dataType, elementType, value, attributes);
+                if ((value as UnityEngine.Object) != null || (value is UnityEngine.Object == false && value != null))
+                {
+                    if (attributes.HasFlagByte(VariableAttributes.IsArray)
+                        || attributes.HasFlagByte(VariableAttributes.IsList))
+                    {
+                        IList list = (IList)value;
+                        valueDisplayNames = new string[list.Count];
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            UnityEngine.Object castObject = ((UnityEngine.Object)list[i]);
+                            if (castObject != null)
+                                valueDisplayNames[i] = castObject.name;
+                            else
+                                valueDisplayNames[i] = "null";
+                        }
+                    }
+                    else
+                    {
+                        valueDisplayNames = new[] { ((UnityEngine.Object)value).name };
+                    }
+                }
+                else
+                {
+                    valueDisplayNames = new[] { "null" };
+                }
             }
         }
 
         public WrappedVariable(BinaryReader br)
+            : base(br)
         {
-            this.variableName = br.ReadString();
-            this.attributes = (VariableAttributes)br.ReadByte();
-            this.dataType = (DataType)br.ReadByte();
-
             if (this.attributes.HasFlagByte(VariableAttributes.IsArray))
             {
                 int count = br.ReadInt32();
@@ -296,18 +225,19 @@ namespace Sabresaurus.Sidekick
                 this.value = DataTypeHelper.ReadFromBinary(dataType, br);
             }
 
-            bool hasMetaData = br.ReadBoolean();
-            if (hasMetaData)
+            if (dataType == DataType.UnityObjectReference)
             {
-                metaData = new VariableMetaData(br, dataType, attributes);
+                valueDisplayNames = new string[br.ReadInt32()];
+                for (int i = 0; i < valueDisplayNames.Length; i++)
+                {
+                    valueDisplayNames[i] = br.ReadString();
+                }
             }
         }
 
-        public void Write(BinaryWriter bw)
+        public override void Write(BinaryWriter bw)
         {
-            bw.Write(variableName);
-            bw.Write((byte)attributes);
-            bw.Write((byte)dataType);
+            base.Write(bw);
 
             if (this.attributes.HasFlagByte(VariableAttributes.IsArray)
                 || this.attributes.HasFlagByte(VariableAttributes.IsList))
@@ -322,10 +252,6 @@ namespace Sabresaurus.Sidekick
                         DataTypeHelper.WriteToBinary(dataType, list[i], bw);
                     }
                 }
-                //else if(value is Array)
-                //{
-                //    Debug.Log(variableName + " is Array");
-                //}
                 else
                 {
                     throw new NotImplementedException("Array serialisation has not been implemented for this array type: " + value.GetType());
@@ -336,10 +262,13 @@ namespace Sabresaurus.Sidekick
                 DataTypeHelper.WriteToBinary(dataType, value, bw);
             }
 
-            bw.Write(metaData != null);
-            if (metaData != null)
+            if (dataType == DataType.UnityObjectReference)
             {
-                metaData.Write(bw, dataType, attributes);
+                bw.Write(valueDisplayNames.Length);
+                for (int i = 0; i < valueDisplayNames.Length; i++)
+                {
+                    bw.Write(valueDisplayNames[i]);
+                }
             }
         }
     }

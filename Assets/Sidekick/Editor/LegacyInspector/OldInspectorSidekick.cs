@@ -85,6 +85,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+#if SIDEKICK_DEBUG
         [MenuItem("Tools/Old Sidekick")]
         static void Init()
         {
@@ -92,6 +93,7 @@ namespace Sabresaurus.Sidekick
             OldInspectorSidekick sidekick = EditorWindow.GetWindow<OldInspectorSidekick>();
             sidekick.UpdateTitleContent();
         }
+#endif
 
         void OnEnable()
         {

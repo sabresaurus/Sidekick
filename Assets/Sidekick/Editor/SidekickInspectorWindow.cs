@@ -422,22 +422,21 @@ namespace Sabresaurus.Sidekick
 
                             if (GUILayout.Button(displayText, normalButtonStyle))
                             {
-                                List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
-
-                                for (int i = 0; i < method.ParameterCount; i++)
-                                {
-                                    //Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(method.Parameters[i].DataType);
-
-                                    WrappedParameter parameter = method.Parameters[i];
-                                    defaultArguments.Add(new WrappedVariable(parameter));
-                                }
-
                                 if(wasMethodExpanded)
                                 {
 									commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
                                 }
                                 else
                                 {
+                                    // Not expanded, just use the default values
+                                    List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
+
+                                    for (int i = 0; i < method.ParameterCount; i++)
+                                    {
+                                        WrappedParameter parameter = method.Parameters[i];
+                                        defaultArguments.Add(new WrappedVariable(parameter));
+                                    }
+
                                     commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
                                 }
                             }
@@ -459,7 +458,7 @@ namespace Sabresaurus.Sidekick
 										arguments = new List<WrappedVariable>(method.ParameterCount);
 										for (int i = 0; i < method.ParameterCount; i++)
 										{
-											WrappedParameter parameter = method.Parameters[i];
+                                            WrappedParameter parameter = method.Parameters[i];
                                             arguments.Add(new WrappedVariable(parameter));
 										}
 									}

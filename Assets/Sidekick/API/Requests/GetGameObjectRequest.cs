@@ -142,9 +142,7 @@ namespace Sabresaurus.Sidekick.Requests
                         if (getMethod != null)
                         {
                             MethodImplAttributes methodImplAttributes = getMethod.GetMethodImplementationFlags();
-#pragma warning disable RECS0016 // Bitwise operation on enum which has no [Flags] attribute
                             if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
-#pragma warning restore RECS0016 // Bitwise operation on enum which has no [Flags] attribute
                             {
                                 continue;
                             }
@@ -170,9 +168,7 @@ namespace Sabresaurus.Sidekick.Requests
                         }
 
                         MethodImplAttributes methodImplAttributes = methodInfo.GetMethodImplementationFlags();
-#pragma warning disable RECS0016 // Bitwise operation on enum which has no [Flags] attribute
                         if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
-#pragma warning restore RECS0016 // Bitwise operation on enum which has no [Flags] attribute
                         {
                             continue;
                         }

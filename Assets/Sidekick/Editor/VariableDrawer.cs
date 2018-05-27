@@ -91,9 +91,9 @@ public static class VariableDrawer
             {
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(fieldName);
-                if ((Guid)fieldValue != Guid.Empty && variable.MetaData.ValueDisplayNames.Length > index)
+                if ((Guid)fieldValue != Guid.Empty && variable.ValueDisplayNames.Length > index)
                 {
-                    EditorGUILayout.TextField(variable.MetaData.ValueDisplayNames[index]);
+                    EditorGUILayout.TextField(variable.ValueDisplayNames[index]);
                 }
                 else
                 {
