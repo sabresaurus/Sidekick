@@ -26,7 +26,7 @@ Fire arbitrary methods on components with support for parameters and return type
 
 ## Unified API
 
-All interactions are handled through a single unified API. This means if you're editing fields on device or in editor it uses a single code path. It may seem a little overkill for every request when just working in editor to be packed into binary then unpacked, but he unified workflow makes it much simpler to add new requests and have them supported in both use-cases without writing duplicate code.
+All interactions are handled through a single unified API. This means if you're editing fields on device or in editor it uses a single code path. It may seem a little overkill for every request to be packed into binary then unpacked when just working in editor, but the unified workflow makes it much simpler to add new requests and have them supported in both use-cases without writing duplicate code.
 
 ### Current requests:
 **GetHierarchy** - Fetches a list of scenes with the hierarchy of transforms inside them
@@ -53,7 +53,7 @@ You can either download the latest version directly from the repository [here](h
 
 Once you have downloaded the zip, for installation into existing projects copy the contents of the extracted Assets folder into your project's Assets folder.
 
-Sidekick requires Unity 5.6.0 and above, although is principally developed on Unity 2017 and 2018. It has been tested in editor, on mobile, WebGL and on console. If you find a platform or a Unity version (> 5.6) it doesn't support please create an [issue](https://github.com/sabresaurus/Sidekick/issues) and we'll add support.
+Sidekick requires Unity 5.6.0 or higher, although is principally developed on Unity 2017 and 2018. It has been tested in editor, on mobile, WebGL and on console. If you find a platform or a Unity version (> 5.6) that it doesn't support please create an [issue](https://github.com/sabresaurus/Sidekick/issues) and we'll add support for it as soon as possible.
 
 ## Running Sidekick
 
