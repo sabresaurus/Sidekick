@@ -27,7 +27,10 @@ namespace Sabresaurus.Sidekick
             set
             {
                 selectedPath = value;
-                SelectionChanged(selectedPath);
+                if(SelectionChanged != null)
+                {
+					SelectionChanged(selectedPath);
+                }
             }
         }
 
@@ -37,6 +40,8 @@ namespace Sabresaurus.Sidekick
 
             this.commonContext = commonContext;
             Selection.selectionChanged += OnEditorSelectionChanged;
+
+            RefreshEditorSelection();
         }
 
         public void OnDisable()
@@ -44,6 +49,18 @@ namespace Sabresaurus.Sidekick
             //Debug.Log("SelectionManager OnDisable()");
 
             Selection.selectionChanged -= OnEditorSelectionChanged;
+        }
+
+        public void RefreshEditorSelection()
+        {
+            if (Selection.activeGameObject != null)
+            {
+                SelectedPath = Selection.activeGameObject.scene.name + "/" + GetPath(Selection.activeGameObject.transform);
+            }
+            else
+            {
+                SelectedPath = "";
+            }
         }
 
         private void OnEditorSelectionChanged()

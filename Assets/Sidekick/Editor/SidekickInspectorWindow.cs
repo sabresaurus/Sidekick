@@ -76,6 +76,7 @@ namespace Sabresaurus.Sidekick
             else
             {
                 DisableRemoteMode();
+                commonContext.SelectionManager.RefreshEditorSelection();
             }
         }
 
@@ -268,12 +269,14 @@ namespace Sabresaurus.Sidekick
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
             GUILayout.Space(3);
             EditorGUI.BeginChangeCheck();
-#if UNITY_2017_3_OR_NEWER
-            // EnumMaskField became EnumFlagsField in 2017.3
-            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumFlagsField("Display", settings.GetGameObjectFlags);
-#else
-            settings.GetGameObjectFlags = (InfoFlags)EditorGUILayout.EnumMaskField("Display", settings.GetGameObjectFlags);
-#endif
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Display");
+            settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Fields, "Fields");
+            settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Properties, "Properties");
+            settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Methods, "Methods");
+			EditorGUILayout.EndHorizontal();
+
             if(EditorGUI.EndChangeCheck())
             {
                 if (!string.IsNullOrEmpty(commonContext.SelectionManager.SelectedPath)) // Valid path?
@@ -415,6 +418,8 @@ namespace Sabresaurus.Sidekick
                                 displayText += " [Static]";
                             }
 
+                            bool wasMethodExpanded = (method.Equals(expandedMethod));
+
                             if (GUILayout.Button(displayText, normalButtonStyle))
                             {
                                 List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
@@ -427,7 +432,14 @@ namespace Sabresaurus.Sidekick
                                     defaultArguments.Add(new WrappedVariable(parameter));
                                 }
 
-                                commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
+                                if(wasMethodExpanded)
+                                {
+									commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
+                                }
+                                else
+                                {
+                                    commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
+                                }
                             }
 
                             Rect lastRect = GUILayoutUtility.GetLastRect();
@@ -436,7 +448,6 @@ namespace Sabresaurus.Sidekick
 
                             if(method.ParameterCount > 0)
                             {
-								bool wasMethodExpanded = (method.Equals(expandedMethod));
 								bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
                                 GUILayout.EndHorizontal();
 
@@ -467,13 +478,10 @@ namespace Sabresaurus.Sidekick
 										//argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
 									}
 									
-									Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
-									buttonRect = EditorGUI.IndentedRect(buttonRect);
+									//Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
+									//buttonRect = EditorGUI.IndentedRect(buttonRect);
 									
-									if (GUI.Button(buttonRect, "Fire"))
-									{
-										commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
-									}
+									
 									EditorGUI.indentLevel--;
 									
 									GUILayout.Space(10);
