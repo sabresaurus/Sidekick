@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Sabresaurus.Sidekick.Requests;
@@ -33,7 +34,22 @@ namespace Sabresaurus.Sidekick
             hierarchySearchField = new SearchField();
             hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
 
+            EditorConnection.instance.RegisterConnection(OnPlayerConnected);
+            EditorConnection.instance.RegisterDisconnection(OnPlayerDisconnected);
+
             UpdateTitleContent();
+        }
+
+        private void OnPlayerConnected(int playerID)
+        {
+            Repaint();
+
+            parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
+        }
+
+        private void OnPlayerDisconnected(int playerID)
+        {
+            Repaint();
         }
 
         void OnDisable()
