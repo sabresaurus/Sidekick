@@ -168,8 +168,9 @@ namespace Sabresaurus.Sidekick.Requests
                         }
 
                         MethodImplAttributes methodImplAttributes = methodInfo.GetMethodImplementationFlags();
-                        if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
+                        if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0 && methodInfo.Name.StartsWith("INTERNAL_"))
                         {
+                            // Skip any internal method if it also begins with INTERNAL_
                             continue;
                         }
                         WrappedMethod wrappedMethod = new WrappedMethod(methodInfo);

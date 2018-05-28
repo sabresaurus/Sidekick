@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Sabresaurus.Sidekick.Requests;
 using UnityEngine.Assertions;
 
 namespace Sabresaurus.Sidekick
@@ -228,7 +229,7 @@ namespace Sabresaurus.Sidekick
 			{
 				// Check that no property exists with the name after the prefix
 				// Don't use SpecialName here as compilers aren't required to populate it
-				if(parentType.GetProperty(methodName.Substring(4)) != null)
+                if(parentType.GetProperty(methodName.Substring(4), GetGameObjectRequest.BINDING_FLAGS) != null)
 				{
 					return true;
 				}

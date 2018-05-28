@@ -216,6 +216,12 @@ namespace Sabresaurus.Sidekick
             {
                 InvokeMethodResponse invokeMethodResponse = (InvokeMethodResponse)response;
                 methodOutput = invokeMethodResponse.MethodName + " () returned:\n" + invokeMethodResponse.ReturnedVariable.Value;
+
+                UnityEngine.Object returnedUnityObject = invokeMethodResponse.ReturnedVariable.Value as UnityEngine.Object;
+                if (returnedUnityObject != null)
+                {
+                    EditorGUIUtility.PingObject(returnedUnityObject);
+                }
                 opacity = 1f;
                 Repaint();
             }
@@ -464,6 +470,9 @@ namespace Sabresaurus.Sidekick
 								{
 									if (isMethodExpanded)
 									{
+                                        // Reset the keyboard control as we don't want old text carrying over
+                                        GUIUtility.keyboardControl = 0;
+
 										expandedMethod = method;
 										arguments = new List<WrappedVariable>(method.ParameterCount);
 										for (int i = 0; i < method.ParameterCount; i++)
