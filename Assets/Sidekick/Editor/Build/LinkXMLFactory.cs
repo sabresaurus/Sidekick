@@ -13,13 +13,6 @@ public static class LinkXMLFactory
     public static readonly Type[] DEFAULT_TYPES =
     {
         typeof(GameObject),
-        typeof(Transform),
-        typeof(Camera),
-        typeof(Light),
-        typeof(Animator),
-        typeof(Animation),
-        typeof(AudioClip),
-        typeof(AudioSource),
     };
 
     public static void GenerateForAllAssemblies()
@@ -30,7 +23,30 @@ public static class LinkXMLFactory
         //}
     }
 
-    public static void Generate(Type[] types)
+    public static List<Type> GetUnityComponentTypes()
+    {
+        List<Type> componentTypes = new List<Type>();
+        Type baseType = typeof(Component);
+        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            // Restrict to official Unity runtime assemblies
+            if(assembly.FullName.StartsWith("UnityEngine"))
+            {
+                Type[] types = assembly.GetTypes();
+                foreach (Type type in types)
+                {
+                    if(type.IsSubclassOf(baseType))
+                    {
+                        componentTypes.Add(type);
+                    }
+                }
+            }
+        }
+
+        return componentTypes;
+    }
+
+    public static void Generate(List<Type> types)
     {
         Dictionary<Assembly, List<Type>> assemblyTypes = new Dictionary<Assembly, List<Type>>();
         foreach (var type in types)
@@ -58,6 +74,8 @@ public static class LinkXMLFactory
             {
                 writer.WriteStartElement("assembly");
                 writer.WriteAttributeString("fullname", new AssemblyName(mapping.Key.FullName).Name);
+                // Assemblies won't always be present, make sure they're optional
+                writer.WriteAttributeString("ignoreIfMissing", "1");
 
                 foreach (var item in mapping.Value)
                 {
