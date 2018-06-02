@@ -35,20 +35,20 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
-                //if (dataType == DataType.UnityObjectReference)
-                //{
-                //    // TODO support array of Unity Objects
+                if (dataType == DataType.UnityObjectReference)
+                {
+                    // TODO support array of Unity Objects
 
-                //    if (value is UnityEngine.Object || value == null)
-                //    {
-                //        UnityEngine.Object unityObject = value as UnityEngine.Object;
-                //        return unityObject;
-                //    }
-                //    else
-                //    {
-                //        return ObjectMap.GetObjectFromGUID((Guid)value);
-                //    }
-                //}
+                    if (value is UnityEngine.Object || value == null)
+                    {
+                        UnityEngine.Object unityObject = value as UnityEngine.Object;
+                        return unityObject;
+                    }
+                    else
+                    {
+                        return ObjectMap.GetObjectFromGUID((Guid)value);
+                    }
+                }
 
                 if (attributes.HasFlagByte(VariableAttributes.IsArray)
                         || attributes.HasFlagByte(VariableAttributes.IsList))

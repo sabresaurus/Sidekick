@@ -7,14 +7,44 @@ namespace Sabresaurus.Sidekick
         [System.Serializable]
         public class Container
         {
-            public string a;
-            public string b;
+            SidekickSettings settings = new SidekickSettings();
+            SelectionManager selectionManager = new SelectionManager();
+            APIManager apiManager = new APIManager();
+
+            public SelectionManager SelectionManager
+            {
+                get
+                {
+                    return selectionManager;
+                }
+            }
+
+            public APIManager APIManager
+            {
+                get
+                {
+                    return apiManager;
+                }
+            }
+
+            public SidekickSettings Settings
+            {
+                get
+                {
+                    return settings;
+                }
+            }
+        }
+
+        public void RefreshCallbacks()
+        {
+            container.SelectionManager.RefreshCallbacks();
         }
 
         #region Bridging
         static Container containerStaticCopy = null;
 
-        public Container container;
+        public Container container = new Container();
 
         private static BridgingContext instance = null;
 
@@ -25,7 +55,10 @@ namespace Sabresaurus.Sidekick
                 if (instance == null)
                 {
                     instance = CreateInstance<BridgingContext>();
-                    instance.container = containerStaticCopy;
+                    if(containerStaticCopy != null)
+                    {
+                        instance.container = containerStaticCopy;
+                    }
                 }
                 return instance;
             }
@@ -34,6 +67,8 @@ namespace Sabresaurus.Sidekick
         private void OnEnable()
         {
             instance = this;
+
+            RefreshCallbacks();
         }
 
         private void OnDisable()

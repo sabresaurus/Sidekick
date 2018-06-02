@@ -8,12 +8,9 @@ namespace Sabresaurus.Sidekick
     /// Wraps selection logic for local and remote targets
     /// </summary>
     [System.Serializable]
-    public class SelectionManager : ICommonContextComponent
+    public class SelectionManager
     {
-        [NonSerialized] CommonContext commonContext;
         string selectedPath;
-
-
 
 		public Action<string> SelectionChanged;
 
@@ -34,21 +31,10 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public void OnEnable(CommonContext commonContext)
+        public void RefreshCallbacks()
         {
-            //Debug.Log("SelectionManager OnEnable()");
-
-            this.commonContext = commonContext;
-            Selection.selectionChanged += OnEditorSelectionChanged;
-
-            RefreshEditorSelection();
-        }
-
-        public void OnDisable()
-        {
-            //Debug.Log("SelectionManager OnDisable()");
-
             Selection.selectionChanged -= OnEditorSelectionChanged;
+            Selection.selectionChanged += OnEditorSelectionChanged;
         }
 
         public void RefreshEditorSelection()
@@ -65,7 +51,8 @@ namespace Sabresaurus.Sidekick
 
         private void OnEditorSelectionChanged()
         {
-            if (commonContext.Settings.InspectionConnection == InspectionConnection.LocalEditor)
+            SidekickSettings settings = BridgingContext.Instance.container.Settings;
+            if (settings.InspectionConnection == InspectionConnection.LocalEditor)
             {
                 if (Selection.activeGameObject != null)
                 {

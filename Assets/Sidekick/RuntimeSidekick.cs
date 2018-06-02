@@ -15,6 +15,9 @@ namespace Sabresaurus.Sidekick
         public static readonly Guid kMsgSendPlayerToEditor = new Guid("b05c5854acec4554bcef23fabe79959e");
 
         [SerializeField]
+        bool dontDestroyOnLoad = true;
+
+        [SerializeField]
         Text text;
 
         bool wasConnected = false;
@@ -24,6 +27,11 @@ namespace Sabresaurus.Sidekick
             if(text != null)
             {
 				text.text = "Not Connected";
+            }
+
+            if(dontDestroyOnLoad)
+            {
+                DontDestroyOnLoad(this.gameObject);
             }
         }
 

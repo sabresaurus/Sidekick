@@ -19,6 +19,28 @@ namespace Sabresaurus.Sidekick
         SimpleTreeView treeView;
         SearchField hierarchySearchField;
 
+        public APIManager APIManager
+        {
+            get
+            {
+                return BridgingContext.Instance.container.APIManager;
+            }
+        }
+        public SelectionManager SelectionManager
+        {
+            get
+            {
+                return BridgingContext.Instance.container.SelectionManager;
+            }
+        }
+        public SidekickSettings Settings
+        {
+            get
+            {
+                return BridgingContext.Instance.container.Settings;
+            }
+        }
+
         void OnEnable()
         {
             // Check if we already had a serialized view state (state 
@@ -37,6 +59,9 @@ namespace Sabresaurus.Sidekick
             EditorConnection.instance.RegisterConnection(OnPlayerConnected);
             EditorConnection.instance.RegisterDisconnection(OnPlayerDisconnected);
 
+            APIManager.ResponseReceived -= OnResponseReceived;
+            APIManager.ResponseReceived += OnResponseReceived;
+
             UpdateTitleContent();
         }
 
@@ -44,7 +69,7 @@ namespace Sabresaurus.Sidekick
         {
             Repaint();
 
-            parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
+            APIManager.SendToPlayers(new GetHierarchyRequest());
         }
 
         private void OnPlayerDisconnected(int playerID)
@@ -54,11 +79,7 @@ namespace Sabresaurus.Sidekick
 
         void OnDisable()
         {
-            if (parentWindow != null)
-            {
-                parentWindow.CommonContext.APIManager.ResponseReceived -= OnResponseReceived;
-                parentWindow = null;
-            }
+            APIManager.ResponseReceived -= OnResponseReceived;
         }
 
         public void UpdateTitleContent()
@@ -86,7 +107,7 @@ namespace Sabresaurus.Sidekick
                     {
                         // Get the path of the selection
                         string path = GetPathForTreeViewItem(items[i]);
-                        parentWindow.CommonContext.SelectionManager.SelectedPath = path;
+                        SelectionManager.SelectedPath = path;
 
                         break;
                     }
@@ -125,11 +146,10 @@ namespace Sabresaurus.Sidekick
         bool AcquireParentWindowIfPossible()
         {
             SidekickInspectorWindow[] windows = Resources.FindObjectsOfTypeAll<SidekickInspectorWindow>();
-            if (windows.Length > 0 && windows[0].CommonContext.Enabled)
+            if (windows.Length > 0)
             {
                 parentWindow = windows[0];
 
-                parentWindow.CommonContext.APIManager.ResponseReceived += OnResponseReceived;
                 return true;
             }
             else
@@ -149,7 +169,7 @@ namespace Sabresaurus.Sidekick
                 AcquireParentWindowIfPossible();
             }
 
-            if (parentWindow == null || parentWindow.CommonContext.Enabled == false)
+            if (parentWindow == null)
             {
                 GUILayout.FlexibleSpace();
                 GUILayout.Label("Sidekick Inspector window must be open to use remote hierarchy", centerMessageStyle);
@@ -164,13 +184,11 @@ namespace Sabresaurus.Sidekick
                 return;
             }
 
-            if (parentWindow.CommonContext.Settings.InspectionConnection == InspectionConnection.RemotePlayer)
+            if (Settings.InspectionConnection == InspectionConnection.RemotePlayer)
             {
                 GUILayout.Space(9);
 
-                SidekickSettings settings = parentWindow.CommonContext.Settings;
-
-                if (settings.InspectionConnection == InspectionConnection.RemotePlayer)
+                if (Settings.InspectionConnection == InspectionConnection.RemotePlayer)
                 {
                     int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
 
@@ -182,7 +200,7 @@ namespace Sabresaurus.Sidekick
 
 #if SIDEKICK_DEBUG
                     // If we're in Local Dev Mode also consider that a valid connection
-                    validConnection |= settings.LocalDevMode;
+                    validConnection |= Settings.LocalDevMode;
 #endif
 
 
@@ -209,16 +227,16 @@ namespace Sabresaurus.Sidekick
 
                         EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
                     }
-                    settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", settings.AutoRefreshRemote);
+                    Settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", Settings.AutoRefreshRemote);
 
 #if SIDEKICK_DEBUG
-                    settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", settings.LocalDevMode);
+                    Settings.LocalDevMode = EditorGUILayout.Toggle("Local Dev Mode", Settings.LocalDevMode);
 #endif
                     if (validConnection)
                     {
                         if (GUILayout.Button("Refresh Hierarchy"))
                         {
-                            parentWindow.CommonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
+                            APIManager.SendToPlayers(new GetHierarchyRequest());
                         }
 
                         DoToolbar();

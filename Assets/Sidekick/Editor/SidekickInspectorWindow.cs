@@ -20,9 +20,6 @@ namespace Sabresaurus.Sidekick
         WrappedMethod expandedMethod = null;
         List<WrappedVariable> arguments = null;
 
-        // Shared serialized context that persists through recompiles
-        CommonContext commonContext = null;
-
         Vector2 scrollPosition = Vector2.zero;
         SearchField searchField2;
 
@@ -33,13 +30,25 @@ namespace Sabresaurus.Sidekick
         string methodOutput = "";
         float opacity = 0f;
 
-        bool messageHandlerRegistered = false;
-
-        public CommonContext CommonContext
+        public APIManager APIManager
         {
             get
             {
-                return commonContext;
+                return BridgingContext.Instance.container.APIManager;
+            }
+        }
+        public SelectionManager SelectionManager
+        {
+            get
+            {
+                return BridgingContext.Instance.container.SelectionManager;
+            }
+        }
+        public SidekickSettings Settings
+        {
+            get
+            {
+                return BridgingContext.Instance.container.Settings;
             }
         }
 
@@ -61,12 +70,11 @@ namespace Sabresaurus.Sidekick
 
         public void SetConnectionMode(InspectionConnection newConnectionMode)
         {
-            SidekickSettings settings = commonContext.Settings;
-            settings.InspectionConnection = newConnectionMode;
+            Settings.InspectionConnection = newConnectionMode;
 
             // Reset
             gameObjectResponse = null;
-            commonContext.SelectionManager.SelectedPath = null;
+            SelectionManager.SelectedPath = null;
 
             if (newConnectionMode == InspectionConnection.RemotePlayer)
             {
@@ -76,7 +84,7 @@ namespace Sabresaurus.Sidekick
             else
             {
                 DisableRemoteMode();
-                commonContext.SelectionManager.RefreshEditorSelection();
+                SelectionManager.RefreshEditorSelection();
             }
         }
 
@@ -98,11 +106,11 @@ namespace Sabresaurus.Sidekick
         {
             if (!string.IsNullOrEmpty(newPath) && newPath.Contains("/")) // Valid path?
             {
-                commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(newPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
+                APIManager.SendToPlayers(new GetGameObjectRequest(newPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
             }
             else
             {
-                commonContext.APIManager.ResponseReceived(new GetGameObjectResponse());
+                APIManager.ResponseReceived(new GetGameObjectResponse());
             }
             Repaint();
         }
@@ -111,20 +119,12 @@ namespace Sabresaurus.Sidekick
         {
             EditorConnection.instance.Initialize();
 
-            if(messageHandlerRegistered == false)
-            {
-                EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-                messageHandlerRegistered = true;
-            }
+            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
         }
 
         void DisableRemoteMode()
         {
-            if (messageHandlerRegistered == true)
-            {
-                EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-                messageHandlerRegistered = false;
-            }
+            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
         }
 
         void OnEnable()
@@ -133,15 +133,10 @@ namespace Sabresaurus.Sidekick
             UpdateTitleContent();
 
             searchField2 = new SearchField();
-
-            if (commonContext == null)
-            {
-                commonContext = new CommonContext();
-            }
-
-            commonContext.OnEnable();
-            commonContext.SelectionManager.SelectionChanged += OnSelectionChanged;
-            commonContext.APIManager.ResponseReceived += OnResponseReceived;
+            SelectionManager.SelectionChanged -= OnSelectionChanged;
+            SelectionManager.SelectionChanged += OnSelectionChanged;
+            APIManager.ResponseReceived -= OnResponseReceived;
+            APIManager.ResponseReceived += OnResponseReceived;
 
             EnableRemoteMode();
         }
@@ -150,15 +145,15 @@ namespace Sabresaurus.Sidekick
         {
             //Debug.Log("SidekickInspectorWindow OnDisable()");
 
-            commonContext.SelectionManager.SelectionChanged -= OnSelectionChanged;
-            commonContext.APIManager.ResponseReceived -= OnResponseReceived;
+            SelectionManager.SelectionChanged -= OnSelectionChanged;
+            APIManager.ResponseReceived -= OnResponseReceived;
             DisableRemoteMode();
         }
 
         private void OnMessageEvent(MessageEventArgs args)
         {
             BaseResponse response = SidekickResponseProcessor.Process(args.data);
-            commonContext.APIManager.ResponseReceived(response);
+            APIManager.ResponseReceived(response);
         }
 
         void OnResponseReceived(BaseResponse response)
@@ -237,16 +232,16 @@ namespace Sabresaurus.Sidekick
 
         private void OnInspectorUpdate()
         {
-            if (commonContext.Settings.InspectionConnection == InspectionConnection.LocalEditor
-                || commonContext.Settings.AutoRefreshRemote)
+            if (Settings.InspectionConnection == InspectionConnection.LocalEditor
+                || Settings.AutoRefreshRemote)
             {
                 if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
                 {
                     timeLastRefreshed = EditorApplication.timeSinceStartup;
-                    commonContext.APIManager.SendToPlayers(new GetHierarchyRequest());
-                    if (!string.IsNullOrEmpty(commonContext.SelectionManager.SelectedPath)) // Valid path?
+                    APIManager.SendToPlayers(new GetHierarchyRequest());
+                    if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                     {
-                        commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(commonContext.SelectionManager.SelectedPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
+                        APIManager.SendToPlayers(new GetGameObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
                     }
                 }
             }
@@ -262,7 +257,7 @@ namespace Sabresaurus.Sidekick
 
             GUILayout.Space(9);
 
-            SidekickSettings settings = commonContext.Settings;
+            SidekickSettings settings = Settings;
 
 
             EditorGUI.BeginChangeCheck();
@@ -285,9 +280,9 @@ namespace Sabresaurus.Sidekick
 
             if(EditorGUI.EndChangeCheck())
             {
-                if (!string.IsNullOrEmpty(commonContext.SelectionManager.SelectedPath)) // Valid path?
+                if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                 {
-                    commonContext.APIManager.SendToPlayers(new GetGameObjectRequest(commonContext.SelectionManager.SelectedPath, commonContext.Settings.GetGameObjectFlags, commonContext.Settings.IncludeInherited));
+                    APIManager.SendToPlayers(new GetGameObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
                 }
             }
 
@@ -350,7 +345,7 @@ namespace Sabresaurus.Sidekick
                                 if (newValue != field.Value || field.Attributes.HasFlagByte(VariableAttributes.IsList) || field.Attributes.HasFlagByte(VariableAttributes.IsArray))
                                 {
                                     field.Value = newValue;
-                                    commonContext.APIManager.SendToPlayers(new SetVariableRequest(component.Guid, field));
+                                    APIManager.SendToPlayers(new SetVariableRequest(component.Guid, field));
                                 }
 
                                 //Debug.Log("Value changed in " + field.VariableName);
@@ -377,7 +372,7 @@ namespace Sabresaurus.Sidekick
                                 if (newValue != property.Value || property.Attributes.HasFlagByte(VariableAttributes.IsList) || property.Attributes.HasFlagByte(VariableAttributes.IsArray))
                                 {
                                     property.Value = newValue;
-                                    commonContext.APIManager.SendToPlayers(new SetVariableRequest(component.Guid, property));
+                                    APIManager.SendToPlayers(new SetVariableRequest(component.Guid, property));
                                 }
                                 //Debug.Log("Value changed in " + property.VariableName);
                             }
@@ -440,7 +435,7 @@ namespace Sabresaurus.Sidekick
                             {
                                 if(wasMethodExpanded)
                                 {
-									commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
+									APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
                                 }
                                 else
                                 {
@@ -453,7 +448,7 @@ namespace Sabresaurus.Sidekick
                                         defaultArguments.Add(new WrappedVariable(parameter));
                                     }
 
-                                    commonContext.APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
+                                    APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
                                 }
                             }
 
@@ -557,14 +552,14 @@ namespace Sabresaurus.Sidekick
 
         public void OnOpenObjectPicker(Guid componentInstanceGuid, WrappedVariable variable)
         {
-            commonContext.APIManager.SendToPlayers(new GetUnityObjectsRequest(variable, componentInstanceGuid));
+            APIManager.SendToPlayers(new GetUnityObjectsRequest(variable, componentInstanceGuid));
         }
 
         public void OnObjectPickerChanged(Guid componentInstanceGuid, WrappedVariable variable, UnityObjectDescription objectDescription)
         {
             Debug.Log("OnObjectPickerChanged");
             variable.Value = (objectDescription != null) ? objectDescription.Guid : Guid.Empty;
-            commonContext.APIManager.SendToPlayers(new SetVariableRequest(componentInstanceGuid, variable));
+            APIManager.SendToPlayers(new SetVariableRequest(componentInstanceGuid, variable));
 
             //SendToPlayers(APIRequest.GetUnityObjects, componentDescription, variable.TypeFullName, variable.AssemblyName);
         }
