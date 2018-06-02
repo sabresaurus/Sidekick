@@ -59,7 +59,14 @@ Sidekick requires Unity 5.6.0 or higher, although is principally developed on Un
 
 Open Sidekick from the menu bar **Tools / Sidekick**, this will open the Sidekick Inspector window. By default this targets your selection in the local editor, but clicking the Remote button will open a Remote Hierarchy window.
 
-The Remote Hierarchy window uses the connected player (as specified in the Console connected players or Profiler window). To use the Remote Hierarchy window you must first build your project now that Sidekick has been imported (make sure to tick Development Build). The Sidekick editor code will connect to the player code in the remote build in a request-response structure. Once built and connected you should see a connected player entry appear at the top of the Remote window, click Refresh Hierarchy to show the device's hierarchy and begin inspection.
+## Remote Debugging With Sidekick
+
+The Remote Hierarchy window uses the connected player (as specified in the Console connected players or Profiler window).
+
+To use the Remote Hierarchy window you must:
+- Add the RuntimeSidekick component, ideally in your boot/first scene. This component communicates with the Sidekick editor from the client (remote device) point of view.
+- Next build and deploy your project, making sure that Development Build is ticked in build settings.
+- Connect to the remote device via the dropdown at the top of Unity's console window or through Unity's profiler window. Once connected you should see a connected player entry appear at the top of the Remote window, click Refresh Hierarchy to show the device's hierarchy and begin inspection.
 
 # Get Involved
 
