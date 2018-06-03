@@ -6,7 +6,9 @@ using System;
 
 public static class VariableDrawer
 {
-    public static object Draw(ComponentDescription componentDescription, WrappedVariable variable, Action<Guid, WrappedVariable> onObjectPicker)
+    public delegate void OpenPickerCallback(ObjectPickerContext context, WrappedVariable variable);
+
+    public static object Draw(ObjectPickerContext objectPickerContext, WrappedVariable variable, OpenPickerCallback onObjectPicker)
     {
         string name = variable.VariableName;
 
@@ -54,7 +56,7 @@ public static class VariableDrawer
                 {
 					for (int i = 0; i < list.Count; i++)
 					{
-						list[i] = DrawIndividualVariable(componentDescription, variable, "Element " + i, list[i], onObjectPicker, i);
+                        list[i] = DrawIndividualVariable(objectPickerContext, variable, "Element " + i, list[i], onObjectPicker, i);
 					}
                 }
                 newValue = list;
@@ -62,7 +64,7 @@ public static class VariableDrawer
             }
             else
             {
-                newValue = DrawIndividualVariable(componentDescription, variable, name, variable.Value, onObjectPicker);
+                newValue = DrawIndividualVariable(objectPickerContext, variable, name, variable.Value, onObjectPicker);
             }
         }
         else
@@ -75,7 +77,7 @@ public static class VariableDrawer
 
     }
 
-    public static object DrawIndividualVariable(ComponentDescription componentDescription, WrappedVariable variable, string fieldName, object fieldValue, Action<Guid, WrappedVariable> onObjectPicker, int index = 0)
+    public static object DrawIndividualVariable(ObjectPickerContext objectPickerContext, WrappedVariable variable, string fieldName, object fieldValue, OpenPickerCallback onObjectPicker, int index = 0)
     {
         object newValue;
         if (variable.DataType == DataType.Enum)
@@ -95,11 +97,11 @@ public static class VariableDrawer
                 {
                     EditorGUILayout.TextField(fieldName, "None (" + variable.MetaData.TypeFullName + ")");
                 }
-                if (componentDescription != null)
+                if (objectPickerContext != null)
                 {
                     if (GUILayout.Button("...", GUILayout.Width(30)))
                     {
-                        onObjectPicker(componentDescription.Guid, variable);
+                        onObjectPicker(objectPickerContext, variable);
                     }
                 }
                 EditorGUILayout.EndHorizontal();

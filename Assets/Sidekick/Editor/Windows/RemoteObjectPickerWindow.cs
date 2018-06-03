@@ -9,8 +9,10 @@ namespace Sabresaurus.Sidekick
 {
     public class RemoteObjectPickerWindow : EditorWindow
     {
-        Guid componentGuid;
-        Action<Guid, WrappedVariable, UnityObjectDescription> onValueChanged;
+        public delegate void ValueChangedCallback(ObjectPickerContext context, WrappedVariable variable, UnityObjectDescription objectDescription);
+
+        ObjectPickerContext context;
+        ValueChangedCallback onValueChanged;
         Vector2 scrollPosition = Vector2.zero;
         WrappedVariable variable;
         UnityObjectDescription[] objectDescriptions;
@@ -37,6 +39,21 @@ namespace Sabresaurus.Sidekick
         private void OnEnable()
         {
             lineStyle = new GUIStyle("PR Label");
+        }
+
+        public static void Show(ObjectPickerContext context, UnityObjectDescription[] objectDescriptions, WrappedVariable variable, ValueChangedCallback onValueChanged)
+        {
+            RemoteObjectPickerWindow window = EditorWindow.GetWindow<RemoteObjectPickerWindow>(true);
+            window.context = context;
+            window.objectDescriptions = objectDescriptions;
+            window.variable = variable;
+            window.onValueChanged = onValueChanged;
+            if (variable != null)
+            {
+                window.index = objectDescriptions.Select(item => item.Guid).ToList().IndexOf((Guid)variable.Value) + 1;
+            }
+            window.titleContent = new GUIContent("Select Object");
+            window.ShowUtility();
         }
 
         void OnGUI()
@@ -68,7 +85,7 @@ namespace Sabresaurus.Sidekick
                         if (e.button == 0)
                         {
                             index = i;
-                            onValueChanged(componentGuid, variable, ActiveObjectDescription);
+                            onValueChanged(context, variable, ActiveObjectDescription);
 
                             Repaint();
                         }
@@ -82,13 +99,13 @@ namespace Sabresaurus.Sidekick
                 {
                     e.Use();
                     index--;
-                    onValueChanged(componentGuid, variable, ActiveObjectDescription);
+                    onValueChanged(context, variable, ActiveObjectDescription);
                 }
                 else if (e.keyCode == KeyCode.DownArrow)
                 {
                     e.Use();
                     index++;
-                    onValueChanged(componentGuid, variable, ActiveObjectDescription);
+                    onValueChanged(context, variable, ActiveObjectDescription);
                 }
                 else if (e.keyCode == KeyCode.Escape)
                 {
@@ -98,26 +115,6 @@ namespace Sabresaurus.Sidekick
 
 
             EditorGUILayout.EndScrollView();
-        }
-
-        void OnInspectorUpdate()
-        {
-            //Repaint();
-        }
-
-        public static void Show(Guid componentGuid, UnityObjectDescription[] objectDescriptions, WrappedVariable variable, Action<Guid, WrappedVariable, UnityObjectDescription> onValueChanged)
-        {
-            RemoteObjectPickerWindow window = EditorWindow.GetWindow<RemoteObjectPickerWindow>(true);
-            window.componentGuid = componentGuid;
-            window.objectDescriptions = objectDescriptions;
-            window.variable = variable;
-            window.onValueChanged = onValueChanged;
-            if (variable != null)
-            {
-                window.index = objectDescriptions.Select(item => item.Guid).ToList().IndexOf((Guid)variable.Value) + 1;
-            }
-            window.titleContent = new GUIContent("Select Object");
-            window.ShowUtility();
         }
     }
 }

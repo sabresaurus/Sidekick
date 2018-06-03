@@ -1,5 +1,7 @@
 ﻿#if UNITY_EDITOR
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace Sabresaurus.Sidekick
 {
@@ -53,6 +55,13 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
+                // If no instance reference cached, first of all try to get any instance Unity knows about
+                if (instance == null)
+                {
+                    instance = Resources.FindObjectsOfTypeAll<BridgingContext>().FirstOrDefault();
+                }
+
+                // That didn't work, so let's make a new one!
                 if (instance == null)
                 {
                     instance = CreateInstance<BridgingContext>();
@@ -61,12 +70,15 @@ namespace Sabresaurus.Sidekick
                         instance.container = containerStaticCopy;
                     }
                 }
+
+                // We should definitely have a valid instance to return
                 return instance;
             }
         }
 
         private void OnEnable()
         {
+            Assert.IsTrue(instance == null || instance == this);
             instance = this;
 
             RefreshCallbacks();

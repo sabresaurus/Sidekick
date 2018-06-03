@@ -9,7 +9,7 @@ namespace Sabresaurus.Sidekick.Responses
     {
 		UnityObjectDescription[] objectDescriptions;
         WrappedVariable variable;
-        Guid componentGuid;
+        ObjectPickerContext context;
 
         public UnityObjectDescription[] ObjectDescriptions
         {
@@ -27,18 +27,18 @@ namespace Sabresaurus.Sidekick.Responses
 			}
 		}
 		
-        public Guid ComponentGuid
+        public ObjectPickerContext Context
 		{
 			get
 			{
-                return componentGuid;
+                return context;
 			}
 		}
 
-        public GetUnityObjectsResponse(WrappedVariable variable, Guid componentGuid, Object[] sourceObjects)
+        public GetUnityObjectsResponse(WrappedVariable variable, ObjectPickerContext context, Object[] sourceObjects)
         {
             this.variable = variable;
-            this.componentGuid = componentGuid;
+            this.context = context;
             objectDescriptions = new UnityObjectDescription[sourceObjects.Length];
             for (int i = 0; i < sourceObjects.Length; i++)
             {
@@ -50,7 +50,7 @@ namespace Sabresaurus.Sidekick.Responses
             : base(br, requestID)
         {
             variable = new WrappedVariable(br);
-            componentGuid = new Guid(br.ReadString());
+            context = new ObjectPickerContext(br);
             int count = br.ReadInt32();
             objectDescriptions = new UnityObjectDescription[count];
             for (int i = 0; i < count; i++)
@@ -63,7 +63,7 @@ namespace Sabresaurus.Sidekick.Responses
 		public override void Write(BinaryWriter bw)
 		{
             variable.Write(bw);
-            bw.Write(componentGuid.ToString());
+            context.Write(bw);
             bw.Write(objectDescriptions.Length);
             for (int i = 0; i < objectDescriptions.Length; i++)
             {
