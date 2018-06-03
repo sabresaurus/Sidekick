@@ -448,9 +448,10 @@ namespace Sabresaurus.Sidekick
 								else if (isMethodExpanded)
 								{
 									EditorGUI.indentLevel++;
-									foreach (var argument in arguments)
-									{
-                                        argument.Value = VariableDrawer.Draw(null, argument, OnOpenObjectPicker);
+                                    for (int i = 0; i < arguments.Count; i++)
+                                    {
+                                        var argument = arguments[i];
+                                        argument.Value = VariableDrawer.Draw(new ObjectPickerContext(i), argument, OnOpenObjectPicker);
 										//argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
 									}
 									
@@ -512,7 +513,6 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-
         public void OnOpenObjectPicker(ObjectPickerContext context, WrappedVariable variable)
         {
             APIManager.SendToPlayers(new GetUnityObjectsRequest(variable, context));
@@ -520,19 +520,21 @@ namespace Sabresaurus.Sidekick
 
         public void OnObjectPickerChanged(ObjectPickerContext context, WrappedVariable variable, UnityObjectDescription objectDescription)
         {
-            Debug.Log("OnObjectPickerChanged");
-
             if(context.ComponentGuid != Guid.Empty)
             {
+                // Remote component GUID specified, send a SetVariableRequest to update a field or property
                 variable.Value = (objectDescription != null) ? objectDescription.Guid : Guid.Empty;
                 APIManager.SendToPlayers(new SetVariableRequest(context.ComponentGuid, variable));
+            }
+            else if(context.ArgumentIndex != -1)
+            {
+                // If an argument index is supplied, this is updating an editor driven method argument set
+                arguments[context.ArgumentIndex].Value = (objectDescription != null) ? objectDescription.Guid : Guid.Empty;
             }
             else
             {
                 throw new NotImplementedException();
             }
-
-            //SendToPlayers(APIRequest.GetUnityObjects, componentDescription, variable.TypeFullName, variable.AssemblyName);
         }
     }
 }
