@@ -1,17 +1,56 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick
 {
-	public static class TransformHelper
+    public static class TransformHelper
     {
         static Scene dontDestroyOnLoadScene;
+
+        public static Scene DontDestroyOnLoadScene
+        {
+            get
+            {
+                if (!dontDestroyOnLoadScene.IsValid())
+                {
+                    GameObject tempObject = new GameObject();
+                    Object.DontDestroyOnLoad(tempObject);
+                    // Cache the scene ref
+                    dontDestroyOnLoadScene = tempObject.scene;
+
+                    Object.Destroy(tempObject);
+                }
+                return dontDestroyOnLoadScene;
+            }
+        }
+
+        public static List<Scene> GetAllScenes()
+        {
+            List<Scene> scenes = new List<Scene>();
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+
+                if(scene.IsValid())
+                {
+                    scenes.Add(scene);
+                }
+            }
+
+            if(DontDestroyOnLoadScene.IsValid())
+            {
+                scenes.Add(DontDestroyOnLoadScene);
+            }
+
+            return scenes;
+        }
 
         public static Transform GetFromPath(string path)
         {
             int firstIndex = path.IndexOf('/');
-            if(firstIndex == -1)
+            if (firstIndex == -1)
             {
                 return null;
             }
@@ -23,10 +62,10 @@ namespace Sabresaurus.Sidekick
 
             string rootGameObject = "";
             string remainingPath = "";
-            if(secondIndex != -1)
+            if (secondIndex != -1)
             {
                 rootGameObject = pathInScene.Substring(0, secondIndex);
-                remainingPath = pathInScene.Substring(secondIndex + 1);    
+                remainingPath = pathInScene.Substring(secondIndex + 1);
             }
             else
             {
@@ -34,31 +73,22 @@ namespace Sabresaurus.Sidekick
             }
 
             Scene scene;
-            if(sceneName == "DontDestroyOnLoad")
+            if (sceneName == "DontDestroyOnLoad")
             {
-                if(!dontDestroyOnLoadScene.IsValid())
-                {
-                    GameObject tempObject = new GameObject();
-                    Object.DontDestroyOnLoad(tempObject);
-                    // Cache the scene ref
-                    dontDestroyOnLoadScene = tempObject.scene;
-
-                    Object.Destroy(tempObject);
-                }
-				scene = dontDestroyOnLoadScene;
+                scene = DontDestroyOnLoadScene;
             }
             else
             {
                 scene = SceneManager.GetSceneByName(sceneName);
             }
-            if(scene.IsValid())
+            if (scene.IsValid())
             {
                 var rootGameObjects = scene.GetRootGameObjects();
                 for (int i = 0; i < rootGameObjects.Length; i++)
                 {
-                    if(rootGameObjects[i].name == rootGameObject)
+                    if (rootGameObjects[i].name == rootGameObject)
                     {
-                        if(remainingPath.Length > 0)
+                        if (remainingPath.Length > 0)
                         {
                             return rootGameObjects[i].transform.Find(remainingPath);
                         }

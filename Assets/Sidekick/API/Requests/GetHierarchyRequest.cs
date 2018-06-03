@@ -30,9 +30,9 @@ namespace Sabresaurus.Sidekick.Requests
 		{
             GetHierarchyResponse response = new GetHierarchyResponse();
 
-            for (int i = 0; i < SceneManager.sceneCount; i++)
+            List<Scene> scenes = TransformHelper.GetAllScenes();
+            foreach (Scene scene in scenes)
             {
-                Scene scene = SceneManager.GetSceneAt(i);
                 SceneHierarchyDescription sceneHierarchyDescription = new SceneHierarchyDescription();
 
                 sceneHierarchyDescription.SceneName = scene.name;

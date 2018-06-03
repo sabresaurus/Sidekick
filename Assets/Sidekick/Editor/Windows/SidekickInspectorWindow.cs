@@ -78,12 +78,10 @@ namespace Sabresaurus.Sidekick
 
             if (newConnectionMode == InspectionConnection.RemotePlayer)
             {
-                EnableRemoteMode();
                 FindOrCreateRemoteHierarchyWindow();
             }
             else
             {
-                DisableRemoteMode();
                 SelectionManager.RefreshEditorSelection();
             }
         }
@@ -115,18 +113,6 @@ namespace Sabresaurus.Sidekick
             Repaint();
         }
 
-        void EnableRemoteMode()
-        {
-            EditorConnection.instance.Initialize();
-
-            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-        }
-
-        void DisableRemoteMode()
-        {
-            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
-        }
-
         void OnEnable()
         {
             //Debug.Log("SidekickInspectorWindow OnEnable()");
@@ -138,7 +124,9 @@ namespace Sabresaurus.Sidekick
             APIManager.ResponseReceived -= OnResponseReceived;
             APIManager.ResponseReceived += OnResponseReceived;
 
-            EnableRemoteMode();
+            EditorConnection.instance.Initialize();
+
+            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
         }
 
         void OnDisable()
@@ -147,7 +135,8 @@ namespace Sabresaurus.Sidekick
 
             SelectionManager.SelectionChanged -= OnSelectionChanged;
             APIManager.ResponseReceived -= OnResponseReceived;
-            DisableRemoteMode();
+
+            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
         }
 
         private void OnMessageEvent(MessageEventArgs args)

@@ -10,10 +10,14 @@ namespace Sabresaurus.Sidekick
     {
         public static string GetDebugStringForResponse(BaseResponse response)
         {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.AppendLine(response.GetType().Name);
+
             if (response is GetGameObjectResponse)
             {
                 GetGameObjectResponse gameObjectResponse = (GetGameObjectResponse)response;
-                StringBuilder stringBuilder = new StringBuilder();
+
                 stringBuilder.AppendLine(gameObjectResponse.GameObjectName);
                 foreach (var component in gameObjectResponse.Components)
                 {
@@ -55,12 +59,26 @@ namespace Sabresaurus.Sidekick
                         stringBuilder.AppendLine();
                     }
                 }
-                return stringBuilder.ToString();
             }
-            else
+            else if (response is GetHierarchyResponse)
             {
-                return "";
+                GetHierarchyResponse hierarchyResponse = (GetHierarchyResponse)response;
+                foreach (var scene in hierarchyResponse.Scenes)
+                {
+                    stringBuilder.AppendLine(scene.SceneName);
+
+                    foreach (var item in scene.HierarchyNodes)
+                    {
+                        for (int i = 0; i < item.Depth + 1; i++)
+                        {
+                            stringBuilder.Append(" ");
+                        }
+                        stringBuilder.AppendLine(item.ObjectName);
+                    }
+                }
             }
+
+            return stringBuilder.ToString();
         }
     }
 }
