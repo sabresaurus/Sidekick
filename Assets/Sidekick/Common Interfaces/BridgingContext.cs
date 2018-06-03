@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
@@ -55,7 +56,7 @@ namespace Sabresaurus.Sidekick
                 if (instance == null)
                 {
                     instance = CreateInstance<BridgingContext>();
-                    if(containerStaticCopy != null)
+                    if (containerStaticCopy != null)
                     {
                         instance.container = containerStaticCopy;
                     }
@@ -78,3 +79,4 @@ namespace Sabresaurus.Sidekick
         #endregion
     }
 }
+#endif

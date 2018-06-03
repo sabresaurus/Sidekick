@@ -65,6 +65,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+#if UNITY_EDITOR
         public object DefaultValue
         {
             get
@@ -90,6 +91,10 @@ namespace Sabresaurus.Sidekick
                 {
                     return 0;
                 }
+                else if (DataType == DataType.UnityObjectReference && BridgingContext.Instance.container.Settings.InspectionConnection == InspectionConnection.RemotePlayer)
+                {
+                    return Guid.Empty;
+                }
                 else
                 {
                     Type type = DataTypeHelper.GetSystemTypeFromWrappedDataType(DataType, metaData);
@@ -97,6 +102,7 @@ namespace Sabresaurus.Sidekick
                 }
             }
         }
+#endif
 
         #endregion
 

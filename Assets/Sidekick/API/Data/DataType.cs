@@ -277,6 +277,10 @@ namespace Sabresaurus.Sidekick
             {
                 value = br.ReadString(); // Read Type name
             }
+            else if (dataType == DataType.Void)
+            {
+                // No need to read/write a value for a void type
+            }
             else
             {
                 Debug.LogWarning("Could not read " + dataType);
@@ -487,6 +491,10 @@ namespace Sabresaurus.Sidekick
             else if (dataType == DataType.Unknown)
             {
                 bw.Write((string)value); // Write Type name
+            }
+            else if (dataType == DataType.Void)
+            {
+                // No need to read/write a value for a void type
             }
             else
             {

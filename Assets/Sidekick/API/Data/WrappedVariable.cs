@@ -120,11 +120,16 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+#if UNITY_EDITOR
+        // Turns a parameter into an argument (uses default value as argument value)
         public WrappedVariable(WrappedParameter parameter)
             : base(parameter.VariableName, parameter.DataType, parameter.Attributes, parameter.MetaData)
         {
             this.value = parameter.DefaultValue;
+
+            CacheDisplayNames();
         }
+#endif
 
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
             : base(variableName, type, generateMetadata)
@@ -157,34 +162,7 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            if (dataType == DataType.UnityObjectReference)
-            {
-                if ((value as UnityEngine.Object) != null || (value is UnityEngine.Object == false && value != null))
-                {
-                    if (attributes.HasFlagByte(VariableAttributes.IsArray)
-                        || attributes.HasFlagByte(VariableAttributes.IsList))
-                    {
-                        IList list = (IList)value;
-                        valueDisplayNames = new string[list.Count];
-                        for (int i = 0; i < list.Count; i++)
-                        {
-                            UnityEngine.Object castObject = ((UnityEngine.Object)list[i]);
-                            if (castObject != null)
-                                valueDisplayNames[i] = castObject.name;
-                            else
-                                valueDisplayNames[i] = "null";
-                        }
-                    }
-                    else
-                    {
-                        valueDisplayNames = new[] { ((UnityEngine.Object)value).name };
-                    }
-                }
-                else
-                {
-                    valueDisplayNames = new[] { "null" };
-                }
-            }
+            CacheDisplayNames();
         }
 
         public WrappedVariable(BinaryReader br)
@@ -222,6 +200,45 @@ namespace Sabresaurus.Sidekick
                 for (int i = 0; i < valueDisplayNames.Length; i++)
                 {
                     valueDisplayNames[i] = br.ReadString();
+                }
+            }
+        }
+
+        void CacheDisplayNames()
+        {
+            if (dataType == DataType.UnityObjectReference)
+            {
+                if ((value as UnityEngine.Object) != null || (value is UnityEngine.Object == false && value != null))
+                {
+                    if (attributes.HasFlagByte(VariableAttributes.IsArray)
+                        || attributes.HasFlagByte(VariableAttributes.IsList))
+                    {
+                        IList list = (IList)value;
+                        valueDisplayNames = new string[list.Count];
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            UnityEngine.Object castObject = ((UnityEngine.Object)list[i]);
+                            if (castObject != null)
+                                valueDisplayNames[i] = castObject.name;
+                            else
+                                valueDisplayNames[i] = "null";
+                        }
+                    }
+                    else
+                    {
+                        if (value is UnityEngine.Object)
+                        {
+                            valueDisplayNames = new[] { ((UnityEngine.Object)value).name };
+                        }
+                        else
+                        {
+                            valueDisplayNames = new[] { "" };
+                        }
+                    }
+                }
+                else
+                {
+                    valueDisplayNames = new[] { "null" };
                 }
             }
         }

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace Sabresaurus.Sidekick
     {
         string selectedPath;
 
-		public Action<string> SelectionChanged;
+        public Action<string> SelectionChanged;
 
         public string SelectedPath
         {
@@ -24,9 +25,9 @@ namespace Sabresaurus.Sidekick
             set
             {
                 selectedPath = value;
-                if(SelectionChanged != null)
+                if (SelectionChanged != null)
                 {
-					SelectionChanged(selectedPath);
+                    SelectionChanged(selectedPath);
                 }
             }
         }
@@ -80,3 +81,4 @@ namespace Sabresaurus.Sidekick
         }
     }
 }
+#endif

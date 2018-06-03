@@ -67,10 +67,7 @@ public static class VariableDrawer
         }
         else
         {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel(name);
-            GUILayout.Label("Unknown <" + variable.Value.ToString() + "> ");
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField(name, "Unknown <" + variable.Value.ToString() + "> ");
         }
         GUI.enabled = true;
 
@@ -90,14 +87,13 @@ public static class VariableDrawer
             if (fieldValue is Guid)
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PrefixLabel(fieldName);
                 if ((Guid)fieldValue != Guid.Empty && variable.ValueDisplayNames.Length > index)
                 {
-                    EditorGUILayout.TextField(variable.ValueDisplayNames[index]);
+                    EditorGUILayout.TextField(fieldName, variable.ValueDisplayNames[index]);
                 }
                 else
                 {
-                    EditorGUILayout.TextField("None (" + variable.MetaData.TypeFullName + ")");
+                    EditorGUILayout.TextField(fieldName, "None (" + variable.MetaData.TypeFullName + ")");
                 }
                 if (componentDescription != null)
                 {
