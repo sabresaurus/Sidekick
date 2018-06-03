@@ -39,9 +39,12 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            if(DontDestroyOnLoadScene.IsValid())
+            if(Application.isPlaying)
             {
-                scenes.Add(DontDestroyOnLoadScene);
+                if(DontDestroyOnLoadScene.IsValid())
+                {
+                    scenes.Add(DontDestroyOnLoadScene);
+                }
             }
 
             return scenes;
