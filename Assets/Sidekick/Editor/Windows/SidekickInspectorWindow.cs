@@ -126,7 +126,7 @@ namespace Sabresaurus.Sidekick
 
             EditorConnection.instance.Initialize();
 
-            EditorConnection.instance.Register(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+            EditorConnection.instance.Register(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
         }
 
         void OnDisable()
@@ -136,7 +136,7 @@ namespace Sabresaurus.Sidekick
             SelectionManager.SelectionChanged -= OnSelectionChanged;
             APIManager.ResponseReceived -= OnResponseReceived;
 
-            EditorConnection.instance.Unregister(RuntimeSidekick.kMsgSendPlayerToEditor, OnMessageEvent);
+            EditorConnection.instance.Unregister(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
         }
 
         private void OnMessageEvent(MessageEventArgs args)

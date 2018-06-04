@@ -15,7 +15,7 @@ namespace Sabresaurus.Sidekick
             {
                 if (!dontDestroyOnLoadScene.IsValid())
                 {
-                    GameObject tempObject = new GameObject();
+                    GameObject tempObject = new GameObject("[TEMP]DontDestroyOnLoadProxy");
                     Object.DontDestroyOnLoad(tempObject);
                     // Cache the scene ref
                     dontDestroyOnLoadScene = tempObject.scene;

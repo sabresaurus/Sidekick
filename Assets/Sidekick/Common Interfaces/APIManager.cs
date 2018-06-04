@@ -54,7 +54,7 @@ namespace Sabresaurus.Sidekick
                 else
 #endif
                 {
-                    EditorConnection.instance.Send(RuntimeSidekick.kMsgSendEditorToPlayer, bytes);
+                    EditorConnection.instance.Send(RuntimeSidekickBridge.SEND_EDITOR_TO_PLAYER, bytes);
                 }
             }
             return lastRequestID;

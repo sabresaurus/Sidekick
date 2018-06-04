@@ -13,37 +13,60 @@ public static class LinkXMLFactory
     public static readonly Type[] DEFAULT_TYPES =
     {
         typeof(GameObject),
+        typeof(Transform),
+        typeof(Camera),
+        typeof(Light),
+        typeof(Animator),
+        typeof(Animation),
+        typeof(AudioClip),
+        typeof(AudioSource),
     };
 
-    public static void GenerateForAllAssemblies()
-    {
-        //foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-        //{
-        //    //Debug.Log(assembly.FullName);
-        //}
-    }
+    //public static List<Type> GetUnityComponentTypes()
+    //{
+    //    List<Type> componentTypes = new List<Type>();
+    //    Type baseType = typeof(Component);
+    //    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+    //    {
+    //        // Restrict to official Unity runtime assemblies
+    //        if (assembly.FullName.StartsWith("UnityEngine"))
+    //        {
+    //            Type[] types = assembly.GetTypes();
+    //            foreach (Type type in types)
+    //            {
+    //                if (type.IsSubclassOf(baseType))
+    //                {
+    //                    componentTypes.Add(type);
+    //                }
+    //            }
+    //        }
+    //    }
 
-    public static List<Type> GetUnityComponentTypes()
+    //    return componentTypes;
+    //}
+
+    public static string GetSidekickPath()
     {
-        List<Type> componentTypes = new List<Type>();
-        Type baseType = typeof(Component);
-        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+        // Find all the scripts with RuntimeSidekickBridge in their name
+        string[] guids = AssetDatabase.FindAssets("RuntimeSidekickBridge t:Script");
+
+        foreach (string guid in guids)
         {
-            // Restrict to official Unity runtime assemblies
-            if(assembly.FullName.StartsWith("UnityEngine"))
+            // Find the path of the file
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+
+            string suffix = "RuntimeSidekickBridge.cs";
+            if (path.EndsWith(suffix))
             {
-                Type[] types = assembly.GetTypes();
-                foreach (Type type in types)
-                {
-                    if(type.IsSubclassOf(baseType))
-                    {
-                        componentTypes.Add(type);
-                    }
-                }
+                // Remove the suffix, to get for example Assets/Sidekick
+                path = path.Remove(path.Length - suffix.Length, suffix.Length);
+
+                return path;
             }
         }
 
-        return componentTypes;
+        // None matched
+        return string.Empty;
     }
 
     public static void Generate(List<Type> types)
@@ -65,7 +88,7 @@ public static class LinkXMLFactory
         settings.OmitXmlDeclaration = true;
         settings.Indent = true;
 
-        using (XmlWriter writer = XmlWriter.Create("Assets/link.xml", settings))
+        using (XmlWriter writer = XmlWriter.Create(Path.Combine(GetSidekickPath(), "link.xml"), settings))
         {
             writer.WriteStartDocument();
             writer.WriteStartElement("linker");
