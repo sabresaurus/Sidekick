@@ -14,16 +14,16 @@ namespace Sabresaurus.Sidekick
 
         bool wasConnected;
 
-#if DEVELOPMENT_BUILD && !UNITY_EDITOR
-        [RuntimeInitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void OnRuntimeMethodLoad()
         {
+            // Can't wrap the whole method - see https://stackoverflow.com/questions/44655667/
+#if DEVELOPMENT_BUILD && !UNITY_EDITOR
             Debug.Log("Initializing Sidekick by auto-instantiating RuntimeSidekickBridge");
             GameObject newGameObject = new GameObject("RuntimeSidekickBridge", typeof(RuntimeSidekickBridge));
             DontDestroyOnLoad(newGameObject);
-        }
 #endif
-
+        }
         void Update()
         {
             PlayerConnection playerConnection = PlayerConnection.instance;
