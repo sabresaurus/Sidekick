@@ -61,11 +61,10 @@ Open Sidekick from the menu bar **Tools / Sidekick**, this will open the Sidekic
 
 ## Remote Debugging With Sidekick
 
-The Remote Hierarchy window uses the connected player (as specified in the Console connected players or Profiler window).
+The Remote Hierarchy window uses the connected player (as specified in the Console connected players or Profiler window). Sidekick will automatically instantiate a RuntimeSidekickBridge object on startup in development builds (not release builds).
 
-To use the Remote Hierarchy window you must:
-- Add the RuntimeSidekick component, ideally in your boot/first scene. This component communicates with the Sidekick editor from the client (remote device) point of view.
-- Next build and deploy your project, making sure that Development Build is ticked in build settings.
+To use the Remote Hierarchy window, follow these steps:
+- Build and deploy your project, making sure that Development Build is ticked in build settings.
 - Connect to the remote device via the dropdown at the top of Unity's console window or through Unity's profiler window. Once connected you should see a connected player entry appear at the top of the Remote window, click Refresh Hierarchy to show the device's hierarchy and begin inspection.
 
 # Get Involved
