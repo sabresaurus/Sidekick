@@ -42,21 +42,14 @@ namespace Sabresaurus.Sidekick.Requests
 
             if (targetObject != null)
             {
-                BindingFlags bindingFlags = GetGameObjectRequest.BINDING_FLAGS;
-
-                if (targetObject.GetType() == typeof(GameObject) && wrappedVariable.VariableName == "name") // Special handling for GameObject.name to always be included
-                {
-                    bindingFlags = BindingFlags.Public | BindingFlags.Instance;
-                }
-
-                FieldInfo fieldInfo = targetObject.GetType().GetField(wrappedVariable.VariableName, bindingFlags);
+                FieldInfo fieldInfo = targetObject.GetType().GetFieldAll(wrappedVariable.VariableName);
                 if (fieldInfo != null)
                 {
                     fieldInfo.SetValue(targetObject, wrappedVariable.ValueNative);
                 }
                 else
                 {
-                    PropertyInfo propertyInfo = targetObject.GetType().GetProperty(wrappedVariable.VariableName, bindingFlags);
+                    PropertyInfo propertyInfo = targetObject.GetType().GetPropertyAll(wrappedVariable.VariableName);
                     MethodInfo setMethod = propertyInfo.GetSetMethod();
 
                     setMethod.Invoke(targetObject, new object[] { wrappedVariable.ValueNative });

@@ -62,7 +62,7 @@ namespace Sabresaurus.Sidekick.Requests
                 {
                     parameterTypes[i] = DataTypeHelper.GetSystemTypeFromWrappedDataType(wrappedParameters[i].DataType, wrappedParameters[i].MetaData, wrappedParameters[i].Attributes);
                 }
-                MethodInfo methodInfo = targetObject.GetType().GetMethod(methodName, GetGameObjectRequest.BINDING_FLAGS, null, parameterTypes, null);
+                MethodInfo methodInfo = targetObject.GetType().GetMethodAll(methodName, parameterTypes);
 				Debug.Assert(methodInfo != null, "Couldn't find a matching method for signature");
                 object[] parameters = new object[wrappedParameters.Length];
                 for (int i = 0; i < wrappedParameters.Length; i++)

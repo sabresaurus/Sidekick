@@ -69,6 +69,23 @@ namespace Sabresaurus.Sidekick
             return ret;
         }
 
+        public static void DrawHeader2(GUIContent label)
+        {
+            Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
+            Rect labelRect = contentRect;
+            labelRect.xMin += 16f;
+            labelRect.xMax -= 20f;
+            contentRect.xMin = 0.0f;
+            contentRect.xMax = Screen.width / EditorGUIUtility.pixelsPerPoint;
+            contentRect.width += 4f;
+
+            DrawHeaderBackground(contentRect);
+            GUIStyle style = new GUIStyle(EditorStyles.boldLabel);
+            style.alignment = TextAnchor.MiddleRight;
+            style.fontSize = 10;
+            EditorGUI.LabelField(labelRect, label, style);
+        }
+
         public static void DrawSplitter()
         {
             Rect rect = GUILayoutUtility.GetRect(1f, 1f);

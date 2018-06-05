@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -16,8 +17,20 @@ public static class LinkXMLFactory
         typeof(Transform),
         typeof(Camera),
         typeof(Light),
+        // UI
+        typeof(Canvas),
+        typeof(CanvasGroup),
+        typeof(CanvasScaler),
+        typeof(RectTransform),
+        typeof(Graphic),
+        typeof(Image),
+        typeof(Button),
+        typeof(Text),
+        typeof(ScrollRect),
+        // Animation
         typeof(Animator),
         typeof(Animation),
+        // Audio
         typeof(AudioClip),
         typeof(AudioSource),
     };

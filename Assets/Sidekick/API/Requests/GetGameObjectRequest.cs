@@ -14,7 +14,7 @@ namespace Sabresaurus.Sidekick.Requests
         Fields = 1,
         Properties = 2,
         Methods = 4,
-	}
+    }
 
     /// <summary>
     /// Gets reflected information about components on a game object specified by path. Flags specify what information to include.
@@ -51,8 +51,8 @@ namespace Sabresaurus.Sidekick.Requests
             bw.Write(includeInherited);
         }
 
-		public override BaseResponse GenerateResponse()
-		{
+        public override BaseResponse GenerateResponse()
+        {
             GetGameObjectResponse getGOResponse = new GetGameObjectResponse();
 
             Transform foundTransform = TransformHelper.GetFromPath(gameObjectPath);
@@ -70,117 +70,128 @@ namespace Sabresaurus.Sidekick.Requests
                 ComponentDescription description = new ComponentDescription(component);
                 Type componentType = component.GetType();
 
-                if ((flags & InfoFlags.Fields) == InfoFlags.Fields)
+                while (componentType != null
+                       && componentType != typeof(System.Object)
+                       && componentType != typeof(UnityEngine.Object)
+                       && componentType != typeof(UnityEngine.Component))
                 {
-                    FieldInfo[] fieldInfos = componentType.GetFields(BINDING_FLAGS);
-                    foreach (FieldInfo fieldInfo in fieldInfos)
+                    ComponentScope componentScope = new ComponentScope(componentType);
+                    if ((flags & InfoFlags.Fields) == InfoFlags.Fields)
                     {
-                        if (TypeUtility.IsBackingField(fieldInfo, componentType))
+                        FieldInfo[] fieldInfos = componentType.GetFields(BINDING_FLAGS);
+                        foreach (FieldInfo fieldInfo in fieldInfos)
                         {
-                            // Skip backing fields for auto-implemented properties
-                            continue;
+                            if (TypeUtility.IsBackingField(fieldInfo, componentType))
+                            {
+                                // Skip backing fields for auto-implemented properties
+                                continue;
+                            }
+
+                            object objectValue = fieldInfo.GetValue(component);
+
+                            WrappedVariable wrappedVariable = new WrappedVariable(fieldInfo, objectValue);
+                            componentScope.Fields.Add(wrappedVariable);
                         }
-
-                        object objectValue = fieldInfo.GetValue(component);
-
-                        WrappedVariable wrappedVariable = new WrappedVariable(fieldInfo, objectValue);
-                        description.Fields.Add(wrappedVariable);
                     }
-                }
 
-                if(component is GameObject) // Special handling for GameObject.name to always be included
-                {
-                    PropertyInfo nameProperty = componentType.GetProperty("name", BindingFlags.Public | BindingFlags.Instance);
-                    WrappedVariable wrappedName = new WrappedVariable(nameProperty, nameProperty.GetValue(component, null));
-                    description.Properties.Add(wrappedName);
-                }
-
-                if ((flags & InfoFlags.Properties) == InfoFlags.Properties)
-                {
-                    PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
-                    foreach (PropertyInfo property in properties)
+                    if (componentType == typeof(GameObject)) // Special handling for GameObject.name to always be included
                     {
-                        Type declaringType = property.DeclaringType;
-                        if (declaringType == typeof(Component)
-                            || declaringType == typeof(UnityEngine.Object))
+                        PropertyInfo nameProperty = componentType.GetProperty("name", BindingFlags.Public | BindingFlags.Instance);
+                        WrappedVariable wrappedName = new WrappedVariable(nameProperty, nameProperty.GetValue(component, null));
+                        componentScope.Properties.Add(wrappedName);
+                    }
+
+                    if ((flags & InfoFlags.Properties) == InfoFlags.Properties)
+                    {
+                        PropertyInfo[] properties = componentType.GetProperties(BINDING_FLAGS);
+                        foreach (PropertyInfo property in properties)
                         {
-                            continue;
-                        }
-
-                        object[] attributes = property.GetCustomAttributes(false);
-                        bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
-                        if (isObsoleteWithError)
-                        {
-                            continue;
-                        }
-
-						// Skip properties that cause exceptions at edit time
-                        if(Application.isPlaying == false)
-                        {
-                            if (typeof(MeshFilter).IsAssignableFrom(declaringType))
-                            {
-                                if(property.Name == "mesh")
-                                {
-                                    continue;
-                                }
-                            }
-
-                            if (typeof(Renderer).IsAssignableFrom(declaringType))
-                            {
-                                if (property.Name == "material" || property.Name == "materials")
-                                {
-                                    continue;
-                                }
-                            }
-                        }
-
-
-
-                        string propertyName = property.Name;
-
-                        MethodInfo getMethod = property.GetGetMethod(true);
-                        if (getMethod != null)
-                        {
-                            MethodImplAttributes methodImplAttributes = getMethod.GetMethodImplementationFlags();
-                            if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
+                            Type declaringType = property.DeclaringType;
+                            if (declaringType == typeof(Component)
+                                || declaringType == typeof(UnityEngine.Object))
                             {
                                 continue;
                             }
 
+                            object[] attributes = property.GetCustomAttributes(false);
+                            bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
+                            if (isObsoleteWithError)
+                            {
+                                continue;
+                            }
 
-                            object objectValue = getMethod.Invoke(component, null);
+                            // Skip properties that cause exceptions at edit time
+                            if (Application.isPlaying == false)
+                            {
+                                if (typeof(MeshFilter).IsAssignableFrom(declaringType))
+                                {
+                                    if (property.Name == "mesh")
+                                    {
+                                        continue;
+                                    }
+                                }
 
-                            WrappedVariable wrappedVariable = new WrappedVariable(property, objectValue);
-                            description.Properties.Add(wrappedVariable);
+                                if (typeof(Renderer).IsAssignableFrom(declaringType))
+                                {
+                                    if (property.Name == "material" || property.Name == "materials")
+                                    {
+                                        continue;
+                                    }
+                                }
+                            }
+
+
+
+                            string propertyName = property.Name;
+
+                            MethodInfo getMethod = property.GetGetMethod(true);
+                            if (getMethod != null)
+                            {
+                                //MethodImplAttributes methodImplAttributes = getMethod.GetMethodImplementationFlags();
+                                //if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0)
+                                //{
+                                //    continue;
+                                //}
+
+
+                                object objectValue = getMethod.Invoke(component, null);
+
+                                WrappedVariable wrappedVariable = new WrappedVariable(property, objectValue);
+                                componentScope.Properties.Add(wrappedVariable);
+                            }
                         }
                     }
-                }
 
-                if ((flags & InfoFlags.Methods) == InfoFlags.Methods)
-                {
-                    MethodInfo[] methodInfos = componentType.GetMethods(BINDING_FLAGS);
-                    foreach (var methodInfo in methodInfos)
+                    if ((flags & InfoFlags.Methods) == InfoFlags.Methods)
                     {
-                        if (TypeUtility.IsPropertyMethod(methodInfo, componentType))
+                        MethodInfo[] methodInfos = componentType.GetMethods(BINDING_FLAGS);
+                        foreach (var methodInfo in methodInfos)
                         {
-                            // Skip automatically generated getter/setter methods
-                            continue;
-                        }
+                            if (TypeUtility.IsPropertyMethod(methodInfo, componentType))
+                            {
+                                // Skip automatically generated getter/setter methods
+                                continue;
+                            }
 
-                        MethodImplAttributes methodImplAttributes = methodInfo.GetMethodImplementationFlags();
-                        if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0 && methodInfo.Name.StartsWith("INTERNAL_"))
-                        {
-                            // Skip any internal method if it also begins with INTERNAL_
-                            continue;
+                            MethodImplAttributes methodImplAttributes = methodInfo.GetMethodImplementationFlags();
+                            if ((methodImplAttributes & MethodImplAttributes.InternalCall) != 0 && methodInfo.Name.StartsWith("INTERNAL_"))
+                            {
+                                // Skip any internal method if it also begins with INTERNAL_
+                                continue;
+                            }
+                            WrappedMethod wrappedMethod = new WrappedMethod(methodInfo);
+                            componentScope.Methods.Add(wrappedMethod);
                         }
-                        WrappedMethod wrappedMethod = new WrappedMethod(methodInfo);
-                        description.Methods.Add(wrappedMethod);
                     }
+
+                    description.Scopes.Add(componentScope);
+
+                    componentType = componentType.BaseType;
                 }
 
                 getGOResponse.Components.Add(description);
             }
             return getGOResponse;
-		}
-	}
+        }
+    }
 }

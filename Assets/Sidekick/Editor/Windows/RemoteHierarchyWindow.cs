@@ -282,7 +282,7 @@ namespace Sabresaurus.Sidekick
 
         void DoTreeView()
         {
-            Rect rect = GUILayoutUtility.GetRect(200, 300, 300, 300);
+            Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             treeView.OnGUI(rect);
         }
     }
