@@ -174,7 +174,7 @@ namespace Sabresaurus.Sidekick
             }
 #if SIDEKICK_DEBUG
             string responseString = ResponseDebug.GetDebugStringForResponse(response);
-            if(!string.IsNullOrEmpty(responseString))
+            if (!string.IsNullOrEmpty(responseString))
             {
                 Debug.Log(responseString);
             }
@@ -215,7 +215,7 @@ namespace Sabresaurus.Sidekick
             InspectionConnection newConnectionMode = (InspectionConnection)GUILayout.Toolbar((int)settings.InspectionConnection, new string[] { "Local", "Remote" }, new GUIStyle("LargeButton"));
             if (EditorGUI.EndChangeCheck())
             {
-                SetConnectionMode(newConnectionMode);                
+                SetConnectionMode(newConnectionMode);
             }
 
             settings.SearchTerm = searchField2.OnGUI(settings.SearchTerm);
@@ -227,9 +227,9 @@ namespace Sabresaurus.Sidekick
             settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Fields, "Fields");
             settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Properties, "Properties");
             settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Methods, "Methods");
-			EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndHorizontal();
 
-            if(EditorGUI.EndChangeCheck())
+            if (EditorGUI.EndChangeCheck())
             {
                 if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                 {
@@ -251,14 +251,54 @@ namespace Sabresaurus.Sidekick
 
                     Texture icon = IconLookup.GetIcon(component.TypeFullName);
                     GUIContent content = new GUIContent(component.TypeShortName, icon, "Object Map ID: " + component.Guid.ToString());
+
                     float labelWidth = EditorGUIUtility.labelWidth; // Cache label width
                     // Temporarily set the label width to full width so the icon is not squashed with long strings
                     EditorGUIUtility.labelWidth = position.width / 2f;
 
                     bool wasComponentExpanded = !settings.CollapsedTypeNames.Contains(component.TypeFullName);
                     bool isComponentExpanded = wasComponentExpanded;
-                    if (SidekickEditorGUI.DrawHeaderWithFoldout(content, isComponentExpanded))
+
+
+                    bool? activeOrEnabled = null;
+                    if (component.TypeShortName == "GameObject" && (settings.GetGameObjectFlags & InfoFlags.Properties) != 0)
+                    {
+                        activeOrEnabled = (bool)component.Scopes[0].GetPropertyValue("activeSelf");
+                    }
+                    else
+                    {
+                        ComponentScope behaviourScope = component.BehaviourScope;
+                        if (behaviourScope != null && (settings.GetGameObjectFlags & InfoFlags.Properties) != 0)
+                        {
+                            activeOrEnabled = (bool)behaviourScope.GetPropertyValue("enabled");
+                        }
+                    }
+
+                    bool? oldActiveOrEnabled = activeOrEnabled;
+
+                    if (SidekickEditorGUI.DrawHeaderWithFoldout(content, isComponentExpanded, ref activeOrEnabled))
                         isComponentExpanded = !isComponentExpanded;
+
+                    if (activeOrEnabled.HasValue && activeOrEnabled != oldActiveOrEnabled)
+                    {
+                        if (component.TypeShortName == "GameObject")
+                        {
+                            // Update local cache (requires method call)
+                            var property = component.Scopes[0].GetProperty("activeSelf");
+                            property.Value = activeOrEnabled.Value;
+
+                            // Update via method call
+                            APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, "SetActive", new WrappedVariable[] { new WrappedVariable("", activeOrEnabled.Value, typeof(bool), false) }));
+                        }
+                        else if (component.BehaviourScope != null)
+                        {
+                            // Update local cache, then ship via SetVariable
+                            var property = component.BehaviourScope.GetProperty("enabled");
+                            property.Value = activeOrEnabled.Value;
+
+                            APIManager.SendToPlayers(new SetVariableRequest(component.Guid, property));
+                        }
+                    }
                     EditorGUIUtility.labelWidth = labelWidth; // Restore label width
                     if (isComponentExpanded != wasComponentExpanded)
                     {
@@ -278,7 +318,7 @@ namespace Sabresaurus.Sidekick
                     {
                         foreach (ComponentScope scope in component.Scopes)
                         {
-                            if(scope.TypeFullName != component.TypeFullName)
+                            if (scope.TypeFullName != component.TypeFullName)
                             {
                                 SidekickEditorGUI.DrawHeader2(new GUIContent(": " + scope.TypeShortName));
                             }
@@ -517,13 +557,13 @@ namespace Sabresaurus.Sidekick
 
         public void OnObjectPickerChanged(ObjectPickerContext context, WrappedVariable variable, UnityObjectDescription objectDescription)
         {
-            if(context.ComponentGuid != Guid.Empty)
+            if (context.ComponentGuid != Guid.Empty)
             {
                 // Remote component GUID specified, send a SetVariableRequest to update a field or property
                 variable.Value = (objectDescription != null) ? objectDescription.Guid : Guid.Empty;
                 APIManager.SendToPlayers(new SetVariableRequest(context.ComponentGuid, variable));
             }
-            else if(context.ArgumentIndex != -1)
+            else if (context.ArgumentIndex != -1)
             {
                 // If an argument index is supplied, this is updating an editor driven method argument set
                 arguments[context.ArgumentIndex].Value = (objectDescription != null) ? objectDescription.Guid : Guid.Empty;

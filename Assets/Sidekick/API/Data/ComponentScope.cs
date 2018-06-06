@@ -15,6 +15,32 @@ namespace Sabresaurus.Sidekick
         List<WrappedVariable> properties = new List<WrappedVariable>();
         List<WrappedMethod> methods = new List<WrappedMethod>();
 
+        public WrappedVariable GetProperty(string variableName)
+        {
+            foreach (var item in properties)
+            {
+                if (item.VariableName == variableName)
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
+        public object GetPropertyValue(string variableName)
+        {
+            foreach (var item in properties)
+            {
+                if(item.VariableName == variableName)
+                {
+                    return item.Value;
+                }
+            }
+
+            return null;
+        }
+
         public ComponentScope(Type componentType)
         {
             this.typeFullName = componentType.FullName;

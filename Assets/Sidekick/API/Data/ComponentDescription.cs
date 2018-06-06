@@ -13,6 +13,21 @@ namespace Sabresaurus.Sidekick
         Guid guid;
         List<ComponentScope> scopes = new List<ComponentScope>();
 
+        public ComponentScope BehaviourScope
+        {
+            get
+            {
+                foreach (ComponentScope scope in scopes)
+                {
+                    if(scope.TypeShortName == "Behaviour")
+                    {
+                        return scope;
+                    }
+                }
+                return null;
+            }
+        }
+
         public ComponentDescription(Object component)
         {
             Type componentType = component.GetType();
