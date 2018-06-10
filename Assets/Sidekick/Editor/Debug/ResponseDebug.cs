@@ -76,7 +76,10 @@ namespace Sabresaurus.Sidekick
                         {
                             stringBuilder.Append(" ");
                         }
-                        stringBuilder.AppendLine(item.ObjectName);
+                        stringBuilder.Append(item.ObjectName);
+                        stringBuilder.Append(" - ");
+                        stringBuilder.Append(item.ActiveInHierarchy);
+                        stringBuilder.AppendLine();
                     }
                 }
             }

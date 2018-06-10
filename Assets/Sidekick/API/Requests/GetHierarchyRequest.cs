@@ -48,15 +48,16 @@ namespace Sabresaurus.Sidekick.Requests
             return response;
 		}
 
-		private static void RecurseHierarchy(List<SceneHierarchyDescription.HierarchyNode> nodes, Transform transform, int depth)
+		private static void RecurseHierarchy(List<HierarchyNode> nodes, Transform transform, int depth)
         {
             ObjectMap.AddOrGetObject(transform);
             ObjectMap.AddOrGetObject(transform.gameObject);
 
-            nodes.Add(new SceneHierarchyDescription.HierarchyNode()
+            nodes.Add(new HierarchyNode()
             {
                 ObjectName = transform.name,
-                Depth = depth
+                Depth = depth,
+                ActiveInHierarchy = transform.gameObject.activeInHierarchy
             });
 
             foreach (Transform childTransform in transform)

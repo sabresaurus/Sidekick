@@ -16,7 +16,7 @@ namespace Sabresaurus.Sidekick
 
         TreeViewState treeViewState;
 
-        SimpleTreeView treeView;
+        HierarchyTreeView treeView;
         SearchField hierarchySearchField;
 
         public APIManager APIManager
@@ -50,7 +50,7 @@ namespace Sabresaurus.Sidekick
                 treeViewState = new TreeViewState();
             }
 
-            treeView = new SimpleTreeView(treeViewState);
+            treeView = new HierarchyTreeView(treeViewState);
             treeView.OnSelectionChanged += OnHierarchySelectionChanged;
 
             hierarchySearchField = new SearchField();
@@ -124,22 +124,23 @@ namespace Sabresaurus.Sidekick
             {
                 GetHierarchyResponse hierarchyResponse = (GetHierarchyResponse)response;
                 List<TreeViewItem> displays = new List<TreeViewItem>();
+                List<HierarchyNode> allNodes = new List<HierarchyNode>();
                 
                 int index = 0;
                 foreach (var scene in hierarchyResponse.Scenes)
                 {
                     displays.Add(new TreeViewItem { id = index, depth = 0, displayName = scene.SceneName });
+                    allNodes.Add(null);
                     treeView.SetExpanded(index, true);
                     index++;
-
                     foreach (var node in scene.HierarchyNodes)
                     {
                         displays.Add(new TreeViewItem { id = index, depth = node.Depth + 1, displayName = node.ObjectName });
+                        allNodes.Add(node);
                         index++;
                     }
                 }
-
-                treeView.SetDisplays(displays);
+                treeView.SetDisplays(displays, allNodes);
             }
         }
 
@@ -246,7 +247,7 @@ namespace Sabresaurus.Sidekick
             }
             else
             {
-                treeView.SetDisplays(new List<TreeViewItem>());
+                treeView.ClearDisplays();
                 GUILayout.FlexibleSpace();
                 GUILayout.Label("Remote hierarchy is only visible in remote mode", centerMessageStyle);
                 if(GUILayout.Button("Set Remote Mode"))

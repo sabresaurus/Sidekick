@@ -5,21 +5,6 @@ namespace Sabresaurus.Sidekick
 {
     public class SceneHierarchyDescription : APIData
     {
-        public class HierarchyNode
-        {
-            public string ObjectName
-            {
-                get;
-                set;
-            }
-
-            public int Depth
-            {
-                get;
-                set;
-            }
-        }
-
         string sceneName;
 
         List<HierarchyNode> hierarchyNodes = new List<HierarchyNode>();
@@ -66,7 +51,8 @@ namespace Sabresaurus.Sidekick
                 hierarchyNodes.Add(new HierarchyNode()
                 {
                     ObjectName = br.ReadString(),
-                    Depth = br.ReadInt32()
+                    Depth = br.ReadInt32(),
+                    ActiveInHierarchy = br.ReadBoolean(),
                 });
             }
         }
@@ -80,6 +66,7 @@ namespace Sabresaurus.Sidekick
             {
                 bw.Write(hierarchyNodes[i].ObjectName);
                 bw.Write(hierarchyNodes[i].Depth);
+                bw.Write(hierarchyNodes[i].ActiveInHierarchy);
             }
         }
     }
