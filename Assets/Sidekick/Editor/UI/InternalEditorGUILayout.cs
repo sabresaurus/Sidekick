@@ -6,6 +6,9 @@ using System;
 
 namespace Sabresaurus.Sidekick
 {
+    /// <summary>
+    /// Exposes certain EditorGUILayout methods which are marked internal rather than public (likely an oversight in Unity)
+    /// </summary>
     public class InternalEditorGUILayout
     {
         public static Gradient GradientField(GUIContent content, Gradient gradient, params GUILayoutOption[] options)

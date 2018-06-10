@@ -18,7 +18,7 @@ namespace Sabresaurus.Sidekick
         Integer, // Signed 32 bit
         Long, // Signed 64 bit
         Float, // 32 bit Single
-        Double, // 32 bit Single
+        Double, // 64 bit Double
         Vector2,
         Vector3,
         Vector4,
@@ -36,9 +36,8 @@ namespace Sabresaurus.Sidekick
         Enum,
         AnimationCurve,
         Gradient,
-        ExposedReference,
-        FixedBufferSize,
-
+        //ExposedReference,
+        //FixedBufferSize,
 
         Unknown = 255
     }
@@ -84,7 +83,6 @@ namespace Sabresaurus.Sidekick
             {
                 return mappings[type];
             }
-            //else if (type.IsAssignableFrom(typeof(UnityEngine.Object)))
             else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             {
                 return DataType.UnityObjectReference;

@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
 {
     public class OldInspectorSidekick : EditorWindow
     {
-        enum InspectedType { Selection, AssemblyClass, Remote };
+        enum InspectedType { Selection, AssemblyClass };
         enum InspectorMode { Fields, Props, Methods, Events, Misc };
 
         OldSettings settings = new OldSettings();
@@ -223,10 +223,6 @@ namespace Sabresaurus.Sidekick
 
                 inspectedTypes = new Type[] { assemblyTypes[activeAssembly][selectedTypeIndex] };
                 inspectedContexts = new Type[] { null };
-            }
-            else if(inspectedType == InspectedType.Remote)
-            {
-                
             }
             else
             {

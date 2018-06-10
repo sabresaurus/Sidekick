@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Cached icon store for Unity object icons
+/// </summary>
 public static class IconLookup
 {
     static Dictionary<string, Texture> cachedIcons = new Dictionary<string, Texture>();

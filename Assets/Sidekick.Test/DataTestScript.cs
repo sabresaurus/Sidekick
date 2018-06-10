@@ -1,8 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.Events;
 
-#pragma warning disable 0414
+#pragma warning disable 0414 // Disable unused field warnings as this is a test data class
 
 /// <summary>
 /// Includes common data types that Sidekick should test against commonly
@@ -10,6 +11,8 @@ using System;
 public class DataTestScript : MonoBehaviour
 {
     public enum TestEnum { Foo, Bar };
+
+    delegate int CustomDelegate();
 
     [SerializeField] string testString = "Hello World";
     [SerializeField] bool testBool = true;
@@ -46,6 +49,11 @@ public class DataTestScript : MonoBehaviour
     [SerializeField] Matrix4x4 testMatrix = Matrix4x4.identity;
     [SerializeField] TestEnum[] testEnumArray;
     [SerializeField] List<Texture2D> testTextureList;
+
+    Action basicAction;
+    Action<bool, TestEnum> complicatedAction;
+    CustomDelegate customDelegate;
+    [SerializeField] UnityEvent unityEvent = new UnityEvent();
 
 
     [Obsolete("Test Message", false)]
@@ -127,5 +135,36 @@ public class DataTestScript : MonoBehaviour
     public UnityEngine.Object PrintRandomValue(List<UnityEngine.Object> testObjects)
     {
         return testObjects[UnityEngine.Random.Range(0, testObjects.Count)];
+    }
+
+    private void Start()
+    {
+        // Hook up some event listeners for us to test raising of events
+        basicAction += DataTestScript_BasicAction;
+        complicatedAction += DataTestScript_ComplicatedAction;
+        customDelegate += DataTestScript_CustomDelegate;
+        unityEvent.AddListener(HandleUnityAction);
+    }
+
+    void DataTestScript_BasicAction()
+    {
+        Debug.Log("BasicAction fired");
+    }
+
+    void DataTestScript_ComplicatedAction(bool arg1, TestEnum arg2)
+    {
+        Debug.Log("ComplicatedAction fired");
+    }
+
+    int DataTestScript_CustomDelegate()
+    {
+        Debug.Log("CustomDelegate fired");
+
+        return 0;
+    }
+    
+    void HandleUnityAction()
+    {
+        Debug.Log("UnityAction fired");
     }
 }

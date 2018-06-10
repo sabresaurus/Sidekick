@@ -223,7 +223,7 @@ namespace Sabresaurus.Sidekick
             EditorGUI.BeginChangeCheck();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel("Display");
+            GUILayout.Label("Display");
             settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Fields, "Fields");
             settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Properties, "Properties");
             settings.GetGameObjectFlags = SidekickEditorGUI.EnumFlagsToggle(settings.GetGameObjectFlags, InfoFlags.Methods, "Methods");

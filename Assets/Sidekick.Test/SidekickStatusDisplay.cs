@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 namespace Sabresaurus.Sidekick
 {
+    /// <summary>
+    /// Helper to show a Sidekick remote's status on device using UGUI Text
+    /// </summary>
     public class SidekickStatusDisplay : MonoBehaviour
     {
         [SerializeField]

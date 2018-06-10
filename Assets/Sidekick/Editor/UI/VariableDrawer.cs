@@ -48,7 +48,6 @@ public static class VariableDrawer
                     if (list == null)
                     {
                         list = new ArrayList();
-                        //list = (IList)Activator.CreateInstance(type);
                     }
                     CollectionUtility.Resize(ref list, variable.DefaultElementValue, newSize);
                 }

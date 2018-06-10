@@ -7,6 +7,10 @@ namespace Sabresaurus.Sidekick
 {
     public enum InspectionConnection : byte { LocalEditor, RemotePlayer }
 
+    /// <summary>
+    /// Required for Sidekick to connect to a remote. This class is included in builds and auto-instantiates
+    /// when the game starts.
+    /// </summary>
     public class RuntimeSidekickBridge : MonoBehaviour
     {
         public static readonly Guid SEND_EDITOR_TO_PLAYER = new Guid("8bc8811663b74007ab8f4868ad9f7cab");

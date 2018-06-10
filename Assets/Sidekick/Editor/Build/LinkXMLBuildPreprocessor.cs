@@ -3,13 +3,24 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build;
+#if UNITY_2018_1_OR_NEWER
+using UnityEditor.Build.Reporting;
+#endif
 using UnityEngine;
 
+#if UNITY_2018_1_OR_NEWER
+class LinkXMLBuildPreprocessor : IPreprocessBuildWithReport
+#else
 class LinkXMLBuildPreprocessor : IPreprocessBuild
+#endif
 {
     public int callbackOrder { get { return 0; } }
 
+#if UNITY_2018_1_OR_NEWER
+    public void OnPreprocessBuild(BuildReport report)
+#else
     public void OnPreprocessBuild(BuildTarget target, string path)
+#endif
     {
         if (Debug.isDebugBuild)
         {
