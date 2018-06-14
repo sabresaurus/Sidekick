@@ -107,7 +107,7 @@ namespace Sabresaurus.Sidekick
                     {
                         // Get the path of the selection
                         string path = GetPathForTreeViewItem(items[i]);
-                        SelectionManager.SelectedPath = path;
+                        SelectionManager.SetSelectedPath(path);
 
                         break;
                     }

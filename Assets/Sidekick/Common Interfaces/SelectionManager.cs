@@ -21,14 +21,14 @@ namespace Sabresaurus.Sidekick
             {
                 return selectedPath;
             }
+        }
 
-            set
+        public void SetSelectedPath(string newPath, bool fireCallbacks = true)
+        {
+            selectedPath = newPath;
+            if (fireCallbacks && SelectionChanged != null)
             {
-                selectedPath = value;
-                if (SelectionChanged != null)
-                {
-                    SelectionChanged(selectedPath);
-                }
+                SelectionChanged(selectedPath);
             }
         }
 
@@ -38,16 +38,9 @@ namespace Sabresaurus.Sidekick
             Selection.selectionChanged += OnEditorSelectionChanged;
         }
 
-        public void RefreshEditorSelection()
+        public void RefreshEditorSelection(bool fireCallbacks = true)
         {
-            if (Selection.activeGameObject != null)
-            {
-                SelectedPath = Selection.activeGameObject.scene.name + "/" + GetPath(Selection.activeGameObject.transform);
-            }
-            else
-            {
-                SelectedPath = "";
-            }
+            SetSelectedPath(GetFullPath(Selection.activeGameObject), fireCallbacks);
         }
 
         private void OnEditorSelectionChanged()
@@ -55,18 +48,28 @@ namespace Sabresaurus.Sidekick
             SidekickSettings settings = BridgingContext.Instance.container.Settings;
             if (settings.InspectionConnection == InspectionConnection.LocalEditor)
             {
-                if (Selection.activeGameObject != null)
-                {
-                    SelectedPath = Selection.activeGameObject.scene.name + "/" + GetPath(Selection.activeGameObject.transform);
-                }
-                else
-                {
-                    SelectedPath = "";
-                }
+                SetSelectedPath(GetFullPath(Selection.activeGameObject));
             }
         }
 
-        public static string GetPath(Transform transform)
+        private static string GetFullPath(GameObject targetObject)
+        {
+            if(targetObject == null)
+            {
+                return "";
+            }
+
+            if(targetObject.scene.IsValid())
+            {
+                return targetObject.scene.name + "//" + GetPathForSceneTransform(targetObject.transform);
+            }
+            else
+            {
+                return AssetDatabase.GetAssetPath(targetObject);
+            }
+        }
+
+        public static string GetPathForSceneTransform(Transform transform)
         {
             string path = transform.name;
 

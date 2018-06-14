@@ -52,14 +52,21 @@ namespace Sabresaurus.Sidekick
 
         public static Transform GetFromPath(string path)
         {
-            int firstIndex = path.IndexOf('/');
+            int firstIndex = path.IndexOf("//", System.StringComparison.InvariantCultureIgnoreCase);
+
             if (firstIndex == -1)
             {
+#if UNITY_EDITOR
+                if (path.StartsWith("Assets/", System.StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return UnityEditor.AssetDatabase.LoadAssetAtPath<Transform>(path);
+                }
+#endif
                 return null;
             }
             string sceneName = path.Substring(0, firstIndex);
 
-            string pathInScene = path.Substring(firstIndex + 1);
+            string pathInScene = path.Substring(firstIndex + 2);
 
             int secondIndex = pathInScene.IndexOf('/');
 

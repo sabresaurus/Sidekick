@@ -74,7 +74,7 @@ namespace Sabresaurus.Sidekick
 
             // Reset
             gameObjectResponse = null;
-            SelectionManager.SelectedPath = null;
+            SelectionManager.SetSelectedPath(null);
 
             if (newConnectionMode == InspectionConnection.RemotePlayer)
             {
@@ -127,6 +127,9 @@ namespace Sabresaurus.Sidekick
             EditorConnection.instance.Initialize();
 
             EditorConnection.instance.Register(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
+
+            if(EditorApplication.isPlayingOrWillChangePlaymode == false)
+                SelectionManager.RefreshEditorSelection(false);
         }
 
         void OnDisable()
