@@ -46,7 +46,10 @@ namespace Sabresaurus.Sidekick
 
             // Use .item.id instead of .row as the row index takes folding into account
             bool disabled = (nodes[args.item.id] != null && nodes[args.item.id].ActiveInHierarchy == false);
-            style.normal.textColor = disabled ? new Color(0, 0, 0, 0.5f) : Color.black;
+            // Make the name less opaque if disabled
+            Color color = style.normal.textColor;
+            color.a = disabled ? 0.5f : 1;
+            style.normal.textColor = color;
 
             GUI.Label(rect, args.item.displayName, style);
         }
