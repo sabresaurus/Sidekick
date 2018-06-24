@@ -48,20 +48,20 @@ namespace Sabresaurus.Sidekick
             SidekickSettings settings = BridgingContext.Instance.container.Settings;
             if (settings.InspectionConnection == InspectionConnection.LocalEditor)
             {
-                SetSelectedPath(GetFullPath(Selection.activeGameObject));
+                SetSelectedPath(GetFullPath(Selection.activeObject));
             }
         }
 
-        private static string GetFullPath(GameObject targetObject)
+        private static string GetFullPath(UnityEngine.Object targetObject)
         {
             if(targetObject == null)
             {
                 return "";
             }
 
-            if(targetObject.scene.IsValid())
+            if(targetObject is GameObject && ((GameObject)targetObject).scene.IsValid())
             {
-                return targetObject.scene.name + "//" + GetPathForSceneTransform(targetObject.transform);
+                return ((GameObject)targetObject).scene.name + "//" + GetPathForSceneTransform(((GameObject)targetObject).transform);
             }
             else
             {

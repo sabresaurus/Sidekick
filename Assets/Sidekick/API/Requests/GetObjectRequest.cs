@@ -17,26 +17,38 @@ namespace Sabresaurus.Sidekick.Requests
     }
 
     /// <summary>
-    /// Gets reflected information about components on a game object specified by path. Flags specify what information to include.
+    /// Gets reflected information about components on a game object or another object specified by search data. Flags specify what information to include.
     /// </summary>
-    public class GetGameObjectRequest : BaseRequest
+    public class GetObjectRequest : BaseRequest
     {
         public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        enum SearchType
+        {
+            Path, // e.g. SceneName//Main Camera, or Assets/texture.png
+            //InstanceID
+        }
 
-        string gameObjectPath;
+        SearchType searchType;
+        string objectObjectPath;
         InfoFlags flags;
         bool includeInherited;
 
-        public GetGameObjectRequest(string gameObjectPath, InfoFlags flags, bool includeInherited)
+        public GetObjectRequest(string gameObjectPath, InfoFlags flags, bool includeInherited)
         {
-            this.gameObjectPath = gameObjectPath;
+            this.searchType = SearchType.Path;
+            this.objectObjectPath = gameObjectPath;
             this.flags = flags;
             this.includeInherited = includeInherited;
         }
 
-        public GetGameObjectRequest(BinaryReader br)
+        public GetObjectRequest(BinaryReader br)
         {
-            this.gameObjectPath = br.ReadString();
+            this.searchType = (SearchType)br.ReadInt32();
+            if(searchType == SearchType.Path)
+            {
+                this.objectObjectPath = br.ReadString();
+            }   
+            
             this.flags = (InfoFlags)br.ReadInt32();
             this.includeInherited = br.ReadBoolean();
         }
@@ -44,23 +56,43 @@ namespace Sabresaurus.Sidekick.Requests
         public override void Write(BinaryWriter bw)
         {
             base.Write(bw);
-
-            bw.Write(gameObjectPath);
+            bw.Write((int)searchType);
+            if(searchType == SearchType.Path)
+            {
+                bw.Write(objectObjectPath);
+            }
             bw.Write((int)flags);
             bw.Write(includeInherited);
         }
 
         public override BaseResponse GenerateResponse()
         {
-            GetGameObjectResponse getGOResponse = new GetGameObjectResponse();
+            GetObjectResponse response = new GetObjectResponse();
+            List<Object> components = new List<Object>();
+            if(searchType == SearchType.Path)
+            {
+                Object foundObject = HierarchyHelper.GetFromPath(objectObjectPath);
+                if(foundObject is GameObject)
+                {
+                    GameObject foundGameObject = (GameObject)foundObject;
 
-            Transform foundTransform = TransformHelper.GetFromPath(gameObjectPath);
-            getGOResponse.GameObjectName = foundTransform.name;
+                    // Not technically a component, but include the GameObject
+                    components.Add(foundGameObject);
+                    components.AddRange(foundGameObject.GetComponents<Component>());    
+                }
+                else
+                {
+                    components.Add(foundObject);
+                }
 
-            List<Object> components = new List<Object>(foundTransform.GetComponents<Component>());
-            // Not technically a component, but include the GameObject
-            components.Insert(0, foundTransform.gameObject);
-            getGOResponse.Components = new List<ComponentDescription>(components.Count);
+                response.GameObjectName = foundObject.name;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            response.Components = new List<ComponentDescription>(components.Count);
             foreach (Object component in components)
             {
                 //Guid guid = ObjectMap.AddOrGetObject(component);
@@ -186,9 +218,9 @@ namespace Sabresaurus.Sidekick.Requests
                     componentType = componentType.BaseType;
                 }
 
-                getGOResponse.Components.Add(description);
+                response.Components.Add(description);
             }
-            return getGOResponse;
+            return response;
         }
     }
 }

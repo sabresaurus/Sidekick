@@ -4,15 +4,15 @@ using System.IO;
 
 namespace Sabresaurus.Sidekick.Responses
 {
-    public class GetGameObjectResponse : BaseResponse
+    public class GetObjectResponse : BaseResponse
     {
-        string gameObjectName = "";
+        string objectName = "";
         List<ComponentDescription> components = new List<ComponentDescription>();
 
-        public GetGameObjectResponse(BinaryReader br, int requestID)
+        public GetObjectResponse(BinaryReader br, int requestID)
             : base(br, requestID)
         {
-            gameObjectName = br.ReadString();
+            objectName = br.ReadString();
 
             int componentCount = br.ReadInt32();
             for (int i = 0; i < componentCount; i++)
@@ -21,7 +21,7 @@ namespace Sabresaurus.Sidekick.Responses
             }
         }
 
-        public GetGameObjectResponse()
+        public GetObjectResponse()
         {
 
         }
@@ -29,7 +29,7 @@ namespace Sabresaurus.Sidekick.Responses
 
         public override void Write(BinaryWriter bw)
         {
-            bw.Write(gameObjectName);
+            bw.Write(objectName);
             bw.Write(components.Count);
 
             foreach (ComponentDescription item in components)
@@ -42,12 +42,12 @@ namespace Sabresaurus.Sidekick.Responses
         {
             get
             {
-                return gameObjectName;
+                return objectName;
             }
 
             set
             {
-                gameObjectName = value;
+                objectName = value;
             }
         }
 

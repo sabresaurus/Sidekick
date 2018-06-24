@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Sabresaurus.Sidekick
 {
-    public static class TransformHelper
+    public static class HierarchyHelper
     {
         static Scene dontDestroyOnLoadScene;
 
@@ -50,7 +50,7 @@ namespace Sabresaurus.Sidekick
             return scenes;
         }
 
-        public static Transform GetFromPath(string path)
+        public static Object GetFromPath(string path)
         {
             int firstIndex = path.IndexOf("//", System.StringComparison.InvariantCultureIgnoreCase);
 
@@ -59,7 +59,8 @@ namespace Sabresaurus.Sidekick
 #if UNITY_EDITOR
                 if (path.StartsWith("Assets/", System.StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return UnityEditor.AssetDatabase.LoadAssetAtPath<Transform>(path);
+                    // TODO: This should handle cases where you select the Sprite not the Texture
+                    return UnityEditor.AssetDatabase.LoadAssetAtPath<Object>(path);
                 }
 #endif
                 return null;
@@ -100,11 +101,11 @@ namespace Sabresaurus.Sidekick
                     {
                         if (remainingPath.Length > 0)
                         {
-                            return rootGameObjects[i].transform.Find(remainingPath);
+                            return rootGameObjects[i].transform.Find(remainingPath).gameObject;
                         }
                         else
                         {
-                            return rootGameObjects[i].transform;
+                            return rootGameObjects[i];
                         }
                     }
                 }

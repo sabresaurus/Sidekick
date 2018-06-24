@@ -14,9 +14,9 @@ namespace Sabresaurus.Sidekick
 
             stringBuilder.AppendLine(response.GetType().Name);
 
-            if (response is GetGameObjectResponse)
+            if (response is GetObjectResponse)
             {
-                GetGameObjectResponse gameObjectResponse = (GetGameObjectResponse)response;
+                GetObjectResponse gameObjectResponse = (GetObjectResponse)response;
 
                 stringBuilder.AppendLine(gameObjectResponse.GameObjectName);
                 foreach (var component in gameObjectResponse.Components)

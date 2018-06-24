@@ -229,7 +229,7 @@ namespace Sabresaurus.Sidekick
 			{
 				// Check that no property exists with the name after the prefix
 				// Don't use SpecialName here as compilers aren't required to populate it
-                if(parentType.GetProperty(methodName.Substring(4), GetGameObjectRequest.BINDING_FLAGS) != null)
+                if(parentType.GetProperty(methodName.Substring(4), GetObjectRequest.BINDING_FLAGS) != null)
 				{
 					return true;
 				}

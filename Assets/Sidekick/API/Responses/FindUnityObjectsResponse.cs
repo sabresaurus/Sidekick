@@ -5,7 +5,7 @@ using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick.Responses
 {
-    public class GetUnityObjectsResponse : BaseResponse
+    public class FindUnityObjectsResponse : BaseResponse
     {
 		UnityObjectDescription[] objectDescriptions;
         WrappedVariable variable;
@@ -35,7 +35,7 @@ namespace Sabresaurus.Sidekick.Responses
 			}
 		}
 
-        public GetUnityObjectsResponse(WrappedVariable variable, ObjectPickerContext context, Object[] sourceObjects)
+        public FindUnityObjectsResponse(WrappedVariable variable, ObjectPickerContext context, Object[] sourceObjects)
         {
             this.variable = variable;
             this.context = context;
@@ -46,7 +46,7 @@ namespace Sabresaurus.Sidekick.Responses
             }
         }
 
-        public GetUnityObjectsResponse(BinaryReader br, int requestID)
+        public FindUnityObjectsResponse(BinaryReader br, int requestID)
             : base(br, requestID)
         {
             variable = new WrappedVariable(br);

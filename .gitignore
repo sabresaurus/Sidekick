@@ -37,3 +37,5 @@ sysinfo.txt
 
 \.idea/\.idea\.Sidekick/
 Assets/GitExclude*
+Assets/Plugins/Editor/JetBrains
+JetBrains.meta

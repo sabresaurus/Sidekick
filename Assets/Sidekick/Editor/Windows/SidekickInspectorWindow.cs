@@ -23,7 +23,7 @@ namespace Sabresaurus.Sidekick
         Vector2 scrollPosition = Vector2.zero;
         SearchField searchField2;
 
-        GetGameObjectResponse gameObjectResponse;
+        GetObjectResponse gameObjectResponse;
 
         double timeLastRefreshed = 0;
 
@@ -104,11 +104,11 @@ namespace Sabresaurus.Sidekick
         {
             if (!string.IsNullOrEmpty(newPath) && newPath.Contains("/")) // Valid path?
             {
-                APIManager.SendToPlayers(new GetGameObjectRequest(newPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                APIManager.SendToPlayers(new GetObjectRequest(newPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
             }
             else
             {
-                APIManager.ResponseReceived(new GetGameObjectResponse());
+                APIManager.ResponseReceived(new GetObjectResponse());
             }
             Repaint();
         }
@@ -152,9 +152,9 @@ namespace Sabresaurus.Sidekick
         {
             Repaint();
 
-            if (response is GetGameObjectResponse)
+            if (response is GetObjectResponse)
             {
-                gameObjectResponse = (GetGameObjectResponse)response;
+                gameObjectResponse = (GetObjectResponse)response;
             }
             else if (response is InvokeMethodResponse)
             {
@@ -169,9 +169,9 @@ namespace Sabresaurus.Sidekick
                 opacity = 1f;
                 Repaint();
             }
-            else if (response is GetUnityObjectsResponse)
+            else if (response is FindUnityObjectsResponse)
             {
-                GetUnityObjectsResponse castResponse = (GetUnityObjectsResponse)response;
+                FindUnityObjectsResponse castResponse = (FindUnityObjectsResponse)response;
 
                 RemoteObjectPickerWindow.Show(castResponse.Context, castResponse.ObjectDescriptions, castResponse.Variable, OnObjectPickerChanged);
             }
@@ -195,7 +195,7 @@ namespace Sabresaurus.Sidekick
                     APIManager.SendToPlayers(new GetHierarchyRequest());
                     if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                     {
-                        APIManager.SendToPlayers(new GetGameObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                        APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
                     }
                 }
             }
@@ -236,7 +236,7 @@ namespace Sabresaurus.Sidekick
             {
                 if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                 {
-                    APIManager.SendToPlayers(new GetGameObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                    APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
                 }
             }
 
@@ -555,7 +555,7 @@ namespace Sabresaurus.Sidekick
 
         public void OnOpenObjectPicker(ObjectPickerContext context, WrappedVariable variable)
         {
-            APIManager.SendToPlayers(new GetUnityObjectsRequest(variable, context));
+            APIManager.SendToPlayers(new FindUnityObjectsRequest(variable, context));
         }
 
         public void OnObjectPickerChanged(ObjectPickerContext context, WrappedVariable variable, UnityObjectDescription objectDescription)

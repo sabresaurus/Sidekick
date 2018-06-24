@@ -7,18 +7,18 @@ using System.IO;
 
 namespace Sabresaurus.Sidekick.Requests
 {
-    public class GetUnityObjectsRequest : BaseRequest
+    public class FindUnityObjectsRequest : BaseRequest
     {
         WrappedVariable variable;
         ObjectPickerContext context;
 
-        public GetUnityObjectsRequest(WrappedVariable variable, ObjectPickerContext context)
+        public FindUnityObjectsRequest(WrappedVariable variable, ObjectPickerContext context)
         {
             this.variable = variable;
             this.context = context;
         }
 
-        public GetUnityObjectsRequest(BinaryReader br)
+        public FindUnityObjectsRequest(BinaryReader br)
         {
 			this.variable = new WrappedVariable(br);
             this.context = new ObjectPickerContext(br);
@@ -37,7 +37,7 @@ namespace Sabresaurus.Sidekick.Requests
             Type type = variable.MetaData.GetTypeFromMetaData();
             Object[] objects = Resources.FindObjectsOfTypeAll(type);
 
-            return new GetUnityObjectsResponse(variable, context, objects);
+            return new FindUnityObjectsResponse(variable, context, objects);
         }
     }
 }
