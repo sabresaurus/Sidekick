@@ -70,9 +70,7 @@ namespace Sabresaurus.Sidekick.Requests
                 Type componentType = component.GetType();
 
                 while (componentType != null
-                       && componentType != typeof(System.Object)
-                       && componentType != typeof(UnityEngine.Object)
-                       && componentType != typeof(UnityEngine.Component))
+                       && !InspectionExclusions.GetExcludedTypes().Contains(componentType))
                 {
                     ComponentScope componentScope = new ComponentScope(componentType);
                     if ((flags & InfoFlags.Fields) == InfoFlags.Fields)
