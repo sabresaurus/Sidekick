@@ -265,7 +265,10 @@ namespace Sabresaurus.Sidekick
             item = item.parent;
             while (item != null && item.depth >= 0)
             {
-                path = item.displayName + "//" + path;
+                if(item.depth > 0)
+                    path = item.displayName + "/" + path;
+                else
+                    path = item.displayName + "//" + path;
                 item = item.parent;
             }
 
