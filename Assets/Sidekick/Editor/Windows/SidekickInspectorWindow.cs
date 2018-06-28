@@ -30,6 +30,8 @@ namespace Sabresaurus.Sidekick
         string methodOutput = "";
         float opacity = 0f;
 
+        bool registered = false;
+
         public APIManager APIManager
         {
             get
@@ -126,10 +128,43 @@ namespace Sabresaurus.Sidekick
 
             EditorConnection.instance.Initialize();
 
-            EditorConnection.instance.Register(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
 
             if(EditorApplication.isPlayingOrWillChangePlaymode == false)
                 SelectionManager.RefreshEditorSelection(false);
+        }
+
+        void OnInspectorUpdate()
+        {
+            if (EditorConnection.instance.ConnectedPlayers.Count > 0)
+            {
+                if (!registered)
+                {
+                    EditorConnection.instance.Register(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
+                    registered = true;
+                }
+            }
+            else
+            {
+                if (registered)
+                {
+                    registered = false;
+                    //EditorConnection.instance.Unregister(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
+                }
+            }
+
+            if (Settings.InspectionConnection == InspectionConnection.LocalEditor
+                || Settings.AutoRefreshRemote)
+            {
+                if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
+                {
+                    timeLastRefreshed = EditorApplication.timeSinceStartup;
+                    APIManager.SendToPlayers(new GetHierarchyRequest());
+                    if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
+                    {
+                        APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                    }
+                }
+            }
         }
 
         void OnDisable()
@@ -138,8 +173,6 @@ namespace Sabresaurus.Sidekick
 
             SelectionManager.SelectionChanged -= OnSelectionChanged;
             APIManager.ResponseReceived -= OnResponseReceived;
-
-            EditorConnection.instance.Unregister(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
         }
 
         private void OnMessageEvent(MessageEventArgs args)
@@ -182,23 +215,6 @@ namespace Sabresaurus.Sidekick
                 Debug.Log(responseString);
             }
 #endif
-        }
-
-        private void OnInspectorUpdate()
-        {
-            if (Settings.InspectionConnection == InspectionConnection.LocalEditor
-                || Settings.AutoRefreshRemote)
-            {
-                if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
-                {
-                    timeLastRefreshed = EditorApplication.timeSinceStartup;
-                    APIManager.SendToPlayers(new GetHierarchyRequest());
-                    if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
-                    {
-                        APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
-                    }
-                }
-            }
         }
 
         void OnGUI()

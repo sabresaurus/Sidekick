@@ -18,6 +18,7 @@ namespace Sabresaurus.Sidekick
 
         HierarchyTreeView treeView;
         SearchField hierarchySearchField;
+        int cachedPlayerCount = 0;
 
         public APIManager APIManager
         {
@@ -156,6 +157,21 @@ namespace Sabresaurus.Sidekick
             else
             {
                 return false;
+            }
+        }
+
+        void OnInspectorUpdate()
+        {
+            if (EditorConnection.instance.ConnectedPlayers.Count == 0)
+            {
+                EditorConnection.instance.Initialize();
+            }
+
+            if(EditorConnection.instance.ConnectedPlayers.Count != cachedPlayerCount)
+            {
+                cachedPlayerCount = EditorConnection.instance.ConnectedPlayers.Count;
+                // OnPlayerConnected isn't always reliable, so also repaint if player count changes
+                Repaint();
             }
         }
 
