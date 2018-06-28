@@ -93,20 +93,42 @@ namespace Sabresaurus.Sidekick
             return ret;
         }
 
+        private static Color splitterColor { get { return EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f) : new Color(0.6f, 0.6f, 0.6f); } }
+
         public static void DrawHeader2(GUIContent label)
         {
             Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
+            float xMax = contentRect.xMax;
+            contentRect.xMin += 16;
             Rect labelRect = contentRect;
             labelRect.xMin += 16f;
-            labelRect.xMax -= 20f;
-            contentRect.xMin = 0.0f;
-            contentRect.xMax = Screen.width / EditorGUIUtility.pixelsPerPoint;
-            contentRect.width += 4f;
+            labelRect.xMax -= 8f;
 
-            DrawHeaderBackground(contentRect);
-            GUIStyle style = new GUIStyle(EditorStyles.boldLabel);
-            style.alignment = TextAnchor.MiddleRight;
-            style.fontSize = 10;
+            GUIStyle style = new GUIStyle(EditorStyles.boldLabel)
+            {
+                alignment = TextAnchor.MiddleRight,
+                fontSize = 10
+            };
+            Vector2 textSize = style.CalcSize(label);
+            contentRect.xMax = Mathf.Max(contentRect.xMin, labelRect.xMax - textSize.x - 2);
+            contentRect.yMin = (contentRect.yMax + contentRect.yMin) / 2f;
+            contentRect.yMax = contentRect.yMin + 1;
+            Color tColour = GUI.color;
+            Color color = splitterColor;
+            EditorGUI.DrawRect(contentRect, color);
+
+            Rect thumbRect = contentRect;
+            thumbRect.x -= 3;
+            thumbRect.y -= 2;
+            thumbRect.width = 7;
+            thumbRect.height = thumbRect.width - 2;
+            GUI.DrawTexture(thumbRect, SidekickEditorGUI.thumb);
+            
+            contentRect.xMax = xMax + 2;
+            contentRect.xMin = labelRect.xMax + 2;
+            EditorGUI.DrawRect(contentRect, color);
+            
+            GUI.color = tColour;
             EditorGUI.LabelField(labelRect, label, style);
         }
 
@@ -117,7 +139,29 @@ namespace Sabresaurus.Sidekick
             rect.width += 4f;
             if (Event.current.type != EventType.Repaint)
                 return;
-            EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f, 1.333f) : new Color(0.6f, 0.6f, 0.6f, 1.333f));
+            EditorGUI.DrawRect(rect, splitterColor);
+        }
+        
+        public static Rect DrawVerticalLine(float height)
+        {
+            Rect rect = GUILayoutUtility.GetRect(1f, 1f, GUILayout.ExpandWidth(false));
+            rect.height = height;
+            rect.yMin -= 8.0f;
+            if (Event.current.type != EventType.Repaint)
+                return rect;
+            EditorGUI.DrawRect(rect, splitterColor);
+            return rect;
+        }
+
+        private static Texture _thumb;
+        public static Texture thumb
+        {
+            get
+            {
+                if (_thumb == null)
+                    _thumb = EditorGUIUtility.IconContent("eventpin on").image;
+                return _thumb;
+            }
         }
 
         public static void DrawHeaderBackground(Rect rect)
