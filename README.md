@@ -71,6 +71,8 @@ To use the Remote Hierarchy window, follow these steps:
 
 Sidekick is built by design to be optimised for extending. Want to help? Take a look at the [issues](https://github.com/sabresaurus/Sidekick/issues) page to see tasks that are good to start on, if you're unsure about one or want advice just post a comment on one of those issues.
 
+Join us on Discord [here](https://discord.gg/6njbyaq)
+
 # License
 
 Sidekick is licensed under MIT, see **LICENSE** for details.
