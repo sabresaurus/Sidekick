@@ -99,7 +99,6 @@ namespace Sabresaurus.Sidekick
         {
             Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
             float xMax = contentRect.xMax;
-            contentRect.xMin += 16;
             Rect labelRect = contentRect;
             labelRect.xMin += 16f;
             labelRect.xMax -= 8f;
@@ -117,13 +116,6 @@ namespace Sabresaurus.Sidekick
             Color color = splitterColor;
             EditorGUI.DrawRect(contentRect, color);
 
-            Rect thumbRect = contentRect;
-            thumbRect.x -= 3;
-            thumbRect.y -= 2;
-            thumbRect.width = 7;
-            thumbRect.height = thumbRect.width - 2;
-            GUI.DrawTexture(thumbRect, SidekickEditorGUI.thumb);
-            
             contentRect.xMax = xMax + 2;
             contentRect.xMin = labelRect.xMax + 2;
             EditorGUI.DrawRect(contentRect, color);
