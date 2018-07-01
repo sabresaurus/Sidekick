@@ -335,199 +335,222 @@ namespace Sabresaurus.Sidekick
 
                     if (isComponentExpanded)
                     {
-                        foreach (ComponentScope scope in component.Scopes)
+                        using (new EditorGUILayout.HorizontalScope())
                         {
-                            if (scope.TypeFullName != component.TypeFullName)
+                            using (new EditorGUILayout.VerticalScope())
                             {
-                                SidekickEditorGUI.DrawHeader2(new GUIContent(": " + scope.TypeShortName));
-                            }
-
-                            ObjectPickerContext objectPickerContext = new ObjectPickerContext(component.Guid);
-                            foreach (var field in scope.Fields)
-                            {
-                                if (!string.IsNullOrEmpty(activeSearchTerm) && !field.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                                foreach (ComponentScope scope in component.Scopes)
                                 {
-                                    // Active search term not matched, skip it
-                                    continue;
-                                }
-
-                                if (settings.IgnoreObsolete && (field.Attributes & VariableAttributes.Obsolete) == VariableAttributes.Obsolete)
-                                {
-                                    // Skip obsolete entries if that setting is enabled
-                                    continue;
-                                }
-                                EditorGUI.BeginChangeCheck();
-                                object newValue = VariableDrawer.Draw(objectPickerContext, field, OnOpenObjectPicker);
-                                if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && field.DataType != DataType.Unknown)
-                                {
-                                    if (newValue != field.Value || field.Attributes.HasFlagByte(VariableAttributes.IsList) || field.Attributes.HasFlagByte(VariableAttributes.IsArray))
+                                    if (scope.TypeFullName != component.TypeFullName)
                                     {
-                                        field.Value = newValue;
-                                        APIManager.SendToPlayers(new SetVariableRequest(component.Guid, field));
+                                        SidekickEditorGUI.DrawHeader2(new GUIContent(": " + scope.TypeShortName));
                                     }
 
-                                    //Debug.Log("Value changed in " + field.VariableName);
-                                }
-                            }
-                            foreach (var property in scope.Properties)
-                            {
-                                if (!string.IsNullOrEmpty(activeSearchTerm) && !property.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    // Active search term not matched, skip it
-                                    continue;
-                                }
-
-                                if (settings.IgnoreObsolete && (property.Attributes & VariableAttributes.Obsolete) == VariableAttributes.Obsolete)
-                                {
-                                    // Skip obsolete entries if that setting is enabled
-                                    continue;
-                                }
-
-                                EditorGUI.BeginChangeCheck();
-                                object newValue = VariableDrawer.Draw(objectPickerContext, property, OnOpenObjectPicker);
-                                if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && property.DataType != DataType.Unknown)
-                                {
-                                    if (newValue != property.Value || property.Attributes.HasFlagByte(VariableAttributes.IsList) || property.Attributes.HasFlagByte(VariableAttributes.IsArray))
+                                    ObjectPickerContext objectPickerContext = new ObjectPickerContext(component.Guid);
+                                    foreach (var field in scope.Fields)
                                     {
-                                        property.Value = newValue;
-                                        APIManager.SendToPlayers(new SetVariableRequest(component.Guid, property));
-                                    }
-                                    //Debug.Log("Value changed in " + property.VariableName);
-                                }
-                            }
-
-                            GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
-                            RectOffset padding = expandButtonStyle.padding;
-                            padding.left = 0;
-                            padding.right = 1;
-                            expandButtonStyle.padding = padding;
-
-                            GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-                            labelStyle.alignment = TextAnchor.MiddleRight;
-                            GUIStyle normalButtonStyle = new GUIStyle(GUI.skin.button);
-                            normalButtonStyle.padding = normalButtonStyle.padding.SetLeft(100);
-                            normalButtonStyle.alignment = TextAnchor.MiddleLeft;
-
-                            foreach (var method in scope.Methods)
-                            {
-                                if (!string.IsNullOrEmpty(activeSearchTerm) && !method.MethodName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
-                                {
-                                    // Active search term not matched, skip it
-                                    continue;
-                                }
-
-                                if (settings.IgnoreObsolete && (method.MethodAttributes & MethodAttributes.Obsolete) == MethodAttributes.Obsolete)
-                                {
-                                    // Skip obsolete entries if that setting is enabled
-                                    continue;
-                                }
-
-                                if (method.SafeToFire == false)
-                                {
-                                    EditorGUI.BeginDisabledGroup(true);
-                                }
-
-                                GUILayout.BeginHorizontal();
-                                if (method.ReturnType == DataType.Void)
-                                    labelStyle.normal.textColor = Color.grey;
-                                else if ((method.ReturnTypeAttributes & VariableAttributes.IsValueType) == VariableAttributes.IsValueType)
-                                    labelStyle.normal.textColor = new Color(0, 0, 1);
-                                else
-                                    labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
-
-                                string displayText = method.MethodName + " (" + method.ParameterCount + ")";
-
-                                if ((method.MethodAttributes & MethodAttributes.Static) == MethodAttributes.Static)
-                                {
-                                    displayText += " [Static]";
-                                }
-
-                                if (method.SafeToFire == false)
-                                {
-                                    displayText += " [Unsupported]";
-                                }
-
-                                bool wasMethodExpanded = (method.Equals(expandedMethod));
-
-                                if (GUILayout.Button(displayText, normalButtonStyle))
-                                {
-                                    if (wasMethodExpanded)
-                                    {
-                                        APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
-                                    }
-                                    else
-                                    {
-                                        // Not expanded, just use the default values
-                                        List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
-
-                                        for (int i = 0; i < method.ParameterCount; i++)
+                                        if (!string.IsNullOrEmpty(activeSearchTerm) && !field.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
                                         {
-                                            WrappedParameter parameter = method.Parameters[i];
-                                            defaultArguments.Add(new WrappedVariable(parameter));
+                                            // Active search term not matched, skip it
+                                            continue;
                                         }
 
-                                        APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
-                                    }
-                                }
-
-                                Rect lastRect = GUILayoutUtility.GetLastRect();
-                                lastRect.xMax = normalButtonStyle.padding.left;
-                                GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
-
-                                if (method.ParameterCount > 0)
-                                {
-                                    bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
-                                    GUILayout.EndHorizontal();
-
-                                    if (isMethodExpanded != wasMethodExpanded) // has changed
-                                    {
-                                        if (isMethodExpanded)
+                                        if (settings.IgnoreObsolete && (field.Attributes & VariableAttributes.Obsolete) == VariableAttributes.Obsolete)
                                         {
-                                            // Reset the keyboard control as we don't want old text carrying over
-                                            GUIUtility.keyboardControl = 0;
+                                            // Skip obsolete entries if that setting is enabled
+                                            continue;
+                                        }
 
-                                            expandedMethod = method;
-                                            arguments = new List<WrappedVariable>(method.ParameterCount);
-                                            for (int i = 0; i < method.ParameterCount; i++)
+                                        EditorGUI.BeginChangeCheck();
+                                        object newValue = VariableDrawer.Draw(objectPickerContext, field, OnOpenObjectPicker);
+                                        if (EditorGUI.EndChangeCheck() && (field.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && field.DataType != DataType.Unknown)
+                                        {
+                                            if (newValue != field.Value || field.Attributes.HasFlagByte(VariableAttributes.IsList) || field.Attributes.HasFlagByte(VariableAttributes.IsArray))
                                             {
-                                                WrappedParameter parameter = method.Parameters[i];
-                                                arguments.Add(new WrappedVariable(parameter));
+                                                field.Value = newValue;
+                                                APIManager.SendToPlayers(new SetVariableRequest(component.Guid, field));
+                                            }
+
+                                            //Debug.Log("Value changed in " + field.VariableName);
+                                        }
+                                    }
+
+                                    foreach (var property in scope.Properties)
+                                    {
+                                        if (!string.IsNullOrEmpty(activeSearchTerm) && !property.VariableName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                                        {
+                                            // Active search term not matched, skip it
+                                            continue;
+                                        }
+
+                                        if (settings.IgnoreObsolete && (property.Attributes & VariableAttributes.Obsolete) == VariableAttributes.Obsolete)
+                                        {
+                                            // Skip obsolete entries if that setting is enabled
+                                            continue;
+                                        }
+
+                                        EditorGUI.BeginChangeCheck();
+                                        object newValue = VariableDrawer.Draw(objectPickerContext, property, OnOpenObjectPicker);
+                                        if (EditorGUI.EndChangeCheck() && (property.Attributes & VariableAttributes.ReadOnly) == VariableAttributes.None && property.DataType != DataType.Unknown)
+                                        {
+                                            if (newValue != property.Value || property.Attributes.HasFlagByte(VariableAttributes.IsList) || property.Attributes.HasFlagByte(VariableAttributes.IsArray))
+                                            {
+                                                property.Value = newValue;
+                                                APIManager.SendToPlayers(new SetVariableRequest(component.Guid, property));
+                                            }
+
+                                            //Debug.Log("Value changed in " + property.VariableName);
+                                        }
+                                    }
+
+                                    GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
+                                    RectOffset padding = expandButtonStyle.padding;
+                                    padding.left = 0;
+                                    padding.right = 1;
+                                    expandButtonStyle.padding = padding;
+
+                                    GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+                                    labelStyle.alignment = TextAnchor.MiddleRight;
+                                    GUIStyle normalButtonStyle = new GUIStyle(GUI.skin.button);
+                                    normalButtonStyle.padding = normalButtonStyle.padding.SetLeft(100);
+                                    normalButtonStyle.alignment = TextAnchor.MiddleLeft;
+
+                                    foreach (var method in scope.Methods)
+                                    {
+                                        if (!string.IsNullOrEmpty(activeSearchTerm) && !method.MethodName.Contains(activeSearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                                        {
+                                            // Active search term not matched, skip it
+                                            continue;
+                                        }
+
+                                        if (settings.IgnoreObsolete && (method.MethodAttributes & MethodAttributes.Obsolete) == MethodAttributes.Obsolete)
+                                        {
+                                            // Skip obsolete entries if that setting is enabled
+                                            continue;
+                                        }
+
+                                        if (method.SafeToFire == false)
+                                        {
+                                            EditorGUI.BeginDisabledGroup(true);
+                                        }
+
+                                        GUILayout.BeginHorizontal();
+                                        if (method.ReturnType == DataType.Void)
+                                            labelStyle.normal.textColor = Color.grey;
+                                        else if ((method.ReturnTypeAttributes & VariableAttributes.IsValueType) == VariableAttributes.IsValueType)
+                                            labelStyle.normal.textColor = new Color(0, 0, 1);
+                                        else
+                                            labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
+
+                                        string displayText = method.MethodName + " (" + method.ParameterCount + ")";
+
+                                        if ((method.MethodAttributes & MethodAttributes.Static) == MethodAttributes.Static)
+                                        {
+                                            displayText += " [Static]";
+                                        }
+
+                                        if (method.SafeToFire == false)
+                                        {
+                                            displayText += " [Unsupported]";
+                                        }
+
+                                        bool wasMethodExpanded = (method.Equals(expandedMethod));
+
+                                        if (GUILayout.Button(displayText, normalButtonStyle))
+                                        {
+                                            if (wasMethodExpanded)
+                                            {
+                                                APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, arguments.ToArray()));
+                                            }
+                                            else
+                                            {
+                                                // Not expanded, just use the default values
+                                                List<WrappedVariable> defaultArguments = new List<WrappedVariable>();
+
+                                                for (int i = 0; i < method.ParameterCount; i++)
+                                                {
+                                                    WrappedParameter parameter = method.Parameters[i];
+                                                    defaultArguments.Add(new WrappedVariable(parameter));
+                                                }
+
+                                                APIManager.SendToPlayers(new InvokeMethodRequest(component.Guid, method.MethodName, defaultArguments.ToArray()));
+                                            }
+                                        }
+
+                                        Rect lastRect = GUILayoutUtility.GetLastRect();
+                                        lastRect.xMax = normalButtonStyle.padding.left;
+                                        GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
+
+                                        if (method.ParameterCount > 0)
+                                        {
+                                            bool isMethodExpanded = GUILayout.Toggle(wasMethodExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
+                                            GUILayout.EndHorizontal();
+
+                                            if (isMethodExpanded != wasMethodExpanded) // has changed
+                                            {
+                                                if (isMethodExpanded)
+                                                {
+                                                    // Reset the keyboard control as we don't want old text carrying over
+                                                    GUIUtility.keyboardControl = 0;
+
+                                                    expandedMethod = method;
+                                                    arguments = new List<WrappedVariable>(method.ParameterCount);
+                                                    for (int i = 0; i < method.ParameterCount; i++)
+                                                    {
+                                                        WrappedParameter parameter = method.Parameters[i];
+                                                        arguments.Add(new WrappedVariable(parameter));
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    expandedMethod = null;
+                                                    arguments = null;
+                                                }
+                                            }
+                                            else if (isMethodExpanded)
+                                            {
+                                                EditorGUI.indentLevel++;
+                                                for (int i = 0; i < arguments.Count; i++)
+                                                {
+                                                    var argument = arguments[i];
+                                                    argument.Value = VariableDrawer.Draw(new ObjectPickerContext(i), argument, OnOpenObjectPicker);
+                                                    //argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
+                                                }
+
+                                                //Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
+                                                //buttonRect = EditorGUI.IndentedRect(buttonRect);
+
+
+                                                EditorGUI.indentLevel--;
+
+                                                GUILayout.Space(10);
                                             }
                                         }
                                         else
                                         {
-                                            expandedMethod = null;
-                                            arguments = null;
+                                            GUILayout.EndHorizontal();
                                         }
-                                    }
-                                    else if (isMethodExpanded)
-                                    {
-                                        EditorGUI.indentLevel++;
-                                        for (int i = 0; i < arguments.Count; i++)
+
+                                        if (method.SafeToFire == false)
                                         {
-                                            var argument = arguments[i];
-                                            argument.Value = VariableDrawer.Draw(new ObjectPickerContext(i), argument, OnOpenObjectPicker);
-                                            //argument.Value = VariableDrawer.DrawIndividualVariable(null, argument, argument.VariableName, DataTypeHelper.GetSystemTypeFromWrappedDataType(argument.DataType), argument.Value, OnOpenObjectPicker);
+                                            EditorGUI.EndDisabledGroup();
                                         }
-
-                                        //Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.button);
-                                        //buttonRect = EditorGUI.IndentedRect(buttonRect);
-
-
-                                        EditorGUI.indentLevel--;
-
-                                        GUILayout.Space(10);
                                     }
                                 }
-                                else
-                                {
-                                    GUILayout.EndHorizontal();
-                                }
+                                
+                                GUILayout.Space(5);
+                            }
 
-                                if (method.SafeToFire == false)
-                                {
-                                    EditorGUI.EndDisabledGroup();
-                                }
+                            {// Vertical Line and Thumb
+                                Rect r = GUILayoutUtility.GetLastRect();
+                                GUILayout.Space(2);
+                                Rect thumbRect = SidekickEditorGUI.DrawVerticalLine(r.height);
+                                thumbRect.x -= 3;
+                                thumbRect.y -= 2;
+                                thumbRect.width = 7;
+                                thumbRect.height = thumbRect.width - 2;
+                                GUI.DrawTexture(thumbRect, SidekickEditorGUI.thumb);
+                                GUILayout.Space(6);
                             }
                         }
                     }
