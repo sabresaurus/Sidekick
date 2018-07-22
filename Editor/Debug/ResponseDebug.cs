@@ -18,7 +18,7 @@ namespace Sabresaurus.Sidekick
             {
                 GetObjectResponse gameObjectResponse = (GetObjectResponse)response;
 
-                stringBuilder.AppendLine(gameObjectResponse.GameObjectName);
+                stringBuilder.AppendLine(gameObjectResponse.ObjectName);
                 foreach (var component in gameObjectResponse.Components)
                 {
                     stringBuilder.Append(" ");

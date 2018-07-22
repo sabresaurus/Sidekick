@@ -28,7 +28,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public ComponentDescription(Object component)
+        public ComponentDescription(object component)
         {
             Type componentType = component.GetType();
             this.typeFullName = componentType.FullName;

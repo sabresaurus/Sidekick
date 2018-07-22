@@ -38,7 +38,7 @@ namespace Sabresaurus.Sidekick.Responses
             }
         }
 
-        public string GameObjectName
+        public string ObjectName
         {
             get
             {

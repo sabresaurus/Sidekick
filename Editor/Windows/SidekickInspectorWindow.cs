@@ -106,7 +106,7 @@ namespace Sabresaurus.Sidekick
         {
             if (!string.IsNullOrEmpty(newPath) && newPath.Contains("/")) // Valid path?
             {
-                APIManager.SendToPlayers(new GetObjectRequest(newPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                APIManager.SendToPlayers(new GetObjectRequest(newPath, Settings.GetGameObjectFlags));
             }
             else
             {
@@ -161,7 +161,7 @@ namespace Sabresaurus.Sidekick
                     APIManager.SendToPlayers(new GetHierarchyRequest());
                     if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                     {
-                        APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                        APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags));
                     }
                 }
             }
@@ -252,7 +252,7 @@ namespace Sabresaurus.Sidekick
             {
                 if (!string.IsNullOrEmpty(SelectionManager.SelectedPath)) // Valid path?
                 {
-                    APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags, Settings.IncludeInherited));
+                    APIManager.SendToPlayers(new GetObjectRequest(SelectionManager.SelectedPath, Settings.GetGameObjectFlags));
                 }
             }
 

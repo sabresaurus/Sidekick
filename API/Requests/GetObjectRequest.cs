@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Sabresaurus.Sidekick.Responses;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -25,75 +26,118 @@ namespace Sabresaurus.Sidekick.Requests
         enum SearchType
         {
             Path, // e.g. SceneName//Main Camera, or Assets/texture.png
-            //InstanceID
+            ObjectGUID, // any System.Object in the ObjectMap
         }
 
         SearchType searchType;
-        string objectObjectPath;
+        string objectPath; // Path in scene or assets
+        Guid guid; // GUID directly to any System.Object known by the ObjectMap
         InfoFlags flags;
-        bool includeInherited;
 
-        public GetObjectRequest(string gameObjectPath, InfoFlags flags, bool includeInherited)
+        public GetObjectRequest(string objectPath, InfoFlags flags)
         {
             this.searchType = SearchType.Path;
-            this.objectObjectPath = gameObjectPath;
+            this.objectPath = objectPath;
             this.flags = flags;
-            this.includeInherited = includeInherited;
+        }
+        
+        public GetObjectRequest(Guid objectGuid, InfoFlags flags)
+        {
+            this.searchType = SearchType.ObjectGUID;
+            this.guid = objectGuid;
+            this.flags = flags;
         }
 
         public GetObjectRequest(BinaryReader br)
         {
-            this.searchType = (SearchType)br.ReadInt32();
-            if(searchType == SearchType.Path)
+            this.searchType = (SearchType) br.ReadInt32();
+            if (searchType == SearchType.Path)
             {
-                this.objectObjectPath = br.ReadString();
-            }   
-            
-            this.flags = (InfoFlags)br.ReadInt32();
-            this.includeInherited = br.ReadBoolean();
+                this.objectPath = br.ReadString();
+            }
+            else if (searchType == SearchType.ObjectGUID)
+            {
+                this.guid = new Guid(br.ReadString());
+            }
+            else
+            {
+                throw new NotImplementedException(searchType + " not implemented");
+            }
+
+            this.flags = (InfoFlags) br.ReadInt32();
         }
 
         public override void Write(BinaryWriter bw)
         {
             base.Write(bw);
-            bw.Write((int)searchType);
-            if(searchType == SearchType.Path)
+            bw.Write((int) searchType);
+            if (searchType == SearchType.Path)
             {
-                bw.Write(objectObjectPath);
+                bw.Write(objectPath);
             }
-            bw.Write((int)flags);
-            bw.Write(includeInherited);
+            else if (searchType == SearchType.ObjectGUID)
+            {
+                bw.Write(this.guid.ToString());
+            }
+            else
+            {
+                throw new NotImplementedException(searchType + " not implemented");
+            }
+
+            bw.Write((int) flags);
         }
 
         public override BaseResponse GenerateResponse()
         {
             GetObjectResponse response = new GetObjectResponse();
-            List<Object> components = new List<Object>();
-            if(searchType == SearchType.Path)
+            List<object> components = new List<object>();
+            if (searchType == SearchType.Path)
             {
-                Object foundObject = HierarchyHelper.GetFromPath(objectObjectPath);
-                if(foundObject is GameObject)
+                Object foundObject = HierarchyHelper.GetFromPath(objectPath);
+                if (foundObject is GameObject)
                 {
-                    GameObject foundGameObject = (GameObject)foundObject;
+                    GameObject foundGameObject = (GameObject) foundObject;
 
                     // Not technically a component, but include the GameObject
                     components.Add(foundGameObject);
-                    components.AddRange(foundGameObject.GetComponents<Component>());    
+                    components.AddRange(foundGameObject.GetComponents<Component>());
                 }
                 else
                 {
                     components.Add(foundObject);
                 }
 
-                response.GameObjectName = foundObject.name;
+                response.ObjectName = foundObject.name;
+            }
+            else if (searchType == SearchType.ObjectGUID)
+            {
+                object foundObject = ObjectMap.GetObjectFromGUID(guid);
+                if (foundObject is GameObject)
+                {
+                    GameObject foundGameObject = (GameObject) foundObject;
+
+                    // Not technically a component, but include the GameObject
+                    components.Add(foundGameObject);
+                    components.AddRange(foundGameObject.GetComponents<Component>());
+                }
+                else
+                {
+                    components.Add(foundObject);
+                }
+
+                Object foundUnityObject = foundObject as Object;
+                if (foundUnityObject != null)
+                {
+                    response.ObjectName = foundUnityObject.name;
+                }
             }
             else
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException(searchType + " not implemented");
             }
 
             response.Components = new List<ComponentDescription>(components.Count);
-            foreach (Object component in components)
+            foreach (object component in components)
             {
                 //Guid guid = ObjectMap.AddOrGetObject(component);
                 ObjectMap.AddOrGetObject(component);
@@ -170,7 +214,6 @@ namespace Sabresaurus.Sidekick.Requests
                             }
 
 
-
                             string propertyName = property.Name;
 
                             MethodInfo getMethod = property.GetGetMethod(true);
@@ -208,6 +251,7 @@ namespace Sabresaurus.Sidekick.Requests
                                 // Skip any internal method if it also begins with INTERNAL_
                                 continue;
                             }
+
                             WrappedMethod wrappedMethod = new WrappedMethod(methodInfo);
                             componentScope.Methods.Add(wrappedMethod);
                         }
@@ -220,6 +264,7 @@ namespace Sabresaurus.Sidekick.Requests
 
                 response.Components.Add(description);
             }
+
             return response;
         }
     }

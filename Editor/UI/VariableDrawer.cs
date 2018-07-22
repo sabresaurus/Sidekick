@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using Sabresaurus.Sidekick;
 using System;
+using Sabresaurus.Sidekick.Requests;
 
 public static class VariableDrawer
 {
@@ -16,13 +17,14 @@ public static class VariableDrawer
         {
             name += " [Const]";
         }
+
         if ((variable.Attributes.HasFlagByte(VariableAttributes.IsStatic)))
         {
             name += " [Static]";
         }
 
         GUI.enabled = (variable.Attributes.HasFlagByte(VariableAttributes.ReadOnly) == false
-                              && variable.Attributes.HasFlagByte(VariableAttributes.IsLiteral) == false);
+                       && variable.Attributes.HasFlagByte(VariableAttributes.IsLiteral) == false);
 
         object objectValue = variable.Value;
         object newValue = null;
@@ -38,7 +40,7 @@ public static class VariableDrawer
                 int size = 0;
                 if (variable.Value != null)
                 {
-                    list = (IList)variable.Value;
+                    list = (IList) variable.Value;
                     size = list.Count;
                 }
 
@@ -49,15 +51,18 @@ public static class VariableDrawer
                     {
                         list = new ArrayList();
                     }
+
                     CollectionUtility.Resize(ref list, variable.DefaultElementValue, newSize);
                 }
-                if(list != null)
+
+                if (list != null)
                 {
-					for (int i = 0; i < list.Count; i++)
-					{
+                    for (int i = 0; i < list.Count; i++)
+                    {
                         list[i] = DrawIndividualVariable(objectPickerContext, variable, "Element " + i, list[i], onObjectPicker, i);
-					}
+                    }
                 }
+
                 newValue = list;
                 EditorGUI.indentLevel--;
             }
@@ -70,10 +75,10 @@ public static class VariableDrawer
         {
             EditorGUILayout.LabelField(name, "Unknown <" + variable.Value.ToString() + "> ");
         }
+
         GUI.enabled = true;
 
         return newValue;
-
     }
 
     public static object DrawIndividualVariable(ObjectPickerContext objectPickerContext, WrappedVariable variable, string fieldName, object fieldValue, OpenPickerCallback onObjectPicker, int index = 0)
@@ -88,7 +93,8 @@ public static class VariableDrawer
             if (fieldValue is Guid)
             {
                 EditorGUILayout.BeginHorizontal();
-                if ((Guid)fieldValue != Guid.Empty && variable.ValueDisplayNames.Length > index)
+
+                if (fieldValueGuid != Guid.Empty && variable.ValueDisplayNames.Length > index)
                 {
                     EditorGUILayout.TextField(fieldName, variable.ValueDisplayNames[index]);
                 }
@@ -96,6 +102,7 @@ public static class VariableDrawer
                 {
                     EditorGUILayout.TextField(fieldName, "None (" + variable.MetaData.TypeFullName + ")");
                 }
+
                 if (objectPickerContext != null)
                 {
                     if (GUILayout.Button("...", GUILayout.Width(30)))
@@ -103,6 +110,19 @@ public static class VariableDrawer
                         onObjectPicker(objectPickerContext, variable);
                     }
                 }
+
+                bool guiEnabled = GUI.enabled;
+                // Force GUI enabled on for this control
+                GUI.enabled = (fieldValueGuid != Guid.Empty);
+                if (GUILayout.Button("-->", GUILayout.Width(30)))
+                {
+                    APIManager apiManager = BridgingContext.Instance.container.APIManager;
+                    SidekickSettings settings = BridgingContext.Instance.container.Settings;
+                    apiManager.SendToPlayers(new GetObjectRequest((Guid) fieldValue, (InfoFlags) settings.GetGameObjectFlags));
+                    Debug.Log(fieldValue);
+                }
+
+                GUI.enabled = guiEnabled;
                 EditorGUILayout.EndHorizontal();
 
                 newValue = fieldValue;
@@ -114,19 +134,19 @@ public static class VariableDrawer
         }
         else if (variable.DataType == DataType.Integer)
         {
-            newValue = EditorGUILayout.IntField(fieldName, (int)fieldValue);
+            newValue = EditorGUILayout.IntField(fieldName, (int) fieldValue);
         }
         else if (variable.DataType == DataType.Long)
         {
-            newValue = EditorGUILayout.LongField(fieldName, (long)fieldValue);
+            newValue = EditorGUILayout.LongField(fieldName, (long) fieldValue);
         }
         else if (variable.DataType == DataType.String)
         {
-            newValue = EditorGUILayout.TextField(fieldName, (string)fieldValue);
+            newValue = EditorGUILayout.TextField(fieldName, (string) fieldValue);
         }
         else if (variable.DataType == DataType.Char)
         {
-            string newString = EditorGUILayout.TextField(fieldName, new string((char)fieldValue, 1));
+            string newString = EditorGUILayout.TextField(fieldName, new string((char) fieldValue, 1));
             if (newString.Length == 1)
             {
                 newValue = newString[0];
@@ -138,37 +158,37 @@ public static class VariableDrawer
         }
         else if (variable.DataType == DataType.Float)
         {
-            newValue = EditorGUILayout.FloatField(fieldName, (float)fieldValue);
+            newValue = EditorGUILayout.FloatField(fieldName, (float) fieldValue);
         }
         else if (variable.DataType == DataType.Double)
         {
-            newValue = EditorGUILayout.DoubleField(fieldName, (double)fieldValue);
+            newValue = EditorGUILayout.DoubleField(fieldName, (double) fieldValue);
         }
         else if (variable.DataType == DataType.Boolean)
         {
-            newValue = EditorGUILayout.Toggle(fieldName, (bool)fieldValue);
+            newValue = EditorGUILayout.Toggle(fieldName, (bool) fieldValue);
         }
         else if (variable.DataType == DataType.Vector2)
         {
-            newValue = EditorGUILayout.Vector2Field(fieldName, (Vector2)fieldValue);
+            newValue = EditorGUILayout.Vector2Field(fieldName, (Vector2) fieldValue);
         }
         else if (variable.DataType == DataType.Vector3)
         {
-            newValue = EditorGUILayout.Vector3Field(fieldName, (Vector3)fieldValue);
+            newValue = EditorGUILayout.Vector3Field(fieldName, (Vector3) fieldValue);
         }
         else if (variable.DataType == DataType.Vector4)
         {
-            newValue = EditorGUILayout.Vector4Field(fieldName, (Vector4)fieldValue);
+            newValue = EditorGUILayout.Vector4Field(fieldName, (Vector4) fieldValue);
         }
 #if UNITY_2017_2_OR_NEWER
         else if (variable.DataType == DataType.Vector2Int)
         {
-            newValue = EditorGUILayout.Vector2IntField(fieldName, (Vector2Int)fieldValue);
+            newValue = EditorGUILayout.Vector2IntField(fieldName, (Vector2Int) fieldValue);
         }
         else if (variable.DataType == DataType.Vector3Int)
         {
-            newValue = EditorGUILayout.Vector3IntField(fieldName, (Vector3Int)fieldValue);
-        } 
+            newValue = EditorGUILayout.Vector3IntField(fieldName, (Vector3Int) fieldValue);
+        }
 #endif
         else if (variable.DataType == DataType.Quaternion)
         {
@@ -181,7 +201,7 @@ public static class VariableDrawer
             //}
             //else
             {
-                Quaternion quaternion = (Quaternion)fieldValue;
+                Quaternion quaternion = (Quaternion) fieldValue;
                 Vector4 vector = new Vector4(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
                 vector = EditorGUILayout.Vector4Field(fieldName, vector);
                 newValue = new Quaternion(vector.x, vector.y, vector.z, vector.z);
@@ -189,39 +209,39 @@ public static class VariableDrawer
         }
         else if (variable.DataType == DataType.Bounds)
         {
-            newValue = EditorGUILayout.BoundsField(fieldName, (Bounds)fieldValue);
+            newValue = EditorGUILayout.BoundsField(fieldName, (Bounds) fieldValue);
         }
 #if UNITY_2017_2_OR_NEWER
         else if (variable.DataType == DataType.BoundsInt)
         {
-            newValue = EditorGUILayout.BoundsIntField(fieldName, (BoundsInt)fieldValue);
-        } 
+            newValue = EditorGUILayout.BoundsIntField(fieldName, (BoundsInt) fieldValue);
+        }
 #endif
         else if (variable.DataType == DataType.Color)
         {
-            newValue = EditorGUILayout.ColorField(fieldName, (Color)fieldValue);
+            newValue = EditorGUILayout.ColorField(fieldName, (Color) fieldValue);
         }
         else if (variable.DataType == DataType.Color32)
         {
-            newValue = (Color32)EditorGUILayout.ColorField(fieldName, (Color32)fieldValue);
+            newValue = (Color32) EditorGUILayout.ColorField(fieldName, (Color32) fieldValue);
         }
         else if (variable.DataType == DataType.Gradient)
         {
-            newValue = InternalEditorGUILayout.GradientField(new GUIContent(fieldName), (Gradient)fieldValue);
+            newValue = InternalEditorGUILayout.GradientField(new GUIContent(fieldName), (Gradient) fieldValue);
         }
         else if (variable.DataType == DataType.AnimationCurve)
         {
-            newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve)fieldValue);
+            newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve) fieldValue);
         }
         else if (variable.DataType == DataType.Rect)
         {
-            newValue = EditorGUILayout.RectField(fieldName, (Rect)fieldValue);
+            newValue = EditorGUILayout.RectField(fieldName, (Rect) fieldValue);
         }
 #if UNITY_2017_2_OR_NEWER
         else if (variable.DataType == DataType.RectInt)
         {
-            newValue = EditorGUILayout.RectIntField(fieldName, (RectInt)fieldValue);
-        } 
+            newValue = EditorGUILayout.RectIntField(fieldName, (RectInt) fieldValue);
+        }
 #endif
         else
         {
