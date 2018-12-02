@@ -1,11 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
+using Sabresaurus.EditorNetworking;
 using Sabresaurus.Sidekick.Requests;
 using Sabresaurus.Sidekick.Responses;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
 
 namespace Sabresaurus.Sidekick
@@ -57,8 +56,8 @@ namespace Sabresaurus.Sidekick
             hierarchySearchField = new SearchField();
             hierarchySearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
 
-            EditorConnection.instance.RegisterConnection(OnPlayerConnected);
-            EditorConnection.instance.RegisterDisconnection(OnPlayerDisconnected);
+            //NetworkWrapper_Editor.RegisterConnection(OnPlayerConnected);
+            //NetworkWrapper_Editor.RegisterDisconnection(OnPlayerDisconnected);
 
             APIManager.ResponseReceived -= OnResponseReceived;
             APIManager.ResponseReceived += OnResponseReceived;
@@ -162,15 +161,9 @@ namespace Sabresaurus.Sidekick
 
         void OnInspectorUpdate()
         {
-            if (EditorConnection.instance.ConnectedPlayers.Count == 0)
+            if(EditorMessaging.KnownEndpoints.Count != cachedPlayerCount)
             {
-                EditorConnection.instance.Initialize();
-            }
-
-            if(EditorConnection.instance.ConnectedPlayers.Count != cachedPlayerCount)
-            {
-                cachedPlayerCount = EditorConnection.instance.ConnectedPlayers.Count;
-                // OnPlayerConnected isn't always reliable, so also repaint if player count changes
+                cachedPlayerCount = EditorMessaging.KnownEndpoints.Count;
                 Repaint();
             }
         }
@@ -207,42 +200,30 @@ namespace Sabresaurus.Sidekick
 
                 if (Settings.InspectionConnection == InspectionConnection.RemotePlayer)
                 {
-                    int playerCount = EditorConnection.instance.ConnectedPlayers.Count;
-
-
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendLine(string.Format("{0} players connected.", playerCount));
-
-                    bool validConnection = (playerCount > 0);
-
-#if SIDEKICK_DEBUG
-                    // If we're in Local Dev Mode also consider that a valid connection
-                    validConnection |= Settings.LocalDevMode;
-#endif
-
+                    bool validConnection = (EditorMessaging.KnownEndpoints.Count >= 1);
 
                     if (validConnection == false)
                     {
-#if UNITY_2017_1_OR_NEWER
-                        EditorGUILayout.HelpBox("No player connected, selected a Connected Player in the Console window or attach the Profiler to a remote player", MessageType.Warning);
-#else
-                        EditorGUILayout.HelpBox("No player connected, attach the Profiler to a remote player", MessageType.Warning);
-#endif
+                        EditorGUILayout.HelpBox("No player found, make sure both the editor and player are on the same network", MessageType.Warning);
                     }
                     else
                     {
-                        int count = 0;
-                        foreach (ConnectedPlayer p in EditorConnection.instance.ConnectedPlayers)
-                        {
-#if UNITY_2017_3_OR_NEWER
-                            // ConnectedPlayer interface changed in 2017.3
-                            builder.AppendLine(string.Format("[{0}] - {1} {2}", count++, p.name, p.playerId));
-#else
-                            builder.AppendLine(string.Format("[{0}] - {1}", count++, p.PlayerId));
-#endif
-                        }
+                        
+                        StringBuilder builder = new StringBuilder();
 
-                        EditorGUILayout.HelpBox(builder.ToString(), MessageType.Info);
+                        List<string> displayNames = new List<string>();
+                        int index = 0;
+                        int selectionIndex = 0;
+                        foreach (var pair in EditorMessaging.KnownEndpoints)
+                        {
+                            displayNames.Add(string.Format("{0} - {1}", pair.Key, pair.Value));
+                            if(pair.Key == EditorMessaging.ConnectedIP)
+                            {
+                                selectionIndex = index;
+                            }
+                            index++;
+                        }
+                        EditorGUILayout.Popup(selectionIndex, displayNames.ToArray());
                     }
                     Settings.AutoRefreshRemote = EditorGUILayout.Toggle("Auto Refresh Remote", Settings.AutoRefreshRemote);
 

@@ -1,12 +1,9 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections;
 using System.IO;
+using Sabresaurus.EditorNetworking;
 using Sabresaurus.Sidekick.Requests;
 using Sabresaurus.Sidekick.Responses;
-using UnityEditor.Networking.PlayerConnection;
-using UnityEngine;
-using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
@@ -45,8 +42,7 @@ namespace Sabresaurus.Sidekick
                 if (settings.LocalDevMode)
                 {
                     byte[] testResponse = SidekickRequestProcessor.Process(bytes);
-                    MessageEventArgs messageEvent = new MessageEventArgs();
-                    messageEvent.data = testResponse;
+
                     BaseResponse response = SidekickResponseProcessor.Process(testResponse);
                     if (ResponseReceived != null)
                         ResponseReceived(response);
@@ -54,7 +50,7 @@ namespace Sabresaurus.Sidekick
                 else
 #endif
                 {
-                    EditorConnection.instance.Send(RuntimeSidekickBridge.SEND_EDITOR_TO_PLAYER, bytes);
+                    EditorMessaging.SendRequest(bytes);
                 }
             }
             return lastRequestID;

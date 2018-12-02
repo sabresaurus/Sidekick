@@ -93,6 +93,7 @@ public static class VariableDrawer
             if (fieldValue is Guid)
             {
                 EditorGUILayout.BeginHorizontal();
+                Guid fieldValueGuid = (Guid)fieldValue;
 
                 if (fieldValueGuid != Guid.Empty && variable.ValueDisplayNames.Length > index)
                 {

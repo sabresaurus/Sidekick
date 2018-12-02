@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using Sabresaurus.EditorNetworking;
 using Sabresaurus.Sidekick.Requests;
 using Sabresaurus.Sidekick.Responses;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
-using UnityEngine.Networking.PlayerConnection;
 
 namespace Sabresaurus.Sidekick
 {
@@ -126,20 +124,24 @@ namespace Sabresaurus.Sidekick
             APIManager.ResponseReceived -= OnResponseReceived;
             APIManager.ResponseReceived += OnResponseReceived;
 
-            EditorConnection.instance.Initialize();
-
-
             if(EditorApplication.isPlayingOrWillChangePlaymode == false)
                 SelectionManager.RefreshEditorSelection(false);
         }
 
         void OnInspectorUpdate()
         {
-            if (EditorConnection.instance.ConnectedPlayers.Count > 0)
+            if(!EditorMessaging.Started)
+            {
+                EditorMessaging.Start();
+            }
+            EditorMessaging.Tick();
+
+            EditorMessaging.RegisterForResponses(OnReceivedResponse);
+            if (EditorMessaging.KnownEndpoints.Count >= 1)
             {
                 if (!registered)
                 {
-                    EditorConnection.instance.Register(RuntimeSidekickBridge.SEND_PLAYER_TO_EDITOR, OnMessageEvent);
+                    EditorMessaging.RegisterForResponses(OnReceivedResponse);
                     registered = true;
                 }
             }
@@ -175,9 +177,9 @@ namespace Sabresaurus.Sidekick
             APIManager.ResponseReceived -= OnResponseReceived;
         }
 
-        private void OnMessageEvent(MessageEventArgs args)
+        private void OnReceivedResponse(byte[] responseData)
         {
-            BaseResponse response = SidekickResponseProcessor.Process(args.data);
+            BaseResponse response = SidekickResponseProcessor.Process(responseData);
             APIManager.ResponseReceived(response);
         }
 
