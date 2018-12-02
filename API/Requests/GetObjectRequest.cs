@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Sabresaurus.Sidekick.Responses;
-using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
