@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Sabresaurus.EditorNetworking;
@@ -18,6 +19,8 @@ namespace Sabresaurus.Sidekick
         HierarchyTreeView treeView;
         SearchField hierarchySearchField;
         int cachedPlayerCount = 0;
+
+        DateTime lastSendHeartbeat = DateTime.MinValue;
 
         public APIManager APIManager
         {
@@ -159,12 +162,23 @@ namespace Sabresaurus.Sidekick
             }
         }
 
+        // Called at 10 frames per second
         void OnInspectorUpdate()
         {
             if(EditorMessaging.KnownEndpoints.Count != cachedPlayerCount)
             {
                 cachedPlayerCount = EditorMessaging.KnownEndpoints.Count;
                 Repaint();
+            }
+
+            if (!string.IsNullOrEmpty(EditorMessaging.ConnectedIP))
+            {
+                // If there's a valid connection send a heartbeat every second so the device knows we're still here
+                if (DateTime.UtcNow - lastSendHeartbeat > TimeSpan.FromSeconds(1))
+                {
+                    APIManager.SendToPlayers(new HeartbeatRequest());
+                    lastSendHeartbeat = DateTime.UtcNow;
+                }
             }
         }
 
