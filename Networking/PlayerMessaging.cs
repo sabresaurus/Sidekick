@@ -11,13 +11,17 @@ namespace Sabresaurus.EditorNetworking
         public const int BROADCAST_PORT = 10061;
         public const int REQUEST_PORT = 10062;
 
-        static DateTime lastSend = DateTime.MinValue;
+        static DateTime lastUDPBroadcast = DateTime.MinValue;
+
+        static DateTime lastRequestReceived = DateTime.MinValue;
 
         public delegate byte[] ReceivedRequestCallback(byte[] request);
         static ReceivedRequestCallback onReceivedRequest = null;
-
+        static TcpListener tcpListener;
         static IAsyncResult pendingAsyncResult = null;
-        static NetworkStream activeStream = null;
+        public static TcpClient connectedClient;
+
+        static bool listenInProgress = false;
 
         public static void Start()
         {
@@ -34,7 +38,11 @@ namespace Sabresaurus.EditorNetworking
 
         public static void ListenForRequests() // server
         {
-            TcpListener tcpListener = new TcpListener(IPAddress.Any, REQUEST_PORT);
+            if(tcpListener != null)
+            {
+                tcpListener.Stop();
+            }
+            tcpListener = new TcpListener(IPAddress.Any, REQUEST_PORT);
 
             tcpListener.Start();
 
@@ -44,32 +52,38 @@ namespace Sabresaurus.EditorNetworking
             Debug.Log(string.Format("Waiting for a connection..."));
 #endif
             tcpListener.BeginAcceptTcpClient(OnAcceptTcpClient, tcpListener);
+
+            listenInProgress = true;
         }
 
         static void OnAcceptTcpClient(IAsyncResult asyncResult)
         {
+            // Not technically a request, but don't close the connection prematurely
+            lastRequestReceived = DateTime.UtcNow;
             pendingAsyncResult = asyncResult;
+
+            listenInProgress = false;
         }
 
         public static void Broadcast()
         {
-            lastSend = DateTime.UtcNow;
-            var Client = new UdpClient();
+            lastUDPBroadcast = DateTime.UtcNow;
+            UdpClient udpClient = new UdpClient();
 
-            Client.Client.SendTimeout = 5000;
-            Client.Client.ReceiveTimeout = 5000;
+            udpClient.Client.SendTimeout = 5000;
+            udpClient.Client.ReceiveTimeout = 5000;
             string broadcastString = GetDisplayName();
             var broadcastData = Encoding.UTF8.GetBytes(broadcastString);
 
             // Tell everyone I'm here
-            Client.EnableBroadcast = true;
-            Client.Send(broadcastData, broadcastData.Length, new IPEndPoint(IPAddress.Broadcast, BROADCAST_PORT));
+            udpClient.EnableBroadcast = true;
+            udpClient.Send(broadcastData, broadcastData.Length, new IPEndPoint(IPAddress.Broadcast, BROADCAST_PORT));
 
             // TODO: Be good here to track which Editor's got it (if we can)
             //var ServerResponseData = Client.Receive(ref ServerEp);
             //var ServerResponse = Encoding.ASCII.GetString(ServerResponseData);
             //WriteLine("Recived {0} from {1}", ServerResponse, ServerEp.Address.ToString());
-            Client.Close();
+            udpClient.Close();
         }
 
         static string GetDisplayName()
@@ -102,7 +116,7 @@ namespace Sabresaurus.EditorNetworking
             // It should fire rarely when an editor has made recent requests
             // It should fire frequently when the app has started or resumed
             // It should fire rarely when the app has been open a while
-            if(DateTime.UtcNow - lastSend > TimeSpan.FromSeconds(5))
+            if(DateTime.UtcNow - lastUDPBroadcast > TimeSpan.FromSeconds(5))
             {
                 Broadcast();
             }
@@ -111,30 +125,51 @@ namespace Sabresaurus.EditorNetworking
             if (pendingAsyncResult != null)
             {
                 var tcpListener = (TcpListener)pendingAsyncResult.AsyncState;
-                TcpClient result = tcpListener.EndAcceptTcpClient(pendingAsyncResult);
+                connectedClient = tcpListener.EndAcceptTcpClient(pendingAsyncResult);
+                //connectedClient.SendTimeout = 5000;
+                //connectedClient.ReceiveTimeout = 5000;
                 pendingAsyncResult = null;
-                activeStream = result.GetStream();
             }
 
-            if(activeStream != null)
+            if(connectedClient != null)
             {
-                NetworkStream stream = activeStream;
-                if (stream.DataAvailable)
+                if (connectedClient.Connected)
                 {
-                    byte[] requestBuffer = new byte[1000];
-                    var count = stream.Read(requestBuffer, 0, requestBuffer.Length);
+                    NetworkStream stream = connectedClient.GetStream();
+                    if (stream.DataAvailable)
+                    {
+                        byte[] requestBuffer = new byte[1000];
+                        var count = stream.Read(requestBuffer, 0, requestBuffer.Length);
 
-                    if (onReceivedRequest != null)
-                    {
-                        byte[] responseBuffer = onReceivedRequest(requestBuffer);
-                        stream.Write(responseBuffer, 0, responseBuffer.Length);
+                        if (onReceivedRequest != null)
+                        {
+                            byte[] responseBuffer = onReceivedRequest(requestBuffer);
+                            stream.Write(responseBuffer, 0, responseBuffer.Length);
+                        }
+                        else
+                        {
+                            // TODO: display some helpful message
+                            byte[] bytes = Encoding.UTF8.GetBytes("No handler registered");
+                            stream.Write(bytes, 0, bytes.Length);
+                        }
+
+                        lastRequestReceived = DateTime.UtcNow;
                     }
-                    else
+
+                    if (DateTime.UtcNow - lastRequestReceived > TimeSpan.FromSeconds(10))
                     {
-                        // TODO: display some helpful message
-                        stream.WriteByte(0);
+                        // Not received a request in X seconds, close the connection
+                        connectedClient.Close();
                     }
                 }
+                else
+                {
+                    connectedClient = null;
+                }
+            }
+            else if(listenInProgress == false)
+            {
+                ListenForRequests();
             }
         }
     }

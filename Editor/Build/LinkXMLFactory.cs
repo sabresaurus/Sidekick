@@ -17,8 +17,6 @@ public static class LinkXMLFactory
         typeof(Transform),
         typeof(Camera),
         typeof(Light),
-        typeof(Renderer),
-        typeof(MeshRenderer),
         typeof(MeshFilter),
         typeof(Collider),
         typeof(MeshCollider),
@@ -41,6 +39,10 @@ public static class LinkXMLFactory
         // Audio
         typeof(AudioClip),
         typeof(AudioSource),
+        // Rendering
+        typeof(Renderer),
+        typeof(MeshRenderer),
+        typeof(Material)
     };
 
     //public static List<Type> GetUnityComponentTypes()
