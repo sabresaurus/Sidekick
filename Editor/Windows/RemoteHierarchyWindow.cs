@@ -222,9 +222,6 @@ namespace Sabresaurus.Sidekick
                     }
                     else
                     {
-                        
-                        StringBuilder builder = new StringBuilder();
-
                         List<string> displayNames = new List<string>();
                         int index = 0;
                         int selectionIndex = 0;

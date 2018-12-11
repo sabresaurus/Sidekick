@@ -11,7 +11,9 @@ namespace Sabresaurus.EditorNetworking
         public const int BROADCAST_PORT = 10061;
         public const int REQUEST_PORT = 10062;
 
+#if !UNITY_EDITOR
         static DateTime lastUDPBroadcast = DateTime.MinValue;
+#endif
 
         static DateTime lastRequestReceived = DateTime.MinValue;
 
@@ -38,7 +40,7 @@ namespace Sabresaurus.EditorNetworking
 
         public static void ListenForRequests() // server
         {
-            if(tcpListener != null)
+            if (tcpListener != null)
             {
                 tcpListener.Stop();
             }
@@ -67,7 +69,9 @@ namespace Sabresaurus.EditorNetworking
 
         public static void Broadcast()
         {
+#if !UNITY_EDITOR
             lastUDPBroadcast = DateTime.UtcNow;
+#endif
             UdpClient udpClient = new UdpClient();
 
             udpClient.Client.SendTimeout = 5000;
@@ -139,7 +143,7 @@ namespace Sabresaurus.EditorNetworking
                     if (stream.DataAvailable)
                     {
                         byte[] requestBuffer = new byte[1000];
-                        var count = stream.Read(requestBuffer, 0, requestBuffer.Length);
+                        stream.Read(requestBuffer, 0, requestBuffer.Length);
 
                         if (onReceivedRequest != null)
                         {

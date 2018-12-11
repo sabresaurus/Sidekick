@@ -162,7 +162,7 @@ namespace Sabresaurus.EditorNetworking
                 // Player should respond so wait until it does
                 pendingClient = client;
             }
-            catch(SocketException e)
+            catch (SocketException)
             {
                 pendingClient = null;
                 if(knownEndpoints.ContainsKey(targetIP))
