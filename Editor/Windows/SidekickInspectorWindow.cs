@@ -155,7 +155,7 @@ namespace Sabresaurus.Sidekick
             }
 
             if (Settings.InspectionConnection == InspectionConnection.LocalEditor
-                || Settings.AutoRefreshRemote)
+                || (Settings.AutoRefreshRemote && EditorMessaging.IsConnected))
             {
                 if (EditorApplication.timeSinceStartup > timeLastRefreshed + AUTO_REFRESH_FREQUENCY)
                 {

@@ -171,7 +171,7 @@ namespace Sabresaurus.Sidekick
                 Repaint();
             }
 
-            if (!string.IsNullOrEmpty(EditorMessaging.ConnectedIP))
+            if (EditorMessaging.IsConnected)
             {
                 // If there's a valid connection send a heartbeat every second so the device knows we're still here
                 if (DateTime.UtcNow - lastSendHeartbeat > TimeSpan.FromSeconds(1))

@@ -54,6 +54,14 @@ namespace Sabresaurus.EditorNetworking
             }
         }
 
+        public static bool IsConnected
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(EditorMessaging.ConnectedIP);
+            }
+        }
+
 
         public struct UdpState
         {
@@ -125,6 +133,7 @@ namespace Sabresaurus.EditorNetworking
         {
             SendRequest(ConnectedIP, sendingBuffer);
         }
+
         public static void SendRequest(string targetIP, byte[] sendingBuffer)
         {
             try
