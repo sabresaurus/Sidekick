@@ -1,3 +1,5 @@
+<img align="right" src="https://user-images.githubusercontent.com/17784523/50124375-4c306e80-025c-11e9-878e-9aa5ff24e14a.png" width="400" />
+
 # What is Sidekick?
 
 Sidekick is a set of tools that allow you to edit fields, properties and invoke methods in deployed Unity projects on device and Unity editors. It extends Unity's philosophy of real-time run-time editing and inspection by allowing you to edit much more than just serialised fields.
@@ -49,9 +51,9 @@ Note that Sidekick heavily uses reflection which relies on signatures being pres
 # Getting Started
 ## Installation
 
-You can either download the latest version directly from the repository [here](https://github.com/sabresaurus/Sidekick/archive/master.zip) or check out our past releases [here](https://github.com/sabresaurus/Sidekick/releases). Past releases are likely to be more stable but won't be as up to date.
+You can either download the latest version directly from the repository [here](https://github.com/sabresaurus/Sidekick/archive/master.zip) or check out our past releases [here](https://github.com/sabresaurus/Sidekick/releases). Past releases are likely to be more stable than what is in the repository but won't be as up to date.
 
-Once you have downloaded the zip, for installation into existing projects copy the contents of the extracted Assets folder into your project's Assets folder.
+Once you have downloaded the zip, unzip it somewhere in your project's Assets folder.
 
 Sidekick requires Unity 5.6.0 or higher, although is principally developed on Unity 2017 and 2018. It has been tested in editor, on mobile, WebGL and on console. If you find a platform or a Unity version (> 5.6) that it doesn't support please create an [issue](https://github.com/sabresaurus/Sidekick/issues) and we'll add support for it as soon as possible.
 
@@ -61,11 +63,11 @@ Open Sidekick from the menu bar **Tools / Sidekick**, this will open the Sidekic
 
 ## Remote Debugging With Sidekick
 
-The Remote Hierarchy window uses the connected player (as specified in the Console connected players or Profiler window). Sidekick will automatically instantiate a RuntimeSidekickBridge object on startup in development builds (not release builds).
+The Remote Hierarchy window listens for players that have been built with Sidekick and automatically connects to those on the same network. Sidekick will automatically instantiate a RuntimeSidekickBridge object on startup in development builds (not release builds), the bridge handles broadcasting so that editors can find it and also sends responses to requests made by editors.
 
 To use the Remote Hierarchy window, follow these steps:
 - Build and deploy your project, making sure that Development Build is ticked in build settings.
-- Connect to the remote device via the dropdown at the top of Unity's console window or through Unity's profiler window. Once connected you should see a connected player entry appear at the top of the Remote window, click Refresh Hierarchy to show the device's hierarchy and begin inspection.
+- Wait for the device to appear in the remote window. Once connected you should see a connected player entry appear at the top of the Remote window, click Refresh Hierarchy to show the device's hierarchy and begin inspection.
 
 # Get Involved
 
