@@ -1,3 +1,5 @@
+<img align="right" src="https://user-images.githubusercontent.com/17784523/50124375-4c306e80-025c-11e9-878e-9aa5ff24e14a.png" width="400" />
+
 # What is Sidekick?
 
 Sidekick is a set of tools that allow you to edit fields, properties and invoke methods in deployed Unity projects on device and Unity editors. It extends Unity's philosophy of real-time run-time editing and inspection by allowing you to edit much more than just serialised fields.
