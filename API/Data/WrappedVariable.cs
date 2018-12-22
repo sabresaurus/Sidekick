@@ -53,7 +53,7 @@ namespace Sabresaurus.Sidekick
                 if (attributes.HasFlagByte(VariableAttributes.IsArray)
                         || attributes.HasFlagByte(VariableAttributes.IsList))
                 {
-                    return CollectionUtility.ConvertArrayOrList(this, DataTypeHelper.GetSystemTypeFromWrappedDataType(dataType, metaData, attributes));
+                    return CollectionUtility.ConvertArrayOrListToNative(this, DataTypeHelper.GetSystemTypeFromWrappedDataType(dataType, metaData, attributes));
                 }
                 else
                 {
@@ -131,6 +131,12 @@ namespace Sabresaurus.Sidekick
         }
 #endif
 
+        public WrappedVariable(string variableName, object value, Type type, bool generateMetadata, VariableAttributes attributes)
+            : this(variableName, value, type, generateMetadata)
+        {
+            this.attributes = attributes;
+        }
+
         public WrappedVariable(string variableName, object value, Type type, bool generateMetadata)
             : base(variableName, type, generateMetadata)
         {
@@ -161,6 +167,17 @@ namespace Sabresaurus.Sidekick
                     this.value = type.Name;
                 }
             }
+            else if(this.dataType == DataType.Enum)
+            {
+                Type enumElementType = TypeUtility.GetElementType(this.value.GetType());
+
+                // Convert enums to underlying type
+                if (enumElementType.IsEnum)
+                {
+                    Type underlyingType = Enum.GetUnderlyingType(enumElementType);
+                    this.value = TypeUtility.ChangeElementType(this.value, underlyingType);
+                }
+            }
 
             CacheDisplayNames();
         }
@@ -174,7 +191,7 @@ namespace Sabresaurus.Sidekick
                 object[] array = new object[count];
                 for (int i = 0; i < count; i++)
                 {
-                    array[i] = DataTypeHelper.ReadFromBinary(dataType, br);
+                    array[i] = DataTypeHelper.ReadFromBinary(dataType, br, metaData);
                 }
                 this.value = array;
             }
@@ -185,13 +202,13 @@ namespace Sabresaurus.Sidekick
                 List<object> list = new List<object>(count);
                 for (int i = 0; i < count; i++)
                 {
-                    list.Add(DataTypeHelper.ReadFromBinary(dataType, br));
+                    list.Add(DataTypeHelper.ReadFromBinary(dataType, br, metaData));
                 }
                 this.value = list;
             }
             else
             {
-                this.value = DataTypeHelper.ReadFromBinary(dataType, br);
+                this.value = DataTypeHelper.ReadFromBinary(dataType, br, metaData);
             }
 
             if (dataType == DataType.UnityObjectReference)
@@ -266,7 +283,7 @@ namespace Sabresaurus.Sidekick
                 }
             }
             else
-            {
+            {                
                 DataTypeHelper.WriteToBinary(dataType, value, bw);
             }
 

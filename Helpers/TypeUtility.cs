@@ -191,10 +191,9 @@ namespace Sabresaurus.Sidekick
 			}
 			else
 			{
-				// This shouldn't happen
+                // Not array or list
+                return type;
 			}
-
-			return null;
 		}
 
 		public static bool IsBackingField(FieldInfo fieldInfo, Type parentType)
@@ -243,5 +242,44 @@ namespace Sabresaurus.Sidekick
 				return false;
 			}
 		}
+
+        /// <summary>
+        /// If supplied with a List<Foo> and newElementType of Bar it will convert it to List<Bar>. Also supports arrays and will work if it's not a collection
+        /// </summary>
+        public static object ChangeElementType(object objectOrCollection, Type newElementType)
+        {
+            if (objectOrCollection is IList)
+            {
+                // TODO: Investigate if this array copying could be simplified
+                IList sourceList = (IList)objectOrCollection;
+                int count = sourceList.Count;
+                if (objectOrCollection.GetType().IsArray)
+                {
+                    Type arrayType = newElementType.MakeArrayType();
+                    // Copying to an array
+                    object newArray = Activator.CreateInstance(arrayType, count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        ((Array)newArray).SetValue(Convert.ChangeType(sourceList[i], newElementType), i);
+                    }
+                    return newArray;
+                }
+                else
+                {
+                    Type listType = typeof(List<>).MakeGenericType(newElementType);
+
+                    object newList = Activator.CreateInstance(listType, 0);
+                    for (int i = 0; i < count; i++)
+                    {
+                        ((IList)newList).Add(Convert.ChangeType(sourceList[i], newElementType));
+                    }
+                    return newList;
+                }
+            }
+            else
+            {
+                return Convert.ChangeType(objectOrCollection, newElementType);
+            }
+        }
 	}
 }

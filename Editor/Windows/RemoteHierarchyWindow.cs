@@ -216,6 +216,10 @@ namespace Sabresaurus.Sidekick
                 {
                     bool validConnection = (EditorMessaging.KnownEndpoints.Count >= 1);
 
+#if SIDEKICK_DEBUG
+                    validConnection |= Settings.LocalDevMode;
+#endif
+
                     if (validConnection == false)
                     {
                         EditorGUILayout.HelpBox("No player found, make sure both the editor and player are on the same network", MessageType.Warning);

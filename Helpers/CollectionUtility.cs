@@ -61,7 +61,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        static object GetValue(WrappedVariable wrappedVariable, object value)
+        static object GetNativeValue(WrappedVariable wrappedVariable, object value)
         {
             if (wrappedVariable.DataType == DataType.UnityObjectReference && value is Guid)
                 return ObjectMap.GetObjectFromGUID((Guid)value);
@@ -69,7 +69,7 @@ namespace Sabresaurus.Sidekick
                 return value;
         }
 
-        public static object ConvertArrayOrList(WrappedVariable wrappedVariable, Type type)
+        public static object ConvertArrayOrListToNative(WrappedVariable wrappedVariable, Type type)
         {
             // TODO: Investigate if this array copying could be simplified
             IList sourceList = (IList)wrappedVariable.Value;
@@ -80,7 +80,7 @@ namespace Sabresaurus.Sidekick
                 object newArray = Activator.CreateInstance(type, new object[] { count });
                 for (int i = 0; i < count; i++)
                 {
-                    ((Array)newArray).SetValue(GetValue(wrappedVariable, sourceList[i]), i);
+                    ((Array)newArray).SetValue(GetNativeValue(wrappedVariable, sourceList[i]), i);
                 }
                 return newArray;
             }
@@ -89,7 +89,7 @@ namespace Sabresaurus.Sidekick
                 object newList = Activator.CreateInstance(type, new object[] { 0 });
                 for (int i = 0; i < count; i++)
                 {
-                    ((IList)newList).Add(GetValue(wrappedVariable, sourceList[i]));
+                    ((IList)newList).Add(GetNativeValue(wrappedVariable, sourceList[i]));
                 }
                 return newList;
             }

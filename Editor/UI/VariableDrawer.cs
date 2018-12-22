@@ -86,7 +86,11 @@ public static class VariableDrawer
         object newValue;
         if (variable.DataType == DataType.Enum)
         {
-            newValue = EditorGUILayout.IntPopup(fieldName, (int)fieldValue, variable.MetaData.EnumNames, variable.MetaData.EnumValues);
+            Type underlyingType = variable.MetaData.GetTypeFromMetaData();
+            int enumValueIndex = Array.IndexOf(variable.MetaData.EnumValues, fieldValue);
+            enumValueIndex = EditorGUILayout.Popup(fieldName, enumValueIndex, variable.MetaData.EnumNames);
+
+            newValue = variable.MetaData.EnumValues[enumValueIndex];
         }
         else if (variable.DataType == DataType.UnityObjectReference)
         {
@@ -138,7 +142,7 @@ public static class VariableDrawer
             newValue = EditorGUILayout.IntField(fieldName, (int) fieldValue);
         }
         else if (variable.DataType == DataType.Long)
-        {
+        {            
             newValue = EditorGUILayout.LongField(fieldName, (long) fieldValue);
         }
         else if (variable.DataType == DataType.String)

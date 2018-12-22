@@ -87,11 +87,7 @@ namespace Sabresaurus.Sidekick
         {
             get
             {
-                if (DataType == DataType.Enum)
-                {
-                    return 0;
-                }
-                else if (DataType == DataType.UnityObjectReference && BridgingContext.Instance.container.Settings.InspectionConnection == InspectionConnection.RemotePlayer)
+                if (DataType == DataType.UnityObjectReference && BridgingContext.Instance.container.Settings.InspectionConnection == InspectionConnection.RemotePlayer)
                 {
                     return Guid.Empty;
                 }

@@ -74,7 +74,6 @@ namespace Sabresaurus.Sidekick
             {typeof(AnimationCurve), DataType.AnimationCurve},
             {typeof(Color), DataType.Color},
             {typeof(Color32), DataType.Color32},
-            //else if (type.IsEnum)), DataType.Enum},
         };
 
         public static DataType GetWrappedDataTypeFromSystemType(Type type)
@@ -105,7 +104,8 @@ namespace Sabresaurus.Sidekick
             }
             else if(dataType == DataType.Enum)
             {
-                return typeof(int);
+                // Backing type, e.g. int, ushort
+                return metaData.GetTypeFromMetaData();
             }
 
             foreach (KeyValuePair<Type, DataType> mapping in mappings)
@@ -147,7 +147,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public static object ReadFromBinary(DataType dataType, BinaryReader br)
+        public static object ReadFromBinary(DataType dataType, BinaryReader br, VariableMetaData metaData)
         {
             object value = null;
             if (dataType == DataType.String)
@@ -261,7 +261,7 @@ namespace Sabresaurus.Sidekick
             }
             else if (dataType == DataType.Enum)
             {
-                value = br.ReadInt32();
+                value = ReadIntegerFromBinary(metaData.GetTypeFromMetaData(), br);
             }
             else if (dataType == DataType.UnityObjectReference)
             {
@@ -284,6 +284,86 @@ namespace Sabresaurus.Sidekick
                 Debug.LogWarning("Could not read " + dataType);
             }
             return value;
+        }
+
+        public static void WriteIntegerToBinary(object value, BinaryWriter bw)
+        {
+            if (value is byte)
+            {
+                bw.Write((byte)value);
+            }
+            else if (value is sbyte)
+            {
+                bw.Write((sbyte)value);
+            }
+            else if (value is short)
+            {
+                bw.Write((short)value);
+            }
+            else if (value is ushort)
+            {
+                bw.Write((ushort)value);
+            }
+            else if (value is int)
+            {
+                bw.Write((int)value);
+            }
+            else if (value is uint)
+            {
+                bw.Write((uint)value);
+            }
+            else if (value is long)
+            {
+                bw.Write((long)value);
+            }
+            else if (value is ulong)
+            {
+                bw.Write((ulong)value);
+            }
+            else
+            {
+                throw new NotSupportedException("Provided object type is not a supported integer type");
+            }
+        }
+
+        public static object ReadIntegerFromBinary(Type integerType, BinaryReader br)
+        {
+            if (integerType == typeof(byte))
+            {
+                return br.ReadByte();
+            }
+            else if (integerType == typeof(sbyte))
+            {
+                return br.ReadSByte();
+            }
+            else if (integerType == typeof(short))
+            {
+                return br.ReadInt16();
+            }
+            else if (integerType == typeof(ushort))
+            {
+                return br.ReadUInt16();
+            }
+            else if (integerType == typeof(int))
+            {
+                return br.ReadInt32();
+            }
+            else if (integerType == typeof(uint))
+            {
+                return br.ReadUInt32();
+            }
+            else if (integerType == typeof(long))
+            {
+                return br.ReadInt64();
+            }
+            else if (integerType == typeof(ulong))
+            {
+                return br.ReadUInt64();
+            }
+            else
+            {
+                throw new NotSupportedException("Provided object type is not a supported integer type");
+            }
         }
 
         public static void WriteToBinary(DataType dataType, object value, BinaryWriter bw)
@@ -468,8 +548,9 @@ namespace Sabresaurus.Sidekick
                 }
             }
             else if (dataType == DataType.Enum)
-            {
-                bw.Write((int)value);
+            {                
+                // Multiple backing types
+                WriteIntegerToBinary(value, bw);
             }
             else if (dataType == DataType.UnityObjectReference)
             {
