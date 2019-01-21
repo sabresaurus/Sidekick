@@ -14,6 +14,9 @@ namespace Sabresaurus.Sidekick
             {
                 using (BinaryReader br = new BinaryReader(ms))
                 {
+                    // Read size here
+                    br.ReadInt32();
+
                     int requestId = br.ReadInt32();
 
                     if (requestId == -1) // Error?

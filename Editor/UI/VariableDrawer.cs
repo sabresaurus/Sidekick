@@ -86,7 +86,7 @@ public static class VariableDrawer
         object newValue;
         if (variable.DataType == DataType.Enum)
         {
-            Type underlyingType = variable.MetaData.GetTypeFromMetaData();
+            //Type underlyingType = variable.MetaData.GetTypeFromMetaData();
             int enumValueIndex = Array.IndexOf(variable.MetaData.EnumValues, fieldValue);
             enumValueIndex = EditorGUILayout.Popup(fieldName, enumValueIndex, variable.MetaData.EnumNames);
 

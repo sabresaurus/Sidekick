@@ -40,7 +40,7 @@ namespace Sabresaurus.Sidekick
                     }
                 }
 
-                byte[] bytes;
+                byte[] responseBytes;
                 using (MemoryStream msOut = new MemoryStream())
                 {
                     using (BinaryWriter bw = new BinaryWriter(msOut))
@@ -49,23 +49,47 @@ namespace Sabresaurus.Sidekick
                         bw.Write(requestType);
                         response.Write(bw);
                     }
-                    bytes = msOut.ToArray();
+                    responseBytes = msOut.ToArray();
                 }
-                return bytes;
-            }
-            catch(Exception e)
-            {
-                byte[] bytes;
+
+                byte[] wrappedBytes; // Including size prefix
                 using (MemoryStream msOut = new MemoryStream())
                 {
                     using (BinaryWriter bw = new BinaryWriter(msOut))
                     {
-                        bw.Write(-1); // Error code
+                        // Size of the following (and itself)
+                        bw.Write(sizeof(int) + responseBytes.Length);
+                        bw.Write(responseBytes);
+                    }
+                    wrappedBytes = msOut.ToArray();
+                }
+                return wrappedBytes;
+            }
+            catch(Exception e)
+            {
+                byte[] responseBytes;
+                using (MemoryStream msOut = new MemoryStream())
+                {
+                    using (BinaryWriter bw = new BinaryWriter(msOut))
+                    {
+                        bw.Write(-1);
                         bw.Write(e.ToString());
                     }
-                    bytes = msOut.ToArray();
+                    responseBytes = msOut.ToArray();
                 }
-                return bytes;
+
+                byte[] wrappedBytes; // Including size prefix
+                using (MemoryStream msOut = new MemoryStream())
+                {
+                    using (BinaryWriter bw = new BinaryWriter(msOut))
+                    {
+                        // Size of the following (and itself)
+                        bw.Write(sizeof(int) + responseBytes.Length);
+                        bw.Write(responseBytes);
+                    }
+                    wrappedBytes = msOut.ToArray();
+                }
+                return wrappedBytes;
             }
         }
     }

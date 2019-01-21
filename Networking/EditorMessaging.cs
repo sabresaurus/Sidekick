@@ -32,6 +32,9 @@ namespace Sabresaurus.EditorNetworking
         static TcpClient pendingClient = null;
         private static UdpClient receivingUdpClient;
 
+        static int bytesReadSoFar = 0; // For large responses that take more than one frame's read
+        static byte[] responseBuffer = new byte[0]; // Large responses are filled in over multiple frames
+
         public static Dictionary<string, string> KnownEndpoints
         {
             get
@@ -191,17 +194,36 @@ namespace Sabresaurus.EditorNetworking
                 {
                     while (stream.DataAvailable)
                     {
-                        byte[] networkResponseBuffer = new byte[100000];
+                        byte[] networkResponseBuffer = new byte[10000000];
                         var count = stream.Read(networkResponseBuffer, 0, networkResponseBuffer.Length);
 
-                        byte[] limitedBuffer = new byte[networkResponseBuffer.Length];
-                        Array.Copy(networkResponseBuffer, limitedBuffer, count);
+                        if(responseBuffer.Length == 0 || bytesReadSoFar == responseBuffer.Length)
+                        {
+                            // New response has started, responses start with their full size so first of all create a staging buffer
+                            int totalCount = BitConverter.ToInt32(networkResponseBuffer, 0);
+                            responseBuffer = new byte[totalCount];
+                            bytesReadSoFar = 0;
+                        }
+
+                        // Copy in the bytes we've read this frame
+                        Array.Copy(networkResponseBuffer, 0, responseBuffer, bytesReadSoFar, count);
+
 #if SIDEKICK_DEBUG
                         Debug.Log(string.Format("Response received in editor, length is {0}", count));
 #endif
-                        if (responseCallback != null)
-                        {
-                            responseCallback(limitedBuffer);
+                        bytesReadSoFar += count;
+
+                        if (bytesReadSoFar >= responseBuffer.Length) // Have we read all the bytes we expected to?
+                        { 
+                            // Response buffer is full, fire the callback
+                            if (responseCallback != null)
+                            {
+                                responseCallback(responseBuffer);
+                            }
+
+                            // Reset the buffer for the next response
+                            bytesReadSoFar = 0;
+                            responseBuffer = new byte[0];
                         }
                     }
                 }
