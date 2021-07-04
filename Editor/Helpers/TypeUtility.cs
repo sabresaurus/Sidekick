@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using Sabresaurus.Sidekick.Requests;
 using UnityEngine.Assertions;
 
 namespace Sabresaurus.Sidekick
