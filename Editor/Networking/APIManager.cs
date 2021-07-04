@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using System.IO;
 using Sabresaurus.EditorNetworking;
@@ -57,4 +56,3 @@ namespace Sabresaurus.Sidekick
         }
     }
 }
-#endif

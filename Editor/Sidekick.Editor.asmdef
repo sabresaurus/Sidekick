@@ -1,0 +1,18 @@
+{
+    "name": "Sidekick.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d442c42f779284647ade94a5568b6139"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 
 namespace Sabresaurus.Sidekick
@@ -14,4 +13,3 @@ namespace Sabresaurus.Sidekick
         public InspectionConnection InspectionConnection = InspectionConnection.LocalEditor;
     }
 }
-#endif

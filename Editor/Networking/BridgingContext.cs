@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -75,4 +74,3 @@ namespace Sabresaurus.Sidekick
         #endregion
     }
 }
-#endif
