@@ -17,9 +17,9 @@ namespace Sabresaurus.Sidekick
 
         public int SendToPlayers(BaseRequest request)
         {
-            SidekickSettings settings = BridgingContext.Instance.container.Settings;
+            SidekickNetworkSettings networkSettings = BridgingContext.Instance.container.NetworkSettings;
             lastRequestID++;
-            if (settings.InspectionConnection == InspectionConnection.LocalEditor)
+            if (networkSettings.InspectionConnection == InspectionConnection.LocalEditor)
             {
                 if (ResponseReceived != null)
                     ResponseReceived(request.GenerateResponse());

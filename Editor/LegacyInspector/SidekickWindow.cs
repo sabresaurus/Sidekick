@@ -73,7 +73,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public object ActiveSelection
+        private object ActiveSelection
         {
             get
             {
@@ -86,15 +86,13 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-#if SIDEKICK_DEBUG
-        [MenuItem("Tools/Old Sidekick")]
+        [MenuItem("Window/Sidekick")]
         static void Init()
         {
             // Get existing open window or if none, make a new one:
             OldInspectorSidekick sidekick = EditorWindow.GetWindow<OldInspectorSidekick>();
             sidekick.UpdateTitleContent();
         }
-#endif
 
         void OnEnable()
         {

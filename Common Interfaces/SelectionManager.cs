@@ -45,8 +45,8 @@ namespace Sabresaurus.Sidekick
 
         private void OnEditorSelectionChanged()
         {
-            SidekickSettings settings = BridgingContext.Instance.container.Settings;
-            if (settings.InspectionConnection == InspectionConnection.LocalEditor)
+            SidekickNetworkSettings networkSettings = BridgingContext.Instance.container.NetworkSettings;
+            if (networkSettings.InspectionConnection == InspectionConnection.LocalEditor)
             {
                 SetSelectedPath(GetFullPath(Selection.activeObject));
             }

@@ -88,79 +88,6 @@ namespace Sabresaurus.Sidekick
 				return type.Name;
 			}
 		}
-
-        public static string NameForType(DataType type)
-        {
-            if (type == DataType.Void)
-            {
-                return "void";
-            }
-            else if (type == DataType.Boolean)
-            {
-                return "bool";
-            }
-            //else if (type == DataType.Byte)
-            //{
-            //    return "byte";
-            //}
-            //else if (type == typeof(System.SByte))
-            //{
-            //    return "sbyte";
-            //}
-            else if (type == DataType.Char)
-            {
-                return "char";
-            }
-            //else if (type == typeof(System.Decimal))
-            //{
-            //    return "decimal";
-            //}
-            else if (type == DataType.Double)
-            {
-                return "double";
-            }
-            else if (type == DataType.Float)
-            {
-                return "float";
-            }
-            else if (type == DataType.Integer)
-            {
-                return "int";
-            }
-            //else if (type == typeof(System.UInt32))
-            //{
-            //    return "uint";
-            //}
-            else if (type == DataType.Long)
-            {
-                return "long";
-            }
-            //else if (type == typeof(System.UInt64))
-            //{
-            //    return "ulong";
-            //}
-            //else if (type == typeof(System.Object))
-            //{
-            //    return "object";
-            //}
-            //else if (type == typeof(System.Int16))
-            //{
-            //    return "short";
-            //}
-            //else if (type == typeof(System.UInt16))
-            //{
-                //return "ushort";
-            //}
-            else if (type == DataType.String)
-            {
-                return "string";
-            }
-            else
-            {
-                return type.ToString();
-            }
-        }
-
 		public static bool IsGenericList(Type type)
 		{
 			// Check if it's a List<T>
@@ -222,13 +149,15 @@ namespace Sabresaurus.Sidekick
 
 		public static bool IsPropertyMethod(MethodInfo methodInfo, Type parentType)
 		{
+			BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
 			string methodName = methodInfo.Name;
 			// The compiler generates methods for getters and setters with a prefix
 			if(methodName.StartsWith("get_") || methodName.StartsWith("set_"))
 			{
 				// Check that no property exists with the name after the prefix
 				// Don't use SpecialName here as compilers aren't required to populate it
-                if(parentType.GetProperty(methodName.Substring(4), GetObjectRequest.BINDING_FLAGS) != null)
+                if(parentType.GetProperty(methodName.Substring(4), bindingFlags) != null)
 				{
 					return true;
 				}

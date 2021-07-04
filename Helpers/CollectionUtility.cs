@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
 using System;
 
 namespace Sabresaurus.Sidekick
@@ -58,40 +57,6 @@ namespace Sabresaurus.Sidekick
                         list.RemoveAt(oldSize - i - 1);
                     }
                 }
-            }
-        }
-
-        static object GetNativeValue(WrappedVariable wrappedVariable, object value)
-        {
-            if (wrappedVariable.DataType == DataType.UnityObjectReference && value is Guid)
-                return ObjectMap.GetObjectFromGUID((Guid)value);
-            else
-                return value;
-        }
-
-        public static object ConvertArrayOrListToNative(WrappedVariable wrappedVariable, Type type)
-        {
-            // TODO: Investigate if this array copying could be simplified
-            IList sourceList = (IList)wrappedVariable.Value;
-            int count = sourceList.Count;
-            if (type.IsArray)
-            {
-                // Copying to an array
-                object newArray = Activator.CreateInstance(type, new object[] { count });
-                for (int i = 0; i < count; i++)
-                {
-                    ((Array)newArray).SetValue(GetNativeValue(wrappedVariable, sourceList[i]), i);
-                }
-                return newArray;
-            }
-            else
-            {
-                object newList = Activator.CreateInstance(type, new object[] { 0 });
-                for (int i = 0; i < count; i++)
-                {
-                    ((IList)newList).Add(GetNativeValue(wrappedVariable, sourceList[i]));
-                }
-                return newList;
             }
         }
     }

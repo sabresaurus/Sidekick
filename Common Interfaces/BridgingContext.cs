@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
         [System.Serializable]
         public class Container
         {
-            SidekickSettings settings = new SidekickSettings();
+            SidekickNetworkSettings networkSettings = new SidekickNetworkSettings();
             SelectionManager selectionManager = new SelectionManager();
             APIManager apiManager = new APIManager();
 
@@ -30,11 +30,11 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            public SidekickSettings Settings
+            public SidekickNetworkSettings NetworkSettings
             {
                 get
                 {
-                    return settings;
+                    return networkSettings;
                 }
             }
         }
