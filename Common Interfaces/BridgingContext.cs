@@ -11,16 +11,7 @@ namespace Sabresaurus.Sidekick
         public class Container
         {
             SidekickNetworkSettings networkSettings = new SidekickNetworkSettings();
-            SelectionManager selectionManager = new SelectionManager();
             APIManager apiManager = new APIManager();
-
-            public SelectionManager SelectionManager
-            {
-                get
-                {
-                    return selectionManager;
-                }
-            }
 
             public APIManager APIManager
             {
@@ -37,11 +28,6 @@ namespace Sabresaurus.Sidekick
                     return networkSettings;
                 }
             }
-        }
-
-        public void RefreshCallbacks()
-        {
-            container.SelectionManager.RefreshCallbacks();
         }
 
         #region Bridging
@@ -80,8 +66,6 @@ namespace Sabresaurus.Sidekick
         {
             Assert.IsTrue(instance == null || instance == this);
             instance = this;
-
-            RefreshCallbacks();
         }
 
         private void OnDisable()
