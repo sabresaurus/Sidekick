@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace Sabresaurus.Sidekick
@@ -23,7 +24,7 @@ namespace Sabresaurus.Sidekick
 
         static OldInspectorSidekick current;
 
-
+        private SearchField searchField;
 
         object selectionOverride = null;
 
@@ -99,15 +100,24 @@ namespace Sabresaurus.Sidekick
         {
             UpdateTitleContent();
 
+            searchField = new SearchField();
+
             minSize = new Vector2(260, 100);
         }
 
         void UpdateTitleContent()
         {
-            titleContent = new GUIContent("Old Sidekick");
+            string[] guids = AssetDatabase.FindAssets("SidekickIcon t:Texture");
+            if (guids.Length >= 1)
+            {
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                titleContent = new GUIContent("Sidekick", texture);
+            }
+            else
+            {
+                titleContent = new GUIContent("Sidekick");
+            }
         }
-
-
 
         void ConstructAssembliesAndTypes()
         {
@@ -230,31 +240,8 @@ namespace Sabresaurus.Sidekick
             }
 
             GUILayout.Space(5);
-            EditorGUILayout.BeginHorizontal();
-            GUIStyle searchStyle = GUI.skin.FindStyle("ToolbarSeachTextField");
-            GUIStyle cancelStyle = GUI.skin.FindStyle("ToolbarSeachCancelButton");
-            GUIStyle noCancelStyle = GUI.skin.FindStyle("ToolbarSeachCancelButtonEmpty");
-
-            GUILayout.Space(10);
-            settings.SearchTerm = EditorGUILayout.TextField(settings.SearchTerm, searchStyle);
-            if (!string.IsNullOrEmpty(settings.SearchTerm))
-            {
-                if (GUILayout.Button("", cancelStyle))
-                {
-                    settings.SearchTerm = "";
-                    GUIUtility.hotControl = 0;
-                    EditorGUIUtility.editingTextField = false;
-                }
-            }
-            else
-            {
-                GUILayout.Button("", noCancelStyle);
-            }
-            GUILayout.Space(10);
-            EditorGUILayout.EndHorizontal();
-            GUILayout.Space(5);
+            settings.SearchTerm = searchField.OnToolbarGUI(settings.SearchTerm);
             mode = SidekickUtility.EnumToolbar(mode);
-            //			mode = SabreGUILayout.DrawEnumGrid(mode);
 
             GUILayout.Space(5);
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
@@ -262,7 +249,7 @@ namespace Sabresaurus.Sidekick
             for (int i = 0; i < inspectedTypes.Length; i++)
             {
                 Type type = inspectedTypes[i];
-                if (!typesHidden.Any(row => row.Key == type))// ContainsKey(component))
+                if (typesHidden.All(row => row.Key != type))
                 {
                     typesHidden.Add(new KeyValuePair<Type, bool>(type, false));
                 }
@@ -270,92 +257,108 @@ namespace Sabresaurus.Sidekick
 
                 int index = typesHidden.FindIndex(row => row.Key == type);
 
-                GUIStyle style = new GUIStyle(EditorStyles.foldout);
-                style.fontStyle = FontStyle.Bold;
-                //				Texture2D icon = AssetPreview.GetMiniTypeThumbnail(type);
                 GUIContent objectContent = EditorGUIUtility.ObjectContent(inspectedContexts[i] as UnityEngine.Object, type);
-                Texture2D icon = objectContent.image as Texture2D;
-                GUIContent content = new GUIContent(type.Name, icon);
+                GUIContent content = new GUIContent(type.Name, objectContent.image);
 
-                bool newValue = !EditorGUILayout.Foldout(!typesHidden[index].Value, content, style);
-
-                if (newValue != typesHidden[index].Value)
+                bool? activeOrEnabled = inspectedContexts[i] switch
                 {
-                    typesHidden[index] = new KeyValuePair<Type, bool>(type, newValue);
+                    GameObject gameObject => gameObject.activeSelf,
+                    Behaviour behaviour => behaviour.enabled,
+                    _ => null
+                };
+
+                bool toggled = SidekickEditorGUI.DrawHeaderWithFoldout(content, !typesHidden[index].Value, ref activeOrEnabled);
+
+                if(toggled)
+                {
+                    typesHidden[index] = new KeyValuePair<Type, bool>(type, !typesHidden[index].Value);
                 }
+                
                 if (!typesHidden[index].Value)
                 {
-                    EditorGUI.indentLevel = 1;
+                    EditorGUI.indentLevel++;
 
-                    BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-                    if (!settings.IncludeInherited)
+                    BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+                    var typeScope = type;
+
+                    while (typeScope != null)
                     {
-                        bindingFlags |= BindingFlags.DeclaredOnly;
-                    }
-
-                    FieldInfo[] fields = type.GetFields(bindingFlags);
-                    PropertyInfo[] properties = type.GetProperties(bindingFlags);
-                    MethodInfo[] methods = type.GetMethods(bindingFlags);
-
-                    // Hide methods and backing fields that have been generated for properties
-                    if (settings.HideAutoGenerated)
-                    {
-                        List<MethodInfo> methodList = new List<MethodInfo>(methods.Length);
-
-                        for (int j = 0; j < methods.Length; j++)
+                        if (InspectionExclusions.GetExcludedTypes().Contains(typeScope))
                         {
-                            if (!TypeUtility.IsPropertyMethod(methods[j], type))
-                            {
-                                methodList.Add(methods[j]);
-                            }
+                            break;
                         }
-                        methods = methodList.ToArray();
 
-                        List<FieldInfo> fieldList = new List<FieldInfo>(fields.Length);
-
-                        for (int j = 0; j < fields.Length; j++)
+                    
+                        if (typeScope != type)
                         {
-                            if (!TypeUtility.IsBackingField(fields[j], type))
-                            {
-                                fieldList.Add(fields[j]);
-                            }
+                            SidekickEditorGUI.DrawHeader2(new GUIContent(": " + typeScope.Name));
                         }
-                        fields = fieldList.ToArray();
-                    }
+                        
+                        FieldInfo[] fields = typeScope.GetFields(bindingFlags);
+                        PropertyInfo[] properties = typeScope.GetProperties(bindingFlags);
+                        MethodInfo[] methods = typeScope.GetMethods(bindingFlags);
+
+                        // Hide methods and backing fields that have been generated for properties
+                        if (settings.HideAutoGenerated)
+                        {
+                            List<MethodInfo> methodList = new List<MethodInfo>(methods.Length);
+
+                            for (int j = 0; j < methods.Length; j++)
+                            {
+                                if (!TypeUtility.IsPropertyMethod(methods[j], typeScope))
+                                {
+                                    methodList.Add(methods[j]);
+                                }
+                            }
+                            methods = methodList.ToArray();
+
+                            List<FieldInfo> fieldList = new List<FieldInfo>(fields.Length);
+
+                            for (int j = 0; j < fields.Length; j++)
+                            {
+                                if (!TypeUtility.IsBackingField(fields[j], typeScope))
+                                {
+                                    fieldList.Add(fields[j]);
+                                }
+                            }
+                            fields = fieldList.ToArray();
+                        }
 
 
-                    FieldInfo[] events = type.GetFields(bindingFlags);
+                        FieldInfo[] events = typeScope.GetFields(bindingFlags);
 
-                    if (mode == InspectorMode.Fields)
-                    {
-                        fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], fields);
-                    }
-                    else if (mode == InspectorMode.Props)
-                    {
-                        propertyPane.DrawProperties(inspectedTypes[i], inspectedContexts[i], properties);
-                    }
-                    else if (mode == InspectorMode.Methods)
-                    {
-                        methodPane.DrawMethods(inspectedTypes[i], inspectedContexts[i], methods);
-                    }
-                    else if (mode == InspectorMode.Events)
-                    {
-                        eventPane.DrawEvents(inspectedTypes[i], inspectedContexts[i], events);
-                    }
-                    else if (mode == InspectorMode.Misc)
-                    {
-                        utilityPane.Draw(inspectedTypes[i], inspectedContexts[i]);
-                    }
+                        if (mode == InspectorMode.Fields)
+                        {
+                            fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], fields);
+                        }
+                        else if (mode == InspectorMode.Props)
+                        {
+                            propertyPane.DrawProperties(inspectedTypes[i], inspectedContexts[i], properties);
+                        }
+                        else if (mode == InspectorMode.Methods)
+                        {
+                            methodPane.DrawMethods(inspectedTypes[i], inspectedContexts[i], methods);
+                        }
+                        else if (mode == InspectorMode.Events)
+                        {
+                            eventPane.DrawEvents(inspectedTypes[i], inspectedContexts[i], events);
+                        }
+                        else if (mode == InspectorMode.Misc)
+                        {
+                            utilityPane.Draw(inspectedTypes[i], inspectedContexts[i]);
+                        }
 
-                    EditorGUI.indentLevel = 0;
+                        
+                        typeScope = typeScope.BaseType;
+                    }
+                    
+
+                    
+                    EditorGUI.indentLevel--;
+
                 }
-
-                Rect rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.Height(1));
-                rect.xMin -= 10;
-                rect.xMax += 10;
-                GUI.color = new Color(0.5f, 0.5f, 0.5f);
-                GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
-                GUI.color = Color.white;
+                SidekickEditorGUI.DrawSplitter();
             }
 
             EditorGUILayout.EndScrollView();
@@ -366,7 +369,6 @@ namespace Sabresaurus.Sidekick
             }
 
             settings.RotationsAsEuler = EditorGUILayout.Toggle("Rotations as euler", settings.RotationsAsEuler);
-            settings.IncludeInherited = EditorGUILayout.Toggle("Include inherited", settings.IncludeInherited);
             settings.HideAutoGenerated = EditorGUILayout.Toggle("Hide auto-generated", settings.HideAutoGenerated);
             settings.TreatEnumsAsInts = EditorGUILayout.Toggle("Enums as ints", settings.TreatEnumsAsInts);
 

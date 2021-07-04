@@ -16,6 +16,9 @@ namespace Sabresaurus.Sidekick
                 typeof(System.Object),
                 typeof(UnityEngine.Object),
                 typeof(UnityEngine.Component),
+                typeof(UnityEngine.Behaviour),
+                typeof(UnityEngine.MonoBehaviour),
+                typeof(UnityEngine.ScriptableObject),
                 // Add any custom exclusions here
             };
         }

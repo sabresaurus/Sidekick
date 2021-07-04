@@ -172,11 +172,11 @@ namespace Sabresaurus.Sidekick
                 {
                     if (returnedObject != null)
                     {
-                        methodOutput = "Method returned:\n" + returnedObject.ToString();
+                        methodOutput = $"{method.Name} returned:\n{returnedObject}";
                     }
                     else
                     {
-                        methodOutput = "Method returned:\nnull";
+                        methodOutput = $"{method.Name} returned:\nnull";
                     }
                 }
 

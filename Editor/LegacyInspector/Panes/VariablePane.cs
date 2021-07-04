@@ -168,6 +168,14 @@ namespace Sabresaurus.Sidekick
 			{
 				newValue = EditorGUILayout.Vector4Field(fieldName, (Vector4)fieldValue);
 			}
+			else if (fieldType == typeof(Vector2Int))
+			{
+				newValue = EditorGUILayout.Vector2IntField(fieldName, (Vector2Int)fieldValue);
+			}
+			else if (fieldType == typeof(Vector3Int))
+			{
+				newValue = EditorGUILayout.Vector3IntField(fieldName, (Vector3Int)fieldValue);
+			}
 			else if (fieldType == typeof(Quaternion))
 			{
 				//if(InspectorSidekick.Current.Settings.RotationsAsEuler)
@@ -189,6 +197,10 @@ namespace Sabresaurus.Sidekick
 			{
 				newValue = EditorGUILayout.BoundsField(fieldName, (Bounds)fieldValue);
 			}
+			else if (fieldType == typeof(BoundsInt))
+			{
+				newValue = EditorGUILayout.BoundsIntField(fieldName, (BoundsInt)fieldValue);
+			}
 			else if (fieldType == typeof(Color))
 			{
 				newValue = EditorGUILayout.ColorField(fieldName, (Color)fieldValue);
@@ -197,6 +209,10 @@ namespace Sabresaurus.Sidekick
             {
                 newValue = (Color32)EditorGUILayout.ColorField(fieldName, (Color32)fieldValue);
             }
+			else if (fieldType == typeof(Gradient))
+			{
+				newValue = EditorGUILayout.GradientField(new GUIContent(fieldName), (Gradient) fieldValue);
+			}
 			else if (fieldType == typeof(AnimationCurve))
 			{
 				newValue = EditorGUILayout.CurveField(fieldName, (AnimationCurve)fieldValue);
@@ -209,13 +225,17 @@ namespace Sabresaurus.Sidekick
 			{
 				newValue = EditorGUILayout.RectField(fieldName, (Rect)fieldValue);
 			}
+			else if (fieldType == typeof(RectInt))
+			{
+				newValue = EditorGUILayout.RectIntField(fieldName, (RectInt)fieldValue);
+			}
 			else if(fieldType.IsSubclassOf(typeof(UnityEngine.Object)))
 			{
 				newValue = EditorGUILayout.ObjectField(fieldName, (UnityEngine.Object)fieldValue, fieldType, true);
 			}
 			else
 			{
-				GUILayout.Label(fieldType + " " + fieldName);
+				GUILayout.Label(fieldType + " unsupported on " + fieldName);
 				newValue = fieldValue;
 			}
 
