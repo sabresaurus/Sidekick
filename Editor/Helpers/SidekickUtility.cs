@@ -2,6 +2,7 @@
 using System;
 //using System.Linq;
 using System.Text;
+using UnityEditor;
 
 namespace Sabresaurus.Sidekick
 {
@@ -53,20 +54,20 @@ namespace Sabresaurus.Sidekick
 
 			for (int i = 0; i < names.Length; i++) 
 			{
-				names[i] = ParseDisplayString(names[i]);
+				names[i] = NicifyIdentifier(names[i]);
 			}
 			int newValue = GUILayout.Toolbar(oldValue, names, style, options);
 
 			return (T)Enum.ToObject(typeof(T), newValue);
 		}
 
-		public static string ParseDisplayString(string input)
+		public static string NicifyIdentifier(string input)
 		{
-            if(input.StartsWith("m_", StringComparison.InvariantCultureIgnoreCase))
-            {
-                input = input.Remove(0, 2);
-            }
-
+			input = input.RemoveStart("m_");
+			input = input.RemoveStart("s_");
+			input = input.RemoveStart("c_");
+			input = input.RemoveStart("_");
+			
 			StringBuilder stringBuilder = new StringBuilder();
 
 			for (int i = 0; i < input.Length; i++) 
@@ -82,7 +83,15 @@ namespace Sabresaurus.Sidekick
 				{
 					currentChar = Char.ToUpper(currentChar);
 				}
-				stringBuilder.Append(currentChar);
+
+				if (currentChar == '_')
+				{
+					stringBuilder.Append(' ');
+				}
+				else
+				{
+					stringBuilder.Append(currentChar);
+				}
 			}
 
 			return stringBuilder.ToString();

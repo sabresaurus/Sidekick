@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,12 +8,18 @@ using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
-    public class OldInspectorSidekick : EditorWindow
+    public class SidekickWindow : EditorWindow
     {
-        enum InspectedType { Selection, AssemblyClass };
-        enum InspectorMode { Fields, Props, Methods, Events, Misc };
+        enum InspectorMode
+        {
+            Fields,
+            Props,
+            Methods,
+            Events,
+            Misc
+        };
 
-        OldSettings settings = new OldSettings();
+        SidekickSettings settings = new SidekickSettings();
 
         FieldPane fieldPane = new FieldPane();
         PropertyPane propertyPane = new PropertyPane();
@@ -22,17 +27,17 @@ namespace Sabresaurus.Sidekick
         EventPane eventPane = new EventPane();
         UtilityPane utilityPane = new UtilityPane();
 
-        static OldInspectorSidekick current;
+        static SidekickWindow current;
 
         private SearchField searchField;
 
         object selectionOverride = null;
+        private Type typeToDisplay = null;
 
         List<object> backStack = new List<object>();
         List<object> forwardStack = new List<object>();
 
         PersistentData persistentData = new PersistentData();
-        InspectedType inspectedType = InspectedType.Selection;
         InspectorMode mode = InspectorMode.Fields;
         Vector2 scrollPosition;
 
@@ -42,36 +47,12 @@ namespace Sabresaurus.Sidekick
             new KeyValuePair<Type, bool>(typeof(GameObject), true),
         };
 
-        int selectedAssemblyIndex = 0;
-        int selectedTypeIndex = 0;
-        string[] assemblyNames;
-        List<Assembly> assemblies = new List<Assembly>();
-        Dictionary<Assembly, List<Type>> assemblyTypes = new Dictionary<Assembly, List<Type>>();
 
+        public static SidekickWindow Current => current;
 
-        public static OldInspectorSidekick Current
-        {
-            get
-            {
-                return current;
-            }
-        }
+        public PersistentData PersistentData => persistentData;
 
-        public PersistentData PersistentData
-        {
-            get
-            {
-                return persistentData;
-            }
-        }
-
-        public OldSettings Settings
-        {
-            get
-            {
-                return settings;
-            }
-        }
+        public SidekickSettings Settings => settings;
 
         private object ActiveSelection
         {
@@ -82,6 +63,7 @@ namespace Sabresaurus.Sidekick
                 {
                     selectedObject = selectionOverride;
                 }
+
                 return selectedObject;
             }
         }
@@ -90,7 +72,7 @@ namespace Sabresaurus.Sidekick
         static void Init()
         {
             // Get existing open window or if none, make a new one:
-            OldInspectorSidekick sidekick = EditorWindow.GetWindow<OldInspectorSidekick>();
+            SidekickWindow sidekick = GetWindow<SidekickWindow>();
             sidekick.UpdateTitleContent();
         }
 
@@ -117,50 +99,6 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        void ConstructAssembliesAndTypes()
-        {
-            assemblies.Clear();
-            assemblies.Add(Assembly.GetAssembly(typeof(UnityEditor.Editor)));
-            assemblies.Add(Assembly.GetAssembly(typeof(UnityEngine.Application)));
-            assemblies.Add(Assembly.GetAssembly(typeof(UnityEditor.Graphs.Edge)));
-            //			assemblies.Add(Assembly.GetAssembly(typeof(InspectorSidekick)));
-
-            Assembly[] allAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (Assembly assembly in allAssemblies)
-            {
-                // Walk through all the types in the main assembly
-                if (assembly.FullName.StartsWith("Assembly-CSharp"))
-                {
-                    assemblies.Add(assembly);
-                }
-            }
-
-            //assemblies.Add(Assembly.GetAssembly(typeof(EditorHelper)));
-            assemblyNames = new string[assemblies.Count];
-
-            for (int i = 0; i < assemblies.Count; i++)
-            {
-                assemblyNames[i] = assemblies[i].GetName().Name;
-
-                assemblyTypes.Add(assemblies[i], assemblies[i].GetTypes().ToList());
-            }
-
-            for (int i = 0; i < assemblies.Count; i++)
-            {
-                for (int j = 0; j < assemblyTypes.Count; j++)
-                {
-                    Type type = assemblyTypes[assemblies[i]][j];
-                    if (!type.IsClass || type.IsAbstract)
-                    {
-                        assemblyTypes[assemblies[i]].RemoveAt(j);
-                        j--;
-                    }
-                }
-
-                assemblyTypes[assemblies[i]].Sort((x, y) => x.Name.CompareTo(y.Name));
-            }
-        }
-
         void OnGUI()
         {
             // Frame rate tracking
@@ -170,71 +108,62 @@ namespace Sabresaurus.Sidekick
             }
 
             current = this;
-            // Make sure we have a valid set of assemblies
-            if (assemblies == null || assemblies.Count == 0)
-            {
-                ConstructAssembliesAndTypes();
-            }
 
-            Rect windowRect = position;
+            DrawToolbar();
 
             Type[] inspectedTypes = null;
             object[] inspectedContexts = null;
 
             GUILayout.Space(9);
 
-            inspectedType = SidekickUtility.EnumToolbar(inspectedType, "LargeButton");//, GUILayout.Width(windowRect.width - 60));
+            DrawSelectionInfo();
 
-            if (inspectedType == InspectedType.Selection)
+            var selectTypeButtonLabel = new GUIContent("Select Type From Assembly");
+            var selectTypeButtonRect = GUILayoutUtility.GetRect(selectTypeButtonLabel, EditorStyles.miniButton);
+            if (GUI.Button(selectTypeButtonRect, selectTypeButtonLabel, EditorStyles.miniButton))
             {
-                object selectedObject = ActiveSelection;
-
-                if (selectedObject == null)
-                {
-                    GUILayout.Space(windowRect.height / 2 - 40);
-                    GUIStyle style = new GUIStyle(GUI.skin.label);
-                    style.alignment = TextAnchor.MiddleCenter;
-                    GUILayout.Label("No object selected", style);
-                    return;
-                }
-
-                if (selectedObject is GameObject)
-                {
-                    List<object> components = ((GameObject)selectedObject).GetComponents<Component>().Cast<object>().ToList();
-                    components.RemoveAll(item => item == null);
-                    components.Insert(0, selectedObject);
-                    inspectedContexts = components.ToArray();
-                }
-                else
-                {
-                    inspectedContexts = new object[] { selectedObject };
-                }
-                inspectedTypes = inspectedContexts.Select(x => x.GetType()).ToArray();
+                TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type => typeToDisplay = type);
+                dropdown.Show(selectTypeButtonRect);
             }
-            else if (inspectedType == InspectedType.AssemblyClass)
+
+            var selectObjectButtonLabel = new GUIContent("Select Loaded Unity Object");
+            var selectObjectButtonRect = GUILayoutUtility.GetRect(selectObjectButtonLabel, EditorStyles.miniButton);
+            if (GUI.Button(selectObjectButtonRect, selectObjectButtonLabel, EditorStyles.miniButton))
             {
-                int newSelectedAssemblyIndex = EditorGUILayout.Popup(selectedAssemblyIndex, assemblyNames);
-                if (newSelectedAssemblyIndex != selectedAssemblyIndex)
-                {
-                    selectedTypeIndex = 0;
-                    selectedAssemblyIndex = newSelectedAssemblyIndex;
-                }
+                UnityObjectSelectDropdown dropdown = new UnityObjectSelectDropdown(new AdvancedDropdownState(), window => SetSelection(window, true));
+                dropdown.Show(selectObjectButtonRect);
+            }
 
-                Assembly activeAssembly = assemblies[selectedAssemblyIndex];
-                List<Type> types = assemblyTypes[activeAssembly];
-                string[] typeNames = new string[types.Count];
-                for (int i = 0; i < types.Count; i++)
-                {
-                    typeNames[i] = types[i].FullName;
-                }
-                selectedTypeIndex = EditorGUILayout.Popup(selectedTypeIndex, typeNames);
+            object selectedObject = ActiveSelection;
 
-                inspectedTypes = new Type[] { assemblyTypes[activeAssembly][selectedTypeIndex] };
-                inspectedContexts = new Type[] { null };
+            if (selectedObject == null && typeToDisplay == null)
+            {
+                GUILayout.FlexibleSpace();
+                GUIStyle style = new GUIStyle(EditorStyles.wordWrappedLabel) {alignment = TextAnchor.MiddleCenter};
+                GUILayout.Label("No object selected.\n\nSelect something in Unity or use one of the selection helper buttons.", style);
+                GUILayout.FlexibleSpace();
+                return;
+            }
+
+            if (selectedObject is GameObject selectedGameObject)
+            {
+                List<object> components = selectedGameObject.GetComponents<Component>().Cast<object>().ToList();
+                components.RemoveAll(item => item == null);
+                components.Insert(0, selectedGameObject);
+                inspectedContexts = components.ToArray();
             }
             else
             {
-                throw new NotImplementedException("Unhandled InspectedType");
+                inspectedContexts = new[] {selectedObject};
+            }
+
+            inspectedTypes = inspectedContexts.Select(x => x.GetType()).ToArray();
+
+            if (typeToDisplay != null)
+            {
+                inspectedTypes = new[] {typeToDisplay};
+
+                inspectedContexts = new Type[] {null};
             }
 
             GUILayout.Space(5);
@@ -267,11 +196,11 @@ namespace Sabresaurus.Sidekick
 
                 bool toggled = SidekickEditorGUI.DrawHeaderWithFoldout(content, !typesHidden[index].Value, ref activeOrEnabled);
 
-                if(toggled)
+                if (toggled)
                 {
                     typesHidden[index] = new KeyValuePair<Type, bool>(type, !typesHidden[index].Value);
                 }
-                
+
                 if (!typesHidden[index].Value)
                 {
                     EditorGUI.indentLevel++;
@@ -287,12 +216,11 @@ namespace Sabresaurus.Sidekick
                             break;
                         }
 
-                    
                         if (typeScope != type)
                         {
                             SidekickEditorGUI.DrawHeader2(new GUIContent(": " + typeScope.Name));
                         }
-                        
+
                         FieldInfo[] fields = typeScope.GetFields(bindingFlags);
                         PropertyInfo[] properties = typeScope.GetProperties(bindingFlags);
                         MethodInfo[] methods = typeScope.GetMethods(bindingFlags);
@@ -309,6 +237,7 @@ namespace Sabresaurus.Sidekick
                                     methodList.Add(methods[j]);
                                 }
                             }
+
                             methods = methodList.ToArray();
 
                             List<FieldInfo> fieldList = new List<FieldInfo>(fields.Length);
@@ -320,6 +249,7 @@ namespace Sabresaurus.Sidekick
                                     fieldList.Add(fields[j]);
                                 }
                             }
+
                             fields = fieldList.ToArray();
                         }
 
@@ -344,18 +274,17 @@ namespace Sabresaurus.Sidekick
                         }
                         else if (mode == InspectorMode.Misc)
                         {
-                            utilityPane.Draw(inspectedTypes[i], inspectedContexts[i]);
+                            utilityPane.Draw(inspectedTypes[i], inspectedContexts[i], typeScope);
                         }
 
-                        
+
                         typeScope = typeScope.BaseType;
                     }
-                    
 
-                    
+
                     EditorGUI.indentLevel--;
-
                 }
+
                 SidekickEditorGUI.DrawSplitter();
             }
 
@@ -370,35 +299,6 @@ namespace Sabresaurus.Sidekick
             settings.HideAutoGenerated = EditorGUILayout.Toggle("Hide auto-generated", settings.HideAutoGenerated);
             settings.TreatEnumsAsInts = EditorGUILayout.Toggle("Enums as ints", settings.TreatEnumsAsInts);
 
-            EditorGUILayout.BeginHorizontal();
-            GUI.enabled = (backStack.Count > 0);
-            if (GUILayout.Button("<-")
-                || (Event.current.type == EventType.MouseDown && Event.current.button == 3)
-                || (Event.current.type == EventType.KeyDown && SidekickUtility.EventsMatch(Event.current, Event.KeyboardEvent("Backspace"), false, true)))
-            {
-                object backStackLast = backStack.Last();
-                backStack.RemoveAt(backStack.Count - 1);
-                forwardStack.Add(ActiveSelection);
-                SetSelection(backStackLast, false);
-            }
-            GUI.enabled = (forwardStack.Count > 0);
-            if (GUILayout.Button("->")
-                || (Event.current.type == EventType.MouseDown && Event.current.button == 4)
-                || (Event.current.type == EventType.KeyDown && SidekickUtility.EventsMatch(Event.current, Event.KeyboardEvent("#Backspace"), false, true)))
-            {
-                object forwardStackLast = forwardStack.Last();
-                forwardStack.RemoveAt(forwardStack.Count - 1);
-                backStack.Add(ActiveSelection);
-                SetSelection(forwardStackLast, false);
-            }
-            GUI.enabled = true;
-
-            if (GUILayout.Button("Pin"))
-            {
-                selectionOverride = ActiveSelection;
-            }
-
-            EditorGUILayout.EndHorizontal();
             //			test += currentFrameDelta;
             //			Color color = Color.Lerp(Color.white, Color.red, Mathf.PingPong(test, 1f));
             //			GUI.backgroundColor = color;
@@ -413,7 +313,60 @@ namespace Sabresaurus.Sidekick
                     //					AnimationHelper.ClearAnimationActive();
                 }
             }
+        }
 
+        private void DrawToolbar()
+        {
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUI.enabled = (backStack.Count > 0);
+            if (GUILayout.Button(SidekickEditorGUI.BackIcon, EditorStyles.toolbarButton)
+                || (Event.current.type == EventType.MouseDown && Event.current.button == 3)
+                || (Event.current.type == EventType.KeyDown && SidekickUtility.EventsMatch(Event.current, Event.KeyboardEvent("Backspace"), false, true)))
+            {
+                object backStackLast = backStack.Last();
+                backStack.RemoveAt(backStack.Count - 1);
+                forwardStack.Add(ActiveSelection);
+                SetSelection(backStackLast, false);
+            }
+
+            GUI.enabled = (forwardStack.Count > 0);
+            if (GUILayout.Button(SidekickEditorGUI.ForwardIcon, EditorStyles.toolbarButton)
+                || (Event.current.type == EventType.MouseDown && Event.current.button == 4)
+                || (Event.current.type == EventType.KeyDown && SidekickUtility.EventsMatch(Event.current, Event.KeyboardEvent("#Backspace"), false, true)))
+            {
+                object forwardStackLast = forwardStack.Last();
+                forwardStack.RemoveAt(forwardStack.Count - 1);
+                backStack.Add(ActiveSelection);
+                SetSelection(forwardStackLast, false);
+            }
+
+            GUI.enabled = true;
+
+            bool locked = (selectionOverride != null);
+
+            var lockIcon = locked ? SidekickEditorGUI.LockIconOn : SidekickEditorGUI.LockIconOff;
+            if (GUILayout.Button(lockIcon, EditorStyles.toolbarButton))
+            {
+                selectionOverride = selectionOverride == null ? ActiveSelection : null;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawSelectionInfo()
+        {
+            if (typeToDisplay != null)
+            {
+                GUILayout.Label("Selection: Assembly Type");
+            }
+            else if (selectionOverride != null)
+            {
+                GUILayout.Label("Selection: Custom");
+            }
+            else
+            {
+                GUILayout.Label("Selection: Editor Selection");
+            }
         }
 
         public void SetSelection(object newSelection, bool updateStack)
@@ -424,9 +377,9 @@ namespace Sabresaurus.Sidekick
                 forwardStack.Clear();
             }
 
-            if (newSelection is UnityEngine.Object)
+            if (newSelection is UnityEngine.Object unityObject)
             {
-                Selection.activeObject = (UnityEngine.Object)newSelection;
+                Selection.activeObject = unityObject;
                 selectionOverride = null;
             }
             else
@@ -437,7 +390,13 @@ namespace Sabresaurus.Sidekick
 
         void OnSelectionChange()
         {
-            //			selectionOverride = null;
+            if (selectionOverride != null)
+            {
+                return;
+            }
+            selectionOverride = null;
+            typeToDisplay = null;
+
             Repaint();
         }
     }

@@ -12,13 +12,12 @@ namespace Sabresaurus.Sidekick
 {
 	public class UtilityPane : BasePane 
 	{
-        public void Draw(Type componentType, object component)
+        public void Draw(Type componentType, object component, Type typeScope)
         {
-            OldSettings settings = OldInspectorSidekick.Current.Settings; // Grab the active window's settings
+            SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
 
-            if (component is MonoScript)
+            if (component is MonoScript monoScript)
             {
-                MonoScript monoScript = (MonoScript)component;
                 Type classType = monoScript.GetClass();
                 if (classType != null)
                 {
@@ -36,10 +35,8 @@ namespace Sabresaurus.Sidekick
                     }
                 }
             }
-            else if (component is GameObject)
+            else if (component is GameObject gameObject)
             {
-                GameObject gameObject = (GameObject)component;
-
                 if (GUILayout.Button("Set Name From First Script"))
                 {
                     MonoBehaviour[] behaviours = gameObject.GetComponents<MonoBehaviour>();
@@ -60,10 +57,13 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            if (GUILayout.Button("Copy As JSON"))
+            if (typeScope == componentType) // Top scope
             {
-                string json = JsonUtility.ToJson(component, true);
-                EditorGUIUtility.systemCopyBuffer = json;
+                if (GUILayout.Button("Copy As JSON (Unity JsonUtility)"))
+                {
+                    string json = JsonUtility.ToJson(component, true);
+                    EditorGUIUtility.systemCopyBuffer = json;
+                }
             }
         }
 	}

@@ -10,7 +10,7 @@ namespace Sabresaurus.Sidekick
 	{
 		public void DrawProperties(Type componentType, object component, PropertyInfo[] properties)
 		{
-			OldSettings settings = OldInspectorSidekick.Current.Settings; // Grab the active window's settings
+			SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
 
 			for (int j = 0; j < properties.Length; j++)
 			{
@@ -30,7 +30,7 @@ namespace Sabresaurus.Sidekick
 				MethodInfo getMethod = properties[j].GetGetMethod(true);
 				MethodInfo setMethod = properties[j].GetSetMethod(true);
 
-				string metaSuffix = "";
+				string metaInformation = "";
 				if(setMethod == null)
 				{
 					GUI.enabled = false;
@@ -47,7 +47,7 @@ namespace Sabresaurus.Sidekick
 				{
 					object oldValue = getMethod.Invoke(component, null);
 					EditorGUI.BeginChangeCheck();
-					object newValue = DrawVariable(properties[j].PropertyType, properties[j].Name, oldValue, metaSuffix, true, componentType);
+					object newValue = DrawVariable(properties[j].PropertyType, properties[j].Name, oldValue, metaInformation, true, componentType);
 					if(EditorGUI.EndChangeCheck() && setMethod != null)
 					{
 						setMethod.Invoke(component, new object[] { newValue });

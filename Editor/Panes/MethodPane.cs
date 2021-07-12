@@ -22,7 +22,7 @@ namespace Sabresaurus.Sidekick
 		float opacity = 0f;
 		public void DrawMethods(Type componentType, object component, MethodInfo[] methods)
 		{
-			OldSettings settings = OldInspectorSidekick.Current.Settings; // Grab the active window's settings
+			SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
 
 			GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
 			labelStyle.alignment = TextAnchor.MiddleRight;
@@ -30,7 +30,7 @@ namespace Sabresaurus.Sidekick
 			normalButtonStyle.padding = normalButtonStyle.padding.SetLeft(100);
 			normalButtonStyle.alignment = TextAnchor.MiddleLeft;
 
-			List<MethodSetup> expandedMethods = OldInspectorSidekick.Current.PersistentData.ExpandedMethods;
+			List<MethodSetup> expandedMethods = SidekickWindow.Current.PersistentData.ExpandedMethods;
 
 			GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
 			RectOffset padding = expandButtonStyle.padding;

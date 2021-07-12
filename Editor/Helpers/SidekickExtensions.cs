@@ -27,5 +27,25 @@ namespace Sabresaurus.Sidekick
         {
             return ((byte)(IConvertible)mask & (byte)(IConvertible)flags) == (byte)(IConvertible)flags;
         }
+
+        public static string RemoveStart(this string input, string toRemove)
+        {
+            if(input.StartsWith(toRemove, StringComparison.InvariantCultureIgnoreCase))
+            {
+                input = input.Remove(0, toRemove.Length);
+            }
+
+            return input;
+        }
+        
+        public static string RemoveEnd(this string input, string toRemove)
+        {
+            if(input.EndsWith(toRemove, StringComparison.InvariantCultureIgnoreCase))
+            {
+                input = input.Remove(input.Length - toRemove.Length, toRemove.Length);
+            }
+
+            return input;
+        }
     }
 }

@@ -6,6 +6,28 @@ namespace Sabresaurus.Sidekick
 {
     public static class SidekickEditorGUI
     {
+        private static Color splitterColor => EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f) : new Color(0.6f, 0.6f, 0.6f);
+        
+        private static Texture _thumb;
+        public static Texture thumb
+        {
+            get
+            {
+                if (_thumb == null)
+                    _thumb = EditorGUIUtility.IconContent("eventpin on").image;
+                return _thumb;
+            }
+        }
+
+        private static GUIStyle _smallTickbox;
+        public static GUIStyle smallTickbox => _smallTickbox ?? (_smallTickbox = new GUIStyle("ShurikenCheckMark"));
+
+        public static readonly Texture BackIcon = EditorGUIUtility.IconContent("back").image; 
+        public static readonly Texture ForwardIcon = EditorGUIUtility.IconContent("forward").image;
+        public static readonly Texture LockIconOff = EditorGUIUtility.IconContent("LockIcon").image;
+        public static readonly Texture LockIconOn = EditorGUIUtility.IconContent("LockIcon-On").image;
+        public static readonly Texture MoreOptions = EditorGUIUtility.IconContent("Toolbar Plus").image;
+        
         public static bool DrawHeader(GUIContent content, ref bool? toggle, SerializedProperty activeField = null, bool active = true)
         {
             Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
@@ -93,8 +115,6 @@ namespace Sabresaurus.Sidekick
             return ret;
         }
 
-        private static Color splitterColor { get { return EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f) : new Color(0.6f, 0.6f, 0.6f); } }
-
         public static void DrawHeader2(GUIContent label)
         {
             Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
@@ -145,17 +165,6 @@ namespace Sabresaurus.Sidekick
             return rect;
         }
 
-        private static Texture _thumb;
-        public static Texture thumb
-        {
-            get
-            {
-                if (_thumb == null)
-                    _thumb = EditorGUIUtility.IconContent("eventpin on").image;
-                return _thumb;
-            }
-        }
-
         public static void DrawHeaderBackground(Rect rect)
         {
             float colorChannel = !EditorGUIUtility.isProSkin ? 1f : 0.1f;
@@ -180,12 +189,6 @@ namespace Sabresaurus.Sidekick
                 value = (T)(IConvertible)(byte)((byte)(IConvertible)value ^ (byte)(IConvertible)flag);
             }
             return value;
-        }
-
-        private static GUIStyle _smallTickbox;
-        public static GUIStyle smallTickbox
-        {
-            get { return _smallTickbox ?? (_smallTickbox = new GUIStyle("ShurikenCheckMark")); }
         }
     }
 }
