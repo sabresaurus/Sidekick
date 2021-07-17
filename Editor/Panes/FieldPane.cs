@@ -11,9 +11,9 @@ namespace Sabresaurus.Sidekick
         {
             SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
 
-            for (int j = 0; j < fields.Length; j++)
+            foreach (FieldInfo field in fields)
             {
-                string fieldName = fields[j].Name;
+                string fieldName = field.Name;
 
                 if (!string.IsNullOrEmpty(settings.SearchTerm) && !fieldName.Contains(settings.SearchTerm, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -23,27 +23,33 @@ namespace Sabresaurus.Sidekick
 
                 bool isReadonly = false;
                 string metaInformation = "";
-                object[] customAttributes = fields[j].GetCustomAttributes(false);
+                object[] customAttributes = field.GetCustomAttributes(false);
                 foreach (var customAttribute in customAttributes)
                 {
                     metaInformation += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
                 }
-                
+
                 // See https://stackoverflow.com/a/10261848
-                if (fields[j].IsLiteral && !fields[j].IsInitOnly)
+                if (field.IsLiteral && !field.IsInitOnly)
                 {
                     metaInformation += "Constant";
-                    
+
                     // Prevent SetValue as it will result in a FieldAccessException
                     isReadonly = true;
                 }
-                else if (fields[j].IsStatic)
+                else if (field.IsStatic)
                 {
                     metaInformation += "Static";
                 }
+            
+                Type fieldType = field.FieldType;
 
-                Type fieldType = fields[j].FieldType;
-                metaInformation += $"\n{TypeUtility.NameForType(fieldType)} {fieldName}";
+                if (!string.IsNullOrEmpty(metaInformation))
+                {
+                    metaInformation += "\n";
+                }
+                
+                metaInformation += $"{TypeUtility.GetVisibilityName(field)} {TypeUtility.NameForType(fieldType)} {fieldName}";
 
                 if (isReadonly)
                 {
@@ -51,10 +57,10 @@ namespace Sabresaurus.Sidekick
                 }
                 
                 EditorGUI.BeginChangeCheck();
-                object newValue = DrawVariable(fieldType, fieldName, component != null ? fields[j].GetValue(component) : null, metaInformation, true, componentType);
+                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, metaInformation, true, componentType);
                 if (EditorGUI.EndChangeCheck() && !isReadonly)
                 {
-                    fields[j].SetValue(component, newValue);
+                    field.SetValue(component, newValue);
                 }
                 
                 if (isReadonly)

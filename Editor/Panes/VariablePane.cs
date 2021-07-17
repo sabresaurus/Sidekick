@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,8 +7,6 @@ namespace Sabresaurus.Sidekick
 {
 	public abstract class VariablePane : BasePane
 	{
-		static Dictionary<string, Rect> guiRects = new Dictionary<string, Rect>();
-
 		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string metaInformation, bool allowExtensions, Type contextType)
 		{
 			GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
@@ -30,7 +27,6 @@ namespace Sabresaurus.Sidekick
 
 			if(isArray || isGenericList)
 			{
-				EditorGUI.indentLevel++;
 				Type elementType = TypeUtility.GetElementType(fieldType);
 
 				string elementTypeName = TypeUtility.NameForType(elementType);
@@ -43,6 +39,13 @@ namespace Sabresaurus.Sidekick
 					label.tooltip += " []";
 				}
 
+				EditorGUILayout.BeginFoldoutHeaderGroup(true, label);
+				
+				Rect sizeRect = GUILayoutUtility.GetLastRect();
+				sizeRect.xMin = sizeRect.xMax - 80;
+				
+				EditorGUI.indentLevel++;
+				
                 IList list = null;
                 int previousSize = 0;
 
@@ -53,8 +56,7 @@ namespace Sabresaurus.Sidekick
                     previousSize = list.Count;
                 }
 
-				
-				int newSize = Mathf.Max(0, EditorGUILayout.IntField("Size", previousSize));
+				int newSize = Mathf.Max(0, EditorGUI.IntField(sizeRect, previousSize));
 				if(newSize != previousSize)
 				{
 					list ??= (IList) Activator.CreateInstance(fieldType);
@@ -63,14 +65,23 @@ namespace Sabresaurus.Sidekick
 
                 if (list != null)
                 {
-	                
                     for (int i = 0; i < list.Count; i++)
                     {
+	                    EditorGUILayout.BeginHorizontal();
+
                         list[i] = DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i]);
+                        
+                        if(allowExtensions)
+                        {
+	                        DrawExtensions(list[i], expandButtonStyle);
+                        }
+                        
+                        EditorGUILayout.EndHorizontal();
                     }
-                    
                 }
                 EditorGUI.indentLevel--;
+                
+                EditorGUILayout.EndFoldoutHeaderGroup();
 			}
 			else
 			{
@@ -81,31 +92,7 @@ namespace Sabresaurus.Sidekick
 
 				if(allowExtensions)
 				{
-                    GUI.enabled = true;
-					if(GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Select This"), expandButtonStyle, GUILayout.Width(18), GUILayout.Height(18)))
-					{
-						SidekickWindow.Current.SetSelection(fieldValue, true);
-					}
-					bool expanded = GUILayout.Button(new GUIContent(SidekickEditorGUI.MoreOptions, "More Options"), expandButtonStyle, GUILayout.Width(18), GUILayout.Height(18));
-					if(Event.current.type == EventType.Repaint)
-					{
-						string methodIdentifier = contextType.FullName + "." + fieldType.FullName;
-
-						guiRects[methodIdentifier] = GUILayoutUtility.GetLastRect();
-					}
-
-					if(expanded)
-					{
-						string methodIdentifier = contextType.FullName + "." + fieldType.FullName;
-
-						Rect gridRect = guiRects[methodIdentifier];
-						GenericMenu menu = new GenericMenu ();
-						if(fieldType == typeof(Texture2D))
-						{
-							menu.AddItem(new GUIContent("Export PNG"), false, ExportTexture, fieldValue);
-						}
-						menu.DropDown(gridRect);
-					}
+					DrawExtensions(fieldValue, expandButtonStyle);
 				}
 
 				EditorGUILayout.EndHorizontal();
@@ -113,6 +100,24 @@ namespace Sabresaurus.Sidekick
 
 
 			return newValue;
+		}
+
+		private static void DrawExtensions(object fieldValue, GUIStyle expandButtonStyle)
+		{
+			GUI.enabled = true;
+			if (GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Select This"), expandButtonStyle, GUILayout.Width(18), GUILayout.Height(18)))
+			{
+				SidekickWindow.Current.SetSelection(fieldValue);
+			}
+
+			Rect rect = GUILayoutUtility.GetRect(18, 18, expandButtonStyle, GUILayout.Width(18));
+
+			if(GUI.Button(rect, new GUIContent(SidekickEditorGUI.MoreOptions, "More Options"), expandButtonStyle))
+			{
+				var menu = ClassUtilities.GetMenu(fieldValue);
+				
+				menu.DropDown(rect);
+			}
 		}
 
 		private static object DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue)
@@ -299,20 +304,6 @@ namespace Sabresaurus.Sidekick
 			// What's this? 		public static bool InspectorTitlebar (bool foldout, Object targetObj)
 
 			return newValue;
-		}
-
-		static void ExportTexture(object texture)
-		{
-			if(texture is Texture2D texture2D)
-			{
-				string path = EditorUtility.SaveFilePanel("Save Texture", "Assets", texture2D.name + ".png", "png");
-				if(!string.IsNullOrEmpty(path))
-				{
-					byte[] bytes = texture2D.EncodeToPNG();
-					System.IO.File.WriteAllBytes(path, bytes);
-					AssetDatabase.Refresh();
-				}
-			}
 		}
 	}
 }

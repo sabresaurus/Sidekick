@@ -15,6 +15,38 @@ namespace Sabresaurus.Sidekick
 			return type.IsValueType ? Activator.CreateInstance(type) : null;
 		}
 
+		public static string GetVisibilityName(FieldInfo field)
+		{
+			string visibility;
+
+			if (field.IsPublic)
+			{
+				visibility = "public";
+			}
+			else if (field.IsAssembly)
+			{
+				visibility = "internal";
+			}
+			else if (field.IsFamily)
+			{
+				visibility = "protected";
+			}
+			else if (field.IsFamilyOrAssembly)
+			{
+				visibility = "protected internal";
+			}
+			else if (field.IsFamilyAndAssembly)
+			{
+				visibility = "private protected";
+			}
+			else
+			{
+				visibility = "private";
+			}
+
+			return visibility;
+		}
+
 		public static string NameForType(Type type)
 		{
 			// See https://msdn.microsoft.com/en-us/library/ya5y69ds.aspx

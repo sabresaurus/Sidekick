@@ -5,19 +5,21 @@ using System.Reflection;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
     public class SidekickWindow : EditorWindow
     {
+        private const int BACK_STACK_LIMIT = 50;
+
         enum InspectorMode
         {
             Fields,
             Props,
             Methods,
             Events,
-            Misc
-        };
+        }
 
         SidekickSettings settings = new SidekickSettings();
 
@@ -25,21 +27,62 @@ namespace Sabresaurus.Sidekick
         PropertyPane propertyPane = new PropertyPane();
         MethodPane methodPane = new MethodPane();
         EventPane eventPane = new EventPane();
-        UtilityPane utilityPane = new UtilityPane();
 
         static SidekickWindow current;
 
         private SearchField searchField;
 
-        object selectionOverride = null;
-        private Type typeToDisplay = null;
+        private readonly struct SelectionInfo : IEquatable<SelectionInfo>
+        {
+            // Note we need to be able to differentiate selecting a RuntimeType from wanting to see static methods on the type it represents 
+            public readonly Type Type;
+            public readonly object Object;
 
-        List<object> backStack = new List<object>();
-        List<object> forwardStack = new List<object>();
+            public SelectionInfo(Type type)
+            {
+                Type = type;
+                Object = null;
+            }
+
+            public SelectionInfo(object o)
+            {
+                Object = o;
+                Type = null;
+            }
+
+            public bool IsEmpty => Type == null && Object == null;
+
+            public bool Equals(SelectionInfo other)
+            {
+                return Type == other.Type && Equals(Object, other.Object);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is SelectionInfo other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Object != null ? Object.GetHashCode() : 0);
+                }
+            }
+        }
+
+        SelectionInfo activeSelection = new SelectionInfo();
+
+        private bool selectionLocked = false;
+
+        List<SelectionInfo> backStack = new List<SelectionInfo>();
+        List<SelectionInfo> forwardStack = new List<SelectionInfo>();
 
         PersistentData persistentData = new PersistentData();
         InspectorMode mode = InspectorMode.Fields;
         Vector2 scrollPosition;
+
+        private bool suppressNextSelectionDetection = false;
 
         List<KeyValuePair<Type, bool>> typesHidden = new List<KeyValuePair<Type, bool>>()
         {
@@ -53,20 +96,6 @@ namespace Sabresaurus.Sidekick
         public PersistentData PersistentData => persistentData;
 
         public SidekickSettings Settings => settings;
-
-        private object ActiveSelection
-        {
-            get
-            {
-                object selectedObject = Selection.activeObject;
-                if (selectionOverride != null)
-                {
-                    selectedObject = selectionOverride;
-                }
-
-                return selectedObject;
-            }
-        }
 
         [MenuItem("Window/Sidekick")]
         static void Init()
@@ -83,6 +112,11 @@ namespace Sabresaurus.Sidekick
             searchField = new SearchField();
 
             minSize = new Vector2(260, 100);
+            
+            if (selectionLocked == false && Selection.activeObject != null)
+            {
+                SetSelection(Selection.activeObject);
+            }
         }
 
         void UpdateTitleContent()
@@ -116,27 +150,27 @@ namespace Sabresaurus.Sidekick
 
             GUILayout.Space(9);
 
-            DrawSelectionInfo();
-
-            var selectTypeButtonLabel = new GUIContent("Select Type From Assembly");
-            var selectTypeButtonRect = GUILayoutUtility.GetRect(selectTypeButtonLabel, EditorStyles.miniButton);
-            if (GUI.Button(selectTypeButtonRect, selectTypeButtonLabel, EditorStyles.miniButton))
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Selection Helpers");
+            var popupRect = GUILayoutUtility.GetLastRect();
+            popupRect.width = EditorGUIUtility.currentViewWidth;
+            
+            var selectTypeButtonLabel = new GUIContent("Type From Assembly");
+            if (GUILayout.Button(selectTypeButtonLabel, EditorStyles.miniButton))
             {
-                TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type => typeToDisplay = type);
-                dropdown.Show(selectTypeButtonRect);
+                TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), SetSelection);
+                dropdown.Show(popupRect);
             }
 
-            var selectObjectButtonLabel = new GUIContent("Select Loaded Unity Object");
-            var selectObjectButtonRect = GUILayoutUtility.GetRect(selectObjectButtonLabel, EditorStyles.miniButton);
-            if (GUI.Button(selectObjectButtonRect, selectObjectButtonLabel, EditorStyles.miniButton))
+            var selectObjectButtonLabel = new GUIContent("Loaded Unity Object");
+            if (GUILayout.Button(selectObjectButtonLabel, EditorStyles.miniButton))
             {
-                UnityObjectSelectDropdown dropdown = new UnityObjectSelectDropdown(new AdvancedDropdownState(), window => SetSelection(window, true));
-                dropdown.Show(selectObjectButtonRect);
+                UnityObjectSelectDropdown dropdown = new UnityObjectSelectDropdown(new AdvancedDropdownState(), SetSelection);
+                dropdown.Show(popupRect);
             }
+            EditorGUILayout.EndHorizontal();
 
-            object selectedObject = ActiveSelection;
-
-            if (selectedObject == null && typeToDisplay == null)
+            if (activeSelection.IsEmpty)
             {
                 GUILayout.FlexibleSpace();
                 GUIStyle style = new GUIStyle(EditorStyles.wordWrappedLabel) {alignment = TextAnchor.MiddleCenter};
@@ -145,23 +179,25 @@ namespace Sabresaurus.Sidekick
                 return;
             }
 
-            if (selectedObject is GameObject selectedGameObject)
+            if (activeSelection.Object != null)
             {
-                List<object> components = selectedGameObject.GetComponents<Component>().Cast<object>().ToList();
-                components.RemoveAll(item => item == null);
-                components.Insert(0, selectedGameObject);
-                inspectedContexts = components.ToArray();
+                if (activeSelection.Object is GameObject selectedGameObject)
+                {
+                    List<object> components = selectedGameObject.GetComponents<Component>().Cast<object>().ToList();
+                    components.RemoveAll(item => item == null);
+                    components.Insert(0, selectedGameObject);
+                    inspectedContexts = components.ToArray();
+                }
+                else
+                {
+                    inspectedContexts = new[] {activeSelection.Object};
+                }
+
+                inspectedTypes = inspectedContexts.Select(x => x.GetType()).ToArray();
             }
             else
             {
-                inspectedContexts = new[] {selectedObject};
-            }
-
-            inspectedTypes = inspectedContexts.Select(x => x.GetType()).ToArray();
-
-            if (typeToDisplay != null)
-            {
-                inspectedTypes = new[] {typeToDisplay};
+                inspectedTypes = new[] {activeSelection.Type};
 
                 inspectedContexts = new Type[] {null};
             }
@@ -185,8 +221,28 @@ namespace Sabresaurus.Sidekick
                 int index = typesHidden.FindIndex(row => row.Key == type);
 
                 GUIContent objectContent = EditorGUIUtility.ObjectContent(inspectedContexts[i] as UnityEngine.Object, type);
-                GUIContent content = new GUIContent(type.Name, objectContent.image);
+                
+                string name;
+                if (inspectedContexts[0] != null)
+                {
+                    const string TOGGLE_SPACER = "      ";
+                    name = TOGGLE_SPACER + type.Name;
 
+                    if (i == 0 && inspectedContexts[i] is Object unityObject)
+                    {
+                        name += $" ({unityObject.name})";
+                    }
+                }
+                else
+                {
+                    name = type.Name + " (Class)";
+                }
+
+                GUIContent content = new GUIContent(name, objectContent.image);
+
+                var inspectedContext = inspectedContexts[i];
+                bool foldout = EditorGUILayout.BeginFoldoutHeaderGroup(!typesHidden[index].Value, content, null, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
+                Rect headerRect = GUILayoutUtility.GetLastRect();
                 bool? activeOrEnabled = inspectedContexts[i] switch
                 {
                     GameObject gameObject => gameObject.activeSelf,
@@ -194,15 +250,35 @@ namespace Sabresaurus.Sidekick
                     _ => null
                 };
 
-                bool toggled = SidekickEditorGUI.DrawHeaderWithFoldout(content, !typesHidden[index].Value, ref activeOrEnabled);
-
-                if (toggled)
+                if (activeOrEnabled.HasValue)
                 {
-                    typesHidden[index] = new KeyValuePair<Type, bool>(type, !typesHidden[index].Value);
+                    headerRect.xMin += 34;
+                    headerRect.width = 20;
+
+                    EditorGUI.BeginChangeCheck();
+                    activeOrEnabled = EditorGUI.Toggle(headerRect, activeOrEnabled.Value);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        switch (inspectedContexts[i])
+                        {
+                            case GameObject gameObject:
+                                gameObject.SetActive(activeOrEnabled.Value);
+                                break;
+                            case Behaviour behaviour:
+                                behaviour.enabled = activeOrEnabled.Value;
+                                break;
+                        }
+                    }
                 }
+
+                EditorGUILayout.EndFoldoutHeaderGroup();
+
+                typesHidden[index] = new KeyValuePair<Type, bool>(type, !foldout);
 
                 if (!typesHidden[index].Value)
                 {
+                    SidekickEditorGUI.DrawSplitter(0.5f);
+
                     EditorGUI.indentLevel++;
 
                     BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
@@ -218,7 +294,7 @@ namespace Sabresaurus.Sidekick
 
                         if (typeScope != type)
                         {
-                            SidekickEditorGUI.DrawHeader2(new GUIContent(": " + typeScope.Name));
+                            SidekickEditorGUI.DrawTypeChainHeader(new GUIContent(": " + typeScope.Name));
                         }
 
                         FieldInfo[] fields = typeScope.GetFields(bindingFlags);
@@ -272,11 +348,6 @@ namespace Sabresaurus.Sidekick
                         {
                             eventPane.DrawEvents(inspectedTypes[i], inspectedContexts[i], events);
                         }
-                        else if (mode == InspectorMode.Misc)
-                        {
-                            utilityPane.Draw(inspectedTypes[i], inspectedContexts[i], typeScope);
-                        }
-
 
                         typeScope = typeScope.BaseType;
                     }
@@ -299,18 +370,13 @@ namespace Sabresaurus.Sidekick
             settings.HideAutoGenerated = EditorGUILayout.Toggle("Hide auto-generated", settings.HideAutoGenerated);
             settings.TreatEnumsAsInts = EditorGUILayout.Toggle("Enums as ints", settings.TreatEnumsAsInts);
 
-            //			test += currentFrameDelta;
-            //			Color color = Color.Lerp(Color.white, Color.red, Mathf.PingPong(test, 1f));
-            //			GUI.backgroundColor = color;
-            //			GUILayout.Button(Mathf.PingPong(test, 1f).ToString());//test.ToString());
-
-            //			if(AnimationHelper.AnimationActive)
+            //if(AnimationHelper.AnimationActive)
             {
                 // Cause repaint on next frame
                 Repaint();
                 if (Event.current.type == EventType.Repaint)
                 {
-                    //					AnimationHelper.ClearAnimationActive();
+                    //AnimationHelper.ClearAnimationActive();
                 }
             }
         }
@@ -319,83 +385,119 @@ namespace Sabresaurus.Sidekick
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUI.enabled = (backStack.Count > 0);
-            if (GUILayout.Button(SidekickEditorGUI.BackIcon, EditorStyles.toolbarButton)
+            if (GUILayout.Button(new GUIContent(SidekickEditorGUI.BackIcon, "Back"), EditorStyles.toolbarButton)
                 || (Event.current.type == EventType.MouseDown && Event.current.button == 3)
                 || (Event.current.type == EventType.KeyDown && SidekickUtility.EventsMatch(Event.current, Event.KeyboardEvent("Backspace"), false, true)))
             {
-                object backStackLast = backStack.Last();
+                SelectionInfo backStackLast = backStack.Last();
                 backStack.RemoveAt(backStack.Count - 1);
-                forwardStack.Add(ActiveSelection);
-                SetSelection(backStackLast, false);
+                forwardStack.Add(activeSelection);
+                activeSelection = backStackLast;
+                
+                
+                if (backStackLast.Object is UnityEngine.Object unityObject)
+                {
+                    suppressNextSelectionDetection = true;
+                    Selection.activeObject = unityObject;
+                }
             }
 
             GUI.enabled = (forwardStack.Count > 0);
-            if (GUILayout.Button(SidekickEditorGUI.ForwardIcon, EditorStyles.toolbarButton)
+            if (GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Forward"), EditorStyles.toolbarButton)
                 || (Event.current.type == EventType.MouseDown && Event.current.button == 4)
                 || (Event.current.type == EventType.KeyDown && SidekickUtility.EventsMatch(Event.current, Event.KeyboardEvent("#Backspace"), false, true)))
             {
-                object forwardStackLast = forwardStack.Last();
+                SelectionInfo forwardStackLast = forwardStack.Last();
                 forwardStack.RemoveAt(forwardStack.Count - 1);
-                backStack.Add(ActiveSelection);
-                SetSelection(forwardStackLast, false);
+                backStack.Add(activeSelection);
+                activeSelection = forwardStackLast;
+                
+                if (forwardStackLast.Object is UnityEngine.Object unityObject)
+                {
+                    suppressNextSelectionDetection = true;
+                    Selection.activeObject = unityObject;
+                }
             }
 
             GUI.enabled = true;
 
-            bool locked = (selectionOverride != null);
-
-            var lockIcon = locked ? SidekickEditorGUI.LockIconOn : SidekickEditorGUI.LockIconOff;
+            var lockIcon = selectionLocked ? SidekickEditorGUI.LockIconOn : SidekickEditorGUI.LockIconOff;
             if (GUILayout.Button(lockIcon, EditorStyles.toolbarButton))
             {
-                selectionOverride = selectionOverride == null ? ActiveSelection : null;
+                selectionLocked = !selectionLocked;
+                if (selectionLocked == false && Selection.activeObject != null)
+                {
+                    SetSelection(Selection.activeObject);
+                }
+            }
+
+            // Spacer
+            GUILayout.Label("", EditorStyles.toolbarButton, GUILayout.Width(6));
+
+            if (GUILayout.Button("Settings", EditorStyles.toolbarButton))
+            {
+                // TODO: Implement settings in Preferences or Project Settings
             }
 
             EditorGUILayout.EndHorizontal();
         }
 
-        private void DrawSelectionInfo()
+        
+        public void SetSelection(object newSelection)
         {
-            if (typeToDisplay != null)
+            if (!activeSelection.IsEmpty && !backStack.LastOrDefault().Equals(activeSelection))
             {
-                GUILayout.Label("Selection: Assembly Type");
+                backStack.Add(activeSelection);
+                if (backStack.Count > BACK_STACK_LIMIT)
+                {
+                    backStack.RemoveAt(0);
+                }
             }
-            else if (selectionOverride != null)
-            {
-                GUILayout.Label("Selection: Custom");
-            }
-            else
-            {
-                GUILayout.Label("Selection: Editor Selection");
-            }
-        }
+            forwardStack.Clear();
 
-        public void SetSelection(object newSelection, bool updateStack)
-        {
-            if (updateStack)
-            {
-                backStack.Add(ActiveSelection);
-                forwardStack.Clear();
-            }
+            activeSelection = new SelectionInfo(newSelection);
 
             if (newSelection is UnityEngine.Object unityObject)
             {
                 Selection.activeObject = unityObject;
-                selectionOverride = null;
             }
-            else
+        }
+
+        public void SetSelection(Type newSelection)
+        {
+            if (!activeSelection.IsEmpty && !backStack.LastOrDefault().Equals(activeSelection))
             {
-                selectionOverride = newSelection;
+                backStack.Add(activeSelection);
+                if (backStack.Count > BACK_STACK_LIMIT)
+                {
+                    backStack.RemoveAt(0);
+                }
             }
+            forwardStack.Clear();
+
+            activeSelection = new SelectionInfo(newSelection);
         }
 
         void OnSelectionChange()
         {
-            if (selectionOverride != null)
+            if (suppressNextSelectionDetection)
+            {
+                // Do nothing this time if we've just been manipulating selection ourselves
+                suppressNextSelectionDetection = false;
+                return;
+            }
+            
+            if (selectionLocked)
             {
                 return;
             }
-            selectionOverride = null;
-            typeToDisplay = null;
+
+            if (Selection.activeObject == null)
+            {
+                return;
+            }
+            
+            SetSelection(Selection.activeObject);
 
             Repaint();
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -69,6 +70,37 @@ namespace Sabresaurus.Sidekick
                 editorsItem.AddChild(new UnityObjectDropdownItem(editor));
             }
             
+            // This will include loaded assets, internal Unity objects and more
+            var allUnityObjects = Resources.FindObjectsOfTypeAll<Object>();
+
+
+            
+            AdvancedDropdownItem hardToAccessAssetsItem = new AdvancedDropdownItem("Hidden Assets");
+            root.AddChild(hardToAccessAssetsItem);
+            
+            AdvancedDropdownItem runtimeObjectsItem = new AdvancedDropdownItem("Runtime Objects");
+            root.AddChild(runtimeObjectsItem);
+            
+            foreach (var unityObject in allUnityObjects)
+            {
+                var assetPath = AssetDatabase.GetAssetPath(unityObject);
+
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    if (!assetPath.StartsWith("Packages/") && !assetPath.StartsWith("Assets/"))
+                    {
+                        hardToAccessAssetsItem.AddChild(new UnityObjectDropdownItem(unityObject));
+                    }
+                }
+                else
+                {
+                    if (!editorWindows.Contains(unityObject) && !editors.Contains(unityObject))
+                    {
+                        runtimeObjectsItem.AddChild(new UnityObjectDropdownItem(unityObject));
+                    }
+                }
+            }
+
             return root;
         }
 

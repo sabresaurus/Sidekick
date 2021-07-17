@@ -7,115 +7,14 @@ namespace Sabresaurus.Sidekick
     public static class SidekickEditorGUI
     {
         private static Color splitterColor => EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f) : new Color(0.6f, 0.6f, 0.6f);
-        
-        private static Texture _thumb;
-        public static Texture thumb
-        {
-            get
-            {
-                if (_thumb == null)
-                    _thumb = EditorGUIUtility.IconContent("eventpin on").image;
-                return _thumb;
-            }
-        }
-
-        private static GUIStyle _smallTickbox;
-        public static GUIStyle smallTickbox => _smallTickbox ?? (_smallTickbox = new GUIStyle("ShurikenCheckMark"));
 
         public static readonly Texture BackIcon = EditorGUIUtility.IconContent("back").image; 
         public static readonly Texture ForwardIcon = EditorGUIUtility.IconContent("forward").image;
         public static readonly Texture LockIconOff = EditorGUIUtility.IconContent("LockIcon").image;
         public static readonly Texture LockIconOn = EditorGUIUtility.IconContent("LockIcon-On").image;
         public static readonly Texture MoreOptions = EditorGUIUtility.IconContent("Toolbar Plus").image;
-        
-        public static bool DrawHeader(GUIContent content, ref bool? toggle, SerializedProperty activeField = null, bool active = true)
-        {
-            Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
 
-            Rect iconRect = contentRect;
-            iconRect.xMin += 14f;
-            iconRect.width = 30;
-
-            Rect checkboxRect = contentRect;
-            checkboxRect.xMin += 32f;
-            checkboxRect.width = 10;
-
-            Rect labelRect = contentRect;
-            labelRect.xMin += 46f;
-            labelRect.xMax -= 20f;
-
-            Rect toggleRect = contentRect;
-            toggleRect.y += 2f;
-            toggleRect.width = 13f;
-            toggleRect.height = 13f;
-
-            contentRect.xMin = 0.0f;
-            contentRect.xMax = Screen.width / EditorGUIUtility.pixelsPerPoint;
-            contentRect.width += 4f;
-
-            DrawHeaderBackground(contentRect);
-
-            if(toggle.HasValue)
-            {
-                toggle = EditorGUI.Toggle(checkboxRect, toggle.Value);
-            }
-
-            GUIContent label = new GUIContent(content);
-            label.image = null;
-            GUIContent image = new GUIContent(content);
-            image.text = null;
-
-            using (new EditorGUI.DisabledScope(!active))
-                EditorGUI.LabelField(iconRect, image, EditorStyles.boldLabel);
-
-            using (new EditorGUI.DisabledScope(!active))
-                EditorGUI.LabelField(labelRect, label, EditorStyles.boldLabel);
-
-            if (activeField != null)
-            {
-                activeField.serializedObject.Update();
-                activeField.boolValue = GUI.Toggle(toggleRect, activeField.boolValue, GUIContent.none, smallTickbox);
-                activeField.serializedObject.ApplyModifiedProperties();
-            }
-            else
-            {
-                labelRect.xMin = 0;
-            }
-
-            Event current = Event.current;
-            if (current.type == EventType.MouseDown)
-            {
-                if (labelRect.Contains(current.mousePosition))
-                {
-                    if (current.button == 0)
-                    {
-                        current.Use();
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static bool DrawHeaderWithFoldout(GUIContent label, bool expanded, ref bool? toggle)
-        {
-            bool ret = DrawHeader(label, ref toggle);
-            if (Event.current.type == EventType.Repaint)
-            {
-                // Only draw the Foldout - don't use it as a button or get focus
-                Rect rect = GUILayoutUtility.GetLastRect();
-                rect.x += 3;
-                rect.x += EditorGUI.indentLevel * 15;
-                rect.y += 1.5f;
-                GUI.enabled = false;
-                EditorStyles.foldout.Draw(rect, GUIContent.none, -1, expanded);
-                GUI.enabled = true;
-            }
-            return ret;
-        }
-
-        public static void DrawHeader2(GUIContent label)
+        public static void DrawTypeChainHeader(GUIContent label)
         {
             Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);
             float xMax = contentRect.xMax;
@@ -144,14 +43,16 @@ namespace Sabresaurus.Sidekick
             EditorGUI.LabelField(labelRect, label, style);
         }
 
-        public static void DrawSplitter()
+        public static void DrawSplitter(float alpha = 1)
         {
             Rect rect = GUILayoutUtility.GetRect(1f, 1f);
             rect.xMin = 0.0f;
             rect.width += 4f;
             if (Event.current.type != EventType.Repaint)
                 return;
-            EditorGUI.DrawRect(rect, splitterColor);
+            Color drawColor = splitterColor;
+            drawColor.a = alpha;
+            EditorGUI.DrawRect(rect, drawColor);
         }
         
         public static Rect DrawVerticalLine(float height)
