@@ -7,15 +7,13 @@ namespace Sabresaurus.Sidekick
 {
     public class FieldPane : VariablePane
     {
-        public void DrawFields(Type componentType, object component, FieldInfo[] fields)
+        public void DrawFields(Type componentType, object component, string searchTerm, FieldInfo[] fields)
         {
-            SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
-
             foreach (FieldInfo field in fields)
             {
                 string fieldName = field.Name;
 
-                if (!string.IsNullOrEmpty(settings.SearchTerm) && !fieldName.Contains(settings.SearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                if(!SearchMatches(searchTerm, fieldName))
                 {
                     // Does not match search term, skip it
                     continue;

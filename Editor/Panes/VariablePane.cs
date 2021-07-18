@@ -124,7 +124,7 @@ namespace Sabresaurus.Sidekick
 		{
 			object newValue;
 			if (fieldType == typeof(int)
-                || (fieldType.IsSubclassOf(typeof(Enum)) && SidekickWindow.Current.Settings.TreatEnumsAsInts))
+                || (fieldType.IsSubclassOf(typeof(Enum)) && SidekickSettings.TreatEnumsAsInts))
 			{
 				newValue = EditorGUILayout.IntField(label, (int)fieldValue);
 			}
@@ -227,20 +227,10 @@ namespace Sabresaurus.Sidekick
 			}
 			else if (fieldType == typeof(Quaternion))
 			{
-				//if(InspectorSidekick.Current.Settings.RotationsAsEuler)
-				//{
-				//	Quaternion quaternion = (Quaternion)fieldValue;
-				//	Vector3 eulerAngles = quaternion.eulerAngles;
-				//	eulerAngles = EditorGUILayout.Vector3Field(fieldName, eulerAngles);
-				//	newValue = Quaternion.Euler(eulerAngles);
-				//}
-				//else
-				{
-					Quaternion quaternion = (Quaternion)fieldValue;
-					Vector4 vector = new Vector4(quaternion.x,quaternion.y,quaternion.z,quaternion.w);
-					vector = EditorGUILayout.Vector4Field(label, vector);
-					newValue = new Quaternion(vector.x,vector.y,vector.z,vector.z);
-				}
+				Quaternion quaternion = (Quaternion)fieldValue;
+				Vector4 vector = new Vector4(quaternion.x,quaternion.y,quaternion.z,quaternion.w);
+				vector = EditorGUILayout.Vector4Field(label, vector);
+				newValue = new Quaternion(vector.x,vector.y,vector.z,vector.z);
 			}
 			else if (fieldType == typeof(Bounds))
 			{

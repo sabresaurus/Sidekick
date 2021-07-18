@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,6 +7,9 @@ namespace Sabresaurus.Sidekick
 {
     public static class SidekickEditorGUI
     {
+        private static MethodInfo beginLabelHighlight = typeof(EditorGUI).GetMethod("BeginLabelHighlight", BindingFlags.Static | BindingFlags.NonPublic);
+        private static MethodInfo endLabelHighlight = typeof(EditorGUI).GetMethod("EndLabelHighlight", BindingFlags.Static | BindingFlags.NonPublic);
+        
         private static Color splitterColor => EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f) : new Color(0.6f, 0.6f, 0.6f);
 
         public static readonly Texture BackIcon = EditorGUIUtility.IconContent("back").image; 
@@ -90,6 +94,24 @@ namespace Sabresaurus.Sidekick
                 value = (T)(IConvertible)(byte)((byte)(IConvertible)value ^ (byte)(IConvertible)flag);
             }
             return value;
+        }
+        
+        public static void BeginLabelHighlight(string searchContext)
+        {
+            BeginLabelHighlight(searchContext, (Color)new Color32(49, 105,172,255), Color.white);
+        }
+
+        public static void BeginLabelHighlight(string searchContext, Color searchHighlightSelectionColor, Color searchHighlightColor)
+        {
+            beginLabelHighlight.Invoke(null, new object[]
+            {
+                searchContext, searchHighlightSelectionColor, searchHighlightColor
+            });
+        }
+        
+        public static void EndLabelHighlight()
+        {
+            endLabelHighlight.Invoke(null, null);
         }
     }
 }

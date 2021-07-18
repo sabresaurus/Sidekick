@@ -8,27 +8,25 @@ namespace Sabresaurus.Sidekick
 {
 	public class PropertyPane : VariablePane 
 	{
-		public void DrawProperties(Type componentType, object component, PropertyInfo[] properties)
+		public void DrawProperties(Type componentType, object component, string searchTerm, PropertyInfo[] properties)
 		{
-			SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
-
-			for (int j = 0; j < properties.Length; j++)
+			foreach (var property in properties)
 			{
-				if(properties[j].DeclaringType == typeof(Component)
-					|| properties[j].DeclaringType == typeof(UnityEngine.Object))
+				if(property.DeclaringType == typeof(Component)
+				   || property.DeclaringType == typeof(UnityEngine.Object))
 				{
 					continue;
 				}
 
-				if(!string.IsNullOrEmpty(settings.SearchTerm) && !properties[j].Name.Contains(settings.SearchTerm, StringComparison.InvariantCultureIgnoreCase))
+				if(!SearchMatches(searchTerm, property.Name))
 				{
 					// Does not match search term, skip it
 					continue;
 				}
 
 
-				MethodInfo getMethod = properties[j].GetGetMethod(true);
-				MethodInfo setMethod = properties[j].GetSetMethod(true);
+				MethodInfo getMethod = property.GetGetMethod(true);
+				MethodInfo setMethod = property.GetSetMethod(true);
 
 				string metaInformation = "";
 				if(setMethod == null)
@@ -36,18 +34,18 @@ namespace Sabresaurus.Sidekick
 					GUI.enabled = false;
 				}
 
-				object[] attributes = properties[j].GetCustomAttributes(false);
+				object[] attributes = property.GetCustomAttributes(false);
 
 				// Don't try to get the value of properties that error on access
 				bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
 
 				if(getMethod != null 
-					&& !isObsoleteWithError
-					&& !(componentType == typeof(MeshFilter) && properties[j].Name == "mesh") )
+				   && !isObsoleteWithError
+				   && !(componentType == typeof(MeshFilter) && property.Name == "mesh") )
 				{
 					object oldValue = getMethod.Invoke(component, null);
 					EditorGUI.BeginChangeCheck();
-					object newValue = DrawVariable(properties[j].PropertyType, properties[j].Name, oldValue, metaInformation, true, componentType);
+					object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, metaInformation, true, componentType);
 					if(EditorGUI.EndChangeCheck() && setMethod != null)
 					{
 						setMethod.Invoke(component, new object[] { newValue });
@@ -55,7 +53,7 @@ namespace Sabresaurus.Sidekick
 				}
 				else
 				{
-					GUILayout.Label(properties[j].PropertyType + " " + properties[j].Name);
+					GUILayout.Label(property.PropertyType + " " + property.Name);
 				}
 
 				if(setMethod == null)

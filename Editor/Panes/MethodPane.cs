@@ -23,10 +23,8 @@ namespace Sabresaurus.Sidekick
 
         float opacity = 0f;
 
-        public void DrawMethods(Type componentType, object component, MethodInfo[] methods)
+        public void DrawMethods(Type componentType, object component, string searchTerm, MethodInfo[] methods)
         {
-            SidekickSettings settings = SidekickWindow.Current.Settings; // Grab the active window's settings
-
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label) {alignment = TextAnchor.MiddleRight};
             GUIStyle normalButtonStyle = new GUIStyle(GUI.skin.button) {alignment = TextAnchor.MiddleLeft};
             normalButtonStyle.padding = normalButtonStyle.padding.SetLeft(100);
@@ -41,7 +39,7 @@ namespace Sabresaurus.Sidekick
 
             foreach (MethodInfo method in methods)
             {
-                if (!string.IsNullOrEmpty(settings.SearchTerm) && !method.Name.Contains(settings.SearchTerm, StringComparison.InvariantCultureIgnoreCase))
+                if(!SearchMatches(searchTerm, method.Name))
                 {
                     // Does not match search term, skip it
                     continue;
