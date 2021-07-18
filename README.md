@@ -1,6 +1,6 @@
 # Sidekick Inspection Tools for Unity
 
-[![openupm](https://img.shields.io/npm/v/com.sabresaurus.sidekick?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.sabresaurus.sidekick/) [![GitHub](https://img.shields.io/github/license/sabresaurus/Sidekick)](https://github.com/sabresaurus/Sidekick/blob/master/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg)](http://makeapullrequest.com)
+[![openupm](https://img.shields.io/npm/v/com.sabresaurus.sidekick?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.sabresaurus.sidekick/) [![GitHub](https://img.shields.io/github/license/sabresaurus/Sidekick)](https://github.com/sabresaurus/Sidekick/blob/master/LICENSE.md) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg)](http://makeapullrequest.com)
 
 <img align="right" src="https://user-images.githubusercontent.com/17784523/126076796-cfd27caf-ee21-4a64-9a73-d45bd83a50b5.png" width="400" />
 
