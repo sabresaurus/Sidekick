@@ -40,6 +40,7 @@ namespace Sabresaurus.Sidekick
 				bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
 
 				if(getMethod != null 
+				   && component != null
 				   && !isObsoleteWithError
 				   && !(componentType == typeof(MeshFilter) && property.Name == "mesh") )
 				{
