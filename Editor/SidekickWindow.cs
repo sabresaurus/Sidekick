@@ -119,16 +119,7 @@ namespace Sabresaurus.Sidekick
 
         void UpdateTitleContent()
         {
-            string[] guids = AssetDatabase.FindAssets("SidekickIcon t:Texture");
-            if (guids.Length >= 1)
-            {
-                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(guids[0]));
-                titleContent = new GUIContent("Sidekick", texture);
-            }
-            else
-            {
-                titleContent = new GUIContent("Sidekick");
-            }
+            titleContent = EditorGUIUtility.TrTextContentWithIcon("Sidekick", "Packages/com.sabresaurus.sidekick/Editor/SidekickIcon.png");
         }
 
         void OnGUI()
@@ -242,40 +233,47 @@ namespace Sabresaurus.Sidekick
                 GUIContent content = new GUIContent(name, objectContent.image);
 
                 var inspectedContext = inspectedContexts[i];
-                bool foldout = EditorGUILayout.BeginFoldoutHeaderGroup(!typesHidden[index].Value, content, null, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
-                Rect headerRect = GUILayoutUtility.GetLastRect();
+
+                
+                
                 bool? activeOrEnabled = inspectedContexts[i] switch
                 {
                     GameObject gameObject => gameObject.activeSelf,
                     Behaviour behaviour => behaviour.enabled,
                     _ => null
                 };
-
-                if (activeOrEnabled.HasValue)
+                
+                Rect foldoutRect = GUILayoutUtility.GetRect(content, EditorStyles.foldoutHeader);
+                
+                Rect headerRect = foldoutRect;
+                headerRect.xMin += 34;
+                headerRect.width = 20;
+                
+                // Have to do this before BeginFoldoutHeaderGroup otherwise it'll consume the mouse down event
+                if (activeOrEnabled.HasValue && Event.current.type == EventType.MouseDown && Event.current.button == 0 && headerRect.Contains(Event.current.mousePosition))
                 {
-                    headerRect.xMin += 34;
-                    headerRect.width = 20;
-
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUI.Toggle(headerRect, activeOrEnabled.Value);
-
-                    if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && headerRect.Contains(Event.current.mousePosition))
-                    {
-                        Event.current.Use();
-                    }
+                    Event.current.Use();
                     
                     if (EditorGUI.EndChangeCheck())
                     {
                         switch (inspectedContexts[i])
                         {
                             case GameObject gameObject:
-                                gameObject.SetActive(activeOrEnabled.Value);
+                                gameObject.SetActive(!gameObject.activeSelf);
                                 break;
                             case Behaviour behaviour:
-                                behaviour.enabled = activeOrEnabled.Value;
+                                behaviour.enabled = !behaviour.enabled;
                                 break;
                         }
                     }
+                    
+                }
+                
+                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content,  EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
+
+                if (activeOrEnabled.HasValue)
+                {
+                    EditorGUI.Toggle(headerRect, activeOrEnabled.Value);
                 }
 
                 EditorGUILayout.EndFoldoutHeaderGroup();
