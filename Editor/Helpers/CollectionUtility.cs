@@ -5,7 +5,7 @@ namespace Sabresaurus.Sidekick
 {
     public static class CollectionUtility
     {
-        public static void Resize(ref IList list, object defaultElementValue, int newSize)
+        public static void Resize(ref IList list, Type elementType, int newSize)
         {
             int oldSize = list.Count;
 
@@ -19,13 +19,13 @@ namespace Sabresaurus.Sidekick
                 }
                 else
                 {
-                    objectToAdd = defaultElementValue;
+                    objectToAdd = Activator.CreateInstance(elementType);
                 }
             }
 
             if (list.IsFixedSize)
             {
-                Array newArray = Array.CreateInstance(typeof(object), newSize);
+                Array newArray = Array.CreateInstance(elementType, newSize);
                 Array.Copy((Array)list, newArray, Math.Min(oldSize, newArray.Length));
 
                 if (newSize > oldSize)

@@ -234,8 +234,6 @@ namespace Sabresaurus.Sidekick
 
                 var inspectedContext = inspectedContexts[i];
 
-                
-                
                 bool? activeOrEnabled = inspectedContexts[i] switch
                 {
                     GameObject gameObject => gameObject.activeSelf,
@@ -286,7 +284,12 @@ namespace Sabresaurus.Sidekick
 
                     EditorGUI.indentLevel++;
 
-                    BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+                    BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
+                    if (inspectedContext != null) // Is this an object instance?
+                    {
+                        bindingFlags |= BindingFlags.Instance;
+                    }
 
                     var typeScope = type;
 

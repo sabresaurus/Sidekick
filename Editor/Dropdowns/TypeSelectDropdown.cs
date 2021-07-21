@@ -85,10 +85,14 @@ namespace Sabresaurus.Sidekick
             {
                 // Package Group
                 string asmDefPath = CompilationPipeline.GetAssemblyDefinitionFilePathFromAssemblyName(uAssembly.name);
-                PackageInfo packageInfo = PackageInfo.FindForAssetPath(asmDefPath);
                 
-                if(packageInfo != null)
-                    return new Group(Location.Packages, GetPackageAuthor(packageInfo));
+                if(!string.IsNullOrEmpty(asmDefPath))
+                {
+                    PackageInfo packageInfo = PackageInfo.FindForAssetPath(asmDefPath);
+
+                    if (packageInfo != null)
+                        return new Group(Location.Packages, GetPackageAuthor(packageInfo));
+                }
                 
                 return new Group(Location.Assets);
             }

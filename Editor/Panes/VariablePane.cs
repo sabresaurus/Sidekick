@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -48,46 +49,34 @@ namespace Sabresaurus.Sidekick
 				{
 					label.tooltip += " []";
 				}
+				EditorGUILayout.BeginHorizontal();
 
 				string expandedID = fieldType.FullName + fieldName;
-				bool expanded = SidekickWindow.Current.PersistentData.ExpandedFields.Contains(expandedID);
-				EditorGUI.BeginChangeCheck();
-				expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, label);
-				if (EditorGUI.EndChangeCheck())
+				bool expanded = DrawHeader(expandedID, label);
+
+				IList list = null;
+				int previousSize = 0;
+
+				if (fieldValue != null)
 				{
-					if (expanded)
-					{
-						SidekickWindow.Current.PersistentData.ExpandedFields.Add(expandedID);
-					}
-					else
-					{
-						SidekickWindow.Current.PersistentData.ExpandedFields.Remove(expandedID);
-					}
+					list = (IList) fieldValue;
+
+					previousSize = list.Count;
+				}
+
+				int newSize = Mathf.Max(0, EditorGUILayout.IntField(previousSize, GUILayout.Width(80)));
+				if (newSize != previousSize)
+				{
+					list ??= (IList) Activator.CreateInstance(fieldType);
+					CollectionUtility.Resize(ref list, elementType, newSize);
+					newValue = list;
 				}
 				
-				Rect sizeRect = GUILayoutUtility.GetLastRect();
-				sizeRect.xMin = sizeRect.xMax - 80;
+				EditorGUILayout.EndHorizontal();
 
 				if (expanded)
 				{
 					EditorGUI.indentLevel++;
-
-					IList list = null;
-					int previousSize = 0;
-
-					if (fieldValue != null)
-					{
-						list = (IList) fieldValue;
-
-						previousSize = list.Count;
-					}
-
-					int newSize = Mathf.Max(0, EditorGUI.IntField(sizeRect, previousSize));
-					if (newSize != previousSize)
-					{
-						list ??= (IList) Activator.CreateInstance(fieldType);
-						CollectionUtility.Resize(ref list, elementType, newSize);
-					}
 
 					if (list != null)
 					{
@@ -95,7 +84,7 @@ namespace Sabresaurus.Sidekick
 						{
 							EditorGUILayout.BeginHorizontal();
 
-							list[i] = DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i]);
+							list[i] = DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i], out var handled);
 
 							if (allowExtensions)
 							{
@@ -116,18 +105,69 @@ namespace Sabresaurus.Sidekick
 				// Not a collection
 				EditorGUILayout.BeginHorizontal();
 
-				newValue = DrawIndividualVariable(label, fieldType, fieldValue);
+				newValue = DrawIndividualVariable(label, fieldType, fieldValue, out var handled);
 
-				if(allowExtensions)
+				if(handled && allowExtensions)
 				{
 					DrawExtensions(fieldValue, expandButtonStyle);
 				}
 
 				EditorGUILayout.EndHorizontal();
+				
+				if (!handled)
+				{
+					string expandedID = fieldType.FullName + fieldName;
+					EditorGUILayout.BeginHorizontal();
+					bool expanded = DrawHeader(expandedID, label);
+					
+					if(allowExtensions)
+					{
+						DrawExtensions(fieldValue, expandButtonStyle);
+					}
+					EditorGUILayout.EndHorizontal();
+					
+					if(expanded)
+					{
+						var fields = fieldType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+						foreach (var fieldInfo in fields)
+						{
+							GUIContent subLabel = new GUIContent(fieldInfo.Name);
+							EditorGUI.BeginChangeCheck();
+							object newSubValue = DrawIndividualVariable(subLabel, fieldInfo.FieldType, fieldInfo.GetValue(fieldValue), out _);
+							if (EditorGUI.EndChangeCheck())
+							{
+								fieldInfo.SetValue(fieldValue, newSubValue);
+							}
+						}
+					}
+
+					EditorGUILayout.EndFoldoutHeaderGroup();
+				}
 			}
 
 
 			return newValue;
+		}
+
+		private static bool DrawHeader(string expandedID, GUIContent label)
+		{
+			bool expanded = SidekickWindow.Current.PersistentData.ExpandedFields.Contains(expandedID);
+			EditorGUI.BeginChangeCheck();
+			expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, label);
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (expanded)
+				{
+					SidekickWindow.Current.PersistentData.ExpandedFields.Add(expandedID);
+				}
+				else
+				{
+					SidekickWindow.Current.PersistentData.ExpandedFields.Remove(expandedID);
+				}
+			}
+
+			return expanded;
 		}
 
 		private static void DrawExtensions(object fieldValue, GUIStyle expandButtonStyle)
@@ -148,8 +188,9 @@ namespace Sabresaurus.Sidekick
 			}
 		}
 
-		private static object DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue)
+		private static object DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue, out bool handled)
 		{
+			handled = true;
 			object newValue;
 			if (fieldType == typeof(int)
                 || (fieldType.IsSubclassOf(typeof(Enum)) && SidekickSettings.TreatEnumsAsInts))
@@ -302,25 +343,10 @@ namespace Sabresaurus.Sidekick
 			}
 			else
 			{
-				GUILayout.Label(new GUIContent($"{label.text} (unsupported)", label.tooltip));
+				handled = false;
 				newValue = fieldValue;
 			}
-
-			//			EditorGUILayout.BoundsField()
-			//			EditorGUILayout.ColorField
-			//			EditorGUILayout.CurveField
-			//			EditorGUILayout.EnumPopup
-			//			EditorGUILayout.EnumMaskField
-			//			EditorGUILayout.IntSlider // If there's a range attribute maybe?
-			//			EditorGUILayout.LabelField // what's this?
-			//			EditorGUILayout.ObjectField
-			//			EditorGUILayout.RectField
-			//			EditorGUILayout.TextArea
-			//			EditorGUILayout.TextField
-
-			// What's this? public static void HelpBox (string message, MessageType type, bool wide)
-			// What's this? 		public static bool InspectorTitlebar (bool foldout, Object targetObj)
-
+			
 			return newValue;
 		}
 	}
