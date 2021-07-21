@@ -4,8 +4,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.PackageManager;
+using UnityEditorInternal;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 using UAssembly = UnityEditor.Compilation.Assembly;
 
 namespace Sabresaurus.Sidekick
@@ -80,21 +83,11 @@ namespace Sabresaurus.Sidekick
             if (nameToAssembly.TryGetValue(assemblyName, out UAssembly uAssembly))
             {
                 // Package Group
-                if (uAssembly.sourceFiles.Length > 0)
-                {
-                    string firstFile = uAssembly.sourceFiles[0];
-                    if (firstFile.StartsWith("Packages"))
-                    {
-                        const int startIndex = 9; // "Packages/".Length
-                        
-                        // Special case to reduce substrings
-                        const string unityPackagePrefix = "com.unity";
-                        if (firstFile.IndexOf(unityPackagePrefix, startIndex, unityPackagePrefix.Length, StringComparison.Ordinal) == startIndex)
-                            return new Group(Location.Packages, "Unity");
-                        
-                        return new Group(Location.Packages, GetPackageOwner(firstFile, startIndex));
-                    }
-                }
+                string asmDefPath = CompilationPipeline.GetAssemblyDefinitionFilePathFromAssemblyName(uAssembly.name);
+                PackageInfo packageInfo = PackageInfo.FindForAssetPath(asmDefPath);
+                
+                if(packageInfo != null)
+                    return new Group(Location.Packages, GetPackageAuthor(packageInfo));
                 
                 return new Group(Location.Assets);
             }
@@ -104,11 +97,23 @@ namespace Sabresaurus.Sidekick
             if (!string.IsNullOrEmpty(location))
             {
                 location = location.Replace('\\', '/');
-                int packageCacheIndex = location.IndexOf("/Library/PackageCache/", StringComparison.Ordinal);
-                if (packageCacheIndex >= 0)
+
+                if (location.Contains("/Library/PackageCache/"))
                 {
-                    int startIndex = packageCacheIndex + 22; // + "/Library/PackageCache/".Length
-                    return new Group(Location.Packages, GetPackageOwner(location, startIndex));
+                    var substring = location.Substring(location.IndexOf("/Library/PackageCache/") + "/Library/PackageCache/".Length);
+                    if (substring.Contains("@"))
+                    {
+                        substring = substring.Substring(0, substring.IndexOf("@"));
+                    }
+                    
+                    location = "Packages/" + substring;
+                }
+                
+                PackageInfo packageInfo = PackageInfo.FindForAssetPath(location);
+
+                if (packageInfo != null)
+                {
+                    return new Group(Location.Packages, GetPackageAuthor(packageInfo));
                 }
 
                 if (location.Contains("/Data/MonoBleedingEdge/"))
@@ -122,12 +127,19 @@ namespace Sabresaurus.Sidekick
 
             return new Group(Location.Dynamic);
 
-            string GetPackageOwner(string path, int startIndex)
+            string GetPackageAuthor(PackageInfo packageInfo)
             {
-                int startPackageOwner = path.IndexOf('.', startIndex) + 1;
-                int endPackageOwner = path.IndexOf('.', startPackageOwner);
-                string packageOwner = path.Substring(startPackageOwner, endPackageOwner - startPackageOwner);
-                return ObjectNames.NicifyVariableName(packageOwner);
+                if(!string.IsNullOrEmpty(packageInfo.author.name))
+                {
+                    return packageInfo.author.name;
+                }
+
+                if (packageInfo.name.StartsWith("com.unity."))
+                {
+                    return "Unity";
+                }
+
+                return "Other";
             }
         }
 
