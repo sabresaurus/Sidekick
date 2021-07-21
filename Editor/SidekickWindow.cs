@@ -16,7 +16,7 @@ namespace Sabresaurus.Sidekick
         enum InspectorMode
         {
             Fields,
-            Props,
+            Properties,
             Methods,
             Events,
         }
@@ -311,11 +311,11 @@ namespace Sabresaurus.Sidekick
                         {
                             List<MethodInfo> methodList = new List<MethodInfo>(methods.Length);
 
-                            for (int j = 0; j < methods.Length; j++)
+                            foreach (MethodInfo method in methods)
                             {
-                                if (!TypeUtility.IsPropertyMethod(methods[j], typeScope))
+                                if (!TypeUtility.IsPropertyMethod(method, typeScope))
                                 {
-                                    methodList.Add(methods[j]);
+                                    methodList.Add(method);
                                 }
                             }
 
@@ -341,7 +341,7 @@ namespace Sabresaurus.Sidekick
                         {
                             fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], searchTerm, fields);
                         }
-                        else if (mode == InspectorMode.Props)
+                        else if (mode == InspectorMode.Properties)
                         {
                             propertyPane.DrawProperties(inspectedTypes[i], inspectedContexts[i], searchTerm, properties);
                         }

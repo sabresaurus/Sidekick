@@ -26,28 +26,35 @@ namespace Sabresaurus.Sidekick
                 {
                     metaInformation += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
                 }
+                if (!string.IsNullOrEmpty(metaInformation))
+                {
+                    metaInformation += "\n";
+                }
+            
+                Type fieldType = field.FieldType;
+
+                VariableAttributes variableAttributes = VariableAttributes.None;
 
                 // See https://stackoverflow.com/a/10261848
                 if (field.IsLiteral && !field.IsInitOnly)
                 {
-                    metaInformation += "Constant";
-
+                    metaInformation += $"{TypeUtility.GetVisibilityName(field)} const {TypeUtility.NameForType(fieldType)} {fieldName}";
+                    
+                    variableAttributes = VariableAttributes.Constant;
+                    
                     // Prevent SetValue as it will result in a FieldAccessException
                     isReadonly = true;
                 }
                 else if (field.IsStatic)
                 {
-                    metaInformation += "Static";
-                }
-            
-                Type fieldType = field.FieldType;
+                    metaInformation += $"{TypeUtility.GetVisibilityName(field)} static {TypeUtility.NameForType(fieldType)} {fieldName}";
 
-                if (!string.IsNullOrEmpty(metaInformation))
-                {
-                    metaInformation += "\n";
+                    variableAttributes = VariableAttributes.Static;
                 }
-                
-                metaInformation += $"{TypeUtility.GetVisibilityName(field)} {TypeUtility.NameForType(fieldType)} {fieldName}";
+                else
+                {
+                    metaInformation += $"{TypeUtility.GetVisibilityName(field)} {TypeUtility.NameForType(fieldType)} {fieldName}";    
+                }
 
                 if (isReadonly)
                 {
@@ -55,7 +62,7 @@ namespace Sabresaurus.Sidekick
                 }
                 
                 EditorGUI.BeginChangeCheck();
-                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, metaInformation, true, componentType);
+                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, metaInformation, variableAttributes, true, componentType);
                 if (EditorGUI.EndChangeCheck() && !isReadonly)
                 {
                     field.SetValue(component, newValue);

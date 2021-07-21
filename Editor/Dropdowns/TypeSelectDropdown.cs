@@ -24,6 +24,7 @@ namespace Sabresaurus.Sidekick
             public TypeDropdownItem(Type type) : base(type.Name)
             {
                 Type = type;
+                icon = (Texture2D) EditorGUIUtility.TrIconContent("dll Script Icon").image;
             }
         }
 

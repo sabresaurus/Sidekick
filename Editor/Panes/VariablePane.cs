@@ -7,7 +7,13 @@ namespace Sabresaurus.Sidekick
 {
 	public abstract class VariablePane : BasePane
 	{
-		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string metaInformation, bool allowExtensions, Type contextType)
+		public enum VariableAttributes
+		{
+			None,
+			Static,
+			Constant
+		}
+		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType)
 		{
 			GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
 			RectOffset padding = expandButtonStyle.padding;
@@ -18,7 +24,11 @@ namespace Sabresaurus.Sidekick
 			fieldValue ??= TypeUtility.GetDefaultValue(fieldType);
 
 			string displayName = SidekickUtility.NicifyIdentifier(fieldName);
-			GUIContent label = new GUIContent(displayName, metaInformation);
+			if (variableAttributes == VariableAttributes.Static)
+			{
+				displayName += " [S]";
+			}
+			GUIContent label = new GUIContent(displayName, tooltip);
 
 			object newValue = fieldValue;
 

@@ -19,6 +19,7 @@ namespace Sabresaurus.Sidekick
 
     public class MethodPane : BasePane
     {
+        Vector2 outputScrollPosition = Vector2.zero;
         private List<object> outputObjects = new List<object>();
 
         float opacity = 0f;
@@ -117,7 +118,7 @@ namespace Sabresaurus.Sidekick
                         {
 //							VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, GetDefaultValue(parameters[i].ParameterType), "", false);
                             EditorGUI.BeginChangeCheck();
-                            object newValue = VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", false, null);
+                            object newValue = VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, false, null);
                             if (EditorGUI.EndChangeCheck())
                             {
                                 methodSetup.Values[i] = newValue;
@@ -160,18 +161,20 @@ namespace Sabresaurus.Sidekick
 
         public void PostDraw()
         {
+            SidekickEditorGUI.DrawSplitter();
             GUILayout.Label("Output", EditorStyles.boldLabel);
+            outputScrollPosition = EditorGUILayout.BeginScrollView(outputScrollPosition, GUILayout.MaxHeight(100));
             foreach (var outputObject in outputObjects)
             {
                 if (outputObject != null)
                 {
                     string name = outputObject switch
                     {
-                        Object unityObject => $"{unityObject.name}({outputObject.GetType().FullName})",
-                        _ => outputObject.GetType().FullName
+                        Object unityObject => $"{unityObject.name}",
+                        _ => outputObject.ToString()
                     };
 
-                    if (GUILayout.Button("Select " + name))
+                    if (GUILayout.Button($"Select {name} ({TypeUtility.NameForType(outputObject.GetType())})"))
                     {
                         SidekickWindow.Current.SetSelection(outputObject);
                     }
@@ -206,6 +209,8 @@ namespace Sabresaurus.Sidekick
 
                 AnimationHelper.SetAnimationActive();
             }
+            
+            EditorGUILayout.EndScrollView();
         }
     }
 }

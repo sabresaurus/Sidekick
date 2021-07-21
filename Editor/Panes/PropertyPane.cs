@@ -24,6 +24,11 @@ namespace Sabresaurus.Sidekick
 					continue;
 				}
 
+				if (property.GetIndexParameters().Length != 0)
+				{
+					// Indexer, show it in Methods instead as it takes parameters
+					continue;
+				}
 
 				MethodInfo getMethod = property.GetGetMethod(true);
 				MethodInfo setMethod = property.GetSetMethod(true);
@@ -36,20 +41,27 @@ namespace Sabresaurus.Sidekick
 
 				object[] attributes = property.GetCustomAttributes(false);
 
-				// Don't try to get the value of properties that error on access
-				bool isObsoleteWithError = AttributeHelper.IsObsoleteWithError(attributes);
-
 				if(getMethod != null 
-				   && component != null
-				   && !isObsoleteWithError
-				   && !(componentType == typeof(MeshFilter) && property.Name == "mesh") )
+				   && component != null)
 				{
-					object oldValue = getMethod.Invoke(component, null);
-					EditorGUI.BeginChangeCheck();
-					object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, metaInformation, true, componentType);
-					if(EditorGUI.EndChangeCheck() && setMethod != null)
+					if (IsException(componentType, property))
 					{
-						setMethod.Invoke(component, new object[] { newValue });
+						GUILayout.Label(property.Name + " excluded due to rule");
+					}
+					else if (AttributeHelper.IsObsoleteWithError(attributes))
+					{
+						// Don't try to get the value of properties that error on access
+						GUILayout.Label(property.Name + " obsolete with error");
+					}
+					else
+					{
+						object oldValue = getMethod.Invoke(component, null);
+						EditorGUI.BeginChangeCheck();
+						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, metaInformation, VariableAttributes.None, true, componentType);
+						if (EditorGUI.EndChangeCheck() && setMethod != null)
+						{
+							setMethod.Invoke(component, new object[] {newValue});
+						}
 					}
 				}
 				else
@@ -62,6 +74,17 @@ namespace Sabresaurus.Sidekick
 					GUI.enabled = true;
 				}
 			}
+		}
+
+		private static bool IsException(Type componentType, PropertyInfo property)
+		{
+			// Will instantiate at edit time
+			if (componentType == typeof(MeshFilter) && property.Name == "mesh") return true;
+			
+			// Will result in assertions if the matrix fails ValidTRS
+			if (componentType == typeof(Matrix4x4) && property.Name == "rotation") return true;
+			if (componentType == typeof(Matrix4x4) && property.Name == "lossyScale") return true;
+			return false;
 		}
 	}
 }

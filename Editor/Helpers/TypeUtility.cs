@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Sabresaurus.Sidekick
@@ -188,19 +190,23 @@ namespace Sabresaurus.Sidekick
 			{
 				// Check that no property exists with the name after the prefix
 				// Don't use SpecialName here as compilers aren't required to populate it
-                if(parentType.GetProperty(methodName.Substring(4), bindingFlags) != null)
-				{
-					return true;
-				}
-				else
+				Type[] parameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
+				PropertyInfo propertyInfo = parentType.GetProperty(methodName.Substring(4), bindingFlags, null, methodInfo.ReturnType, parameterTypes, null);
+				if (propertyInfo == null)
 				{
 					return false;
 				}
+
+				if (propertyInfo.GetIndexParameters().Length != 0)
+				{
+					// Indexer, takes parameters unlike ordinary properties so don't treat it like a normal property
+					return false;
+				}
+
+				return true;
 			}
-			else
-			{
-				return false;
-			}
+
+			return false;
 		}
 
         /// <summary>
