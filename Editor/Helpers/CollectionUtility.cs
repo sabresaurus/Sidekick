@@ -5,9 +5,9 @@ namespace Sabresaurus.Sidekick
 {
     public static class CollectionUtility
     {
-        public static void Resize(ref IList list, Type elementType, int newSize)
+        public static IList Resize(IList list, bool isArray, Type fieldType, Type elementType, int newSize)
         {
-            int oldSize = list.Count;
+            var oldSize = list != null ? list.Count : 0;
 
             // Unity's default behaviour when expanding a collection is to use the last element as the new element value
             object objectToAdd = null;
@@ -23,10 +23,13 @@ namespace Sabresaurus.Sidekick
                 }
             }
 
-            if (list.IsFixedSize)
+            if (isArray)
             {
                 Array newArray = Array.CreateInstance(elementType, newSize);
-                Array.Copy((Array)list, newArray, Math.Min(oldSize, newArray.Length));
+                if (oldSize != 0)
+                {
+                    Array.Copy((Array)list, newArray, Math.Min(oldSize, newArray.Length));
+                }
 
                 if (newSize > oldSize)
                 {
@@ -37,10 +40,14 @@ namespace Sabresaurus.Sidekick
                     }
                 }
 
-                list = newArray;
+                return newArray;
             }
             else
             {
+                if (oldSize == 0)
+                {
+                    list = (IList) Activator.CreateInstance(fieldType);
+                }
                 if (newSize > oldSize)
                 {
                     int toAdd = newSize - oldSize;
@@ -57,6 +64,8 @@ namespace Sabresaurus.Sidekick
                         list.RemoveAt(oldSize - i - 1);
                     }
                 }
+
+                return list;
             }
         }
     }

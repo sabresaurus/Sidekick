@@ -67,9 +67,7 @@ namespace Sabresaurus.Sidekick
 				int newSize = Mathf.Max(0, EditorGUILayout.IntField(previousSize, GUILayout.Width(80)));
 				if (newSize != previousSize)
 				{
-					list ??= (IList) Activator.CreateInstance(fieldType);
-					CollectionUtility.Resize(ref list, elementType, newSize);
-					newValue = list;
+					newValue = CollectionUtility.Resize(list, isArray, fieldType, elementType, newSize);;
 				}
 				
 				EditorGUILayout.EndHorizontal();
