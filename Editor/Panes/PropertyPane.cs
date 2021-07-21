@@ -44,7 +44,7 @@ namespace Sabresaurus.Sidekick
 				if(getMethod != null 
 				   && component != null)
 				{
-					if (IsException(componentType, property))
+					if (InspectionExclusions.IsPropertyExcluded(componentType, property))
 					{
 						GUILayout.Label(property.Name + " excluded due to rule");
 					}
@@ -74,17 +74,6 @@ namespace Sabresaurus.Sidekick
 					GUI.enabled = true;
 				}
 			}
-		}
-
-		private static bool IsException(Type componentType, PropertyInfo property)
-		{
-			// Will instantiate at edit time
-			if (componentType == typeof(MeshFilter) && property.Name == "mesh") return true;
-			
-			// Will result in assertions if the matrix fails ValidTRS
-			if (componentType == typeof(Matrix4x4) && property.Name == "rotation") return true;
-			if (componentType == typeof(Matrix4x4) && property.Name == "lossyScale") return true;
-			return false;
 		}
 	}
 }

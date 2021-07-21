@@ -250,26 +250,26 @@ namespace Sabresaurus.Sidekick
                 headerRect.width = 20;
                 
                 // Have to do this before BeginFoldoutHeaderGroup otherwise it'll consume the mouse down event
-                if (activeOrEnabled.HasValue && Event.current.type == EventType.MouseDown && Event.current.button == 0 && headerRect.Contains(Event.current.mousePosition))
+                if (activeOrEnabled.HasValue && SidekickEditorGUI.DetectClickInRect(headerRect))
                 {
-                    Event.current.Use();
-                    
-                    if (EditorGUI.EndChangeCheck())
+                    switch (inspectedContexts[i])
                     {
-                        switch (inspectedContexts[i])
-                        {
-                            case GameObject gameObject:
-                                gameObject.SetActive(!gameObject.activeSelf);
-                                break;
-                            case Behaviour behaviour:
-                                behaviour.enabled = !behaviour.enabled;
-                                break;
-                        }
+                        case GameObject gameObject:
+                            gameObject.SetActive(!gameObject.activeSelf);
+                            break;
+                        case Behaviour behaviour:
+                            behaviour.enabled = !behaviour.enabled;
+                            break;
                     }
-                    
                 }
                 
-                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content,  EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
+                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content, EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
+
+                if (SidekickEditorGUI.DetectClickInRect(foldoutRect, 1))
+                {
+                    // Right click context menu
+                    ClassUtilities.GetMenu(inspectedContext).DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+                }
 
                 if (activeOrEnabled.HasValue)
                 {

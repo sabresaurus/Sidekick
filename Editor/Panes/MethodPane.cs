@@ -9,14 +9,6 @@ using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
-    [Serializable]
-    public class MethodSetup
-    {
-        public string MethodName = "";
-
-        public object[] Values = new object[0];
-    }
-
     public class MethodPane : BasePane
     {
         Vector2 outputScrollPosition = Vector2.zero;

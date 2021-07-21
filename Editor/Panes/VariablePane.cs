@@ -49,49 +49,67 @@ namespace Sabresaurus.Sidekick
 					label.tooltip += " []";
 				}
 
-				EditorGUILayout.BeginFoldoutHeaderGroup(true, label);
+				string expandedID = fieldType.FullName + fieldName;
+				bool expanded = SidekickWindow.Current.PersistentData.ExpandedFields.Contains(expandedID);
+				EditorGUI.BeginChangeCheck();
+				expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, label);
+				if (EditorGUI.EndChangeCheck())
+				{
+					if (expanded)
+					{
+						SidekickWindow.Current.PersistentData.ExpandedFields.Add(expandedID);
+					}
+					else
+					{
+						SidekickWindow.Current.PersistentData.ExpandedFields.Remove(expandedID);
+					}
+				}
 				
 				Rect sizeRect = GUILayoutUtility.GetLastRect();
 				sizeRect.xMin = sizeRect.xMax - 80;
-				
-				EditorGUI.indentLevel++;
-				
-                IList list = null;
-                int previousSize = 0;
 
-                if (fieldValue != null)
-                {
-                    list = (IList)fieldValue;
-
-                    previousSize = list.Count;
-                }
-
-				int newSize = Mathf.Max(0, EditorGUI.IntField(sizeRect, previousSize));
-				if(newSize != previousSize)
+				if (expanded)
 				{
-					list ??= (IList) Activator.CreateInstance(fieldType);
-					CollectionUtility.Resize(ref list, elementType, newSize);
+					EditorGUI.indentLevel++;
+
+					IList list = null;
+					int previousSize = 0;
+
+					if (fieldValue != null)
+					{
+						list = (IList) fieldValue;
+
+						previousSize = list.Count;
+					}
+
+					int newSize = Mathf.Max(0, EditorGUI.IntField(sizeRect, previousSize));
+					if (newSize != previousSize)
+					{
+						list ??= (IList) Activator.CreateInstance(fieldType);
+						CollectionUtility.Resize(ref list, elementType, newSize);
+					}
+
+					if (list != null)
+					{
+						for (int i = 0; i < list.Count; i++)
+						{
+							EditorGUILayout.BeginHorizontal();
+
+							list[i] = DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i]);
+
+							if (allowExtensions)
+							{
+								DrawExtensions(list[i], expandButtonStyle);
+							}
+
+							EditorGUILayout.EndHorizontal();
+						}
+					}
+
+					EditorGUI.indentLevel--;
 				}
 
-                if (list != null)
-                {
-                    for (int i = 0; i < list.Count; i++)
-                    {
-	                    EditorGUILayout.BeginHorizontal();
-
-                        list[i] = DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i]);
-                        
-                        if(allowExtensions)
-                        {
-	                        DrawExtensions(list[i], expandButtonStyle);
-                        }
-                        
-                        EditorGUILayout.EndHorizontal();
-                    }
-                }
-                EditorGUI.indentLevel--;
-                
-                EditorGUILayout.EndFoldoutHeaderGroup();
+				EditorGUILayout.EndFoldoutHeaderGroup();
 			}
 			else
 			{

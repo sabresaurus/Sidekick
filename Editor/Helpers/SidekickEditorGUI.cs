@@ -12,11 +12,11 @@ namespace Sabresaurus.Sidekick
         
         private static Color splitterColor => EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f) : new Color(0.6f, 0.6f, 0.6f);
 
-        public static readonly Texture BackIcon = EditorGUIUtility.IconContent("back").image; 
-        public static readonly Texture ForwardIcon = EditorGUIUtility.IconContent("forward").image;
-        public static readonly Texture LockIconOff = EditorGUIUtility.IconContent("LockIcon").image;
-        public static readonly Texture LockIconOn = EditorGUIUtility.IconContent("LockIcon-On").image;
-        public static readonly Texture MoreOptions = EditorGUIUtility.IconContent("Toolbar Plus").image;
+        public static readonly Texture BackIcon = EditorGUIUtility.TrIconContent("back").image; 
+        public static readonly Texture ForwardIcon = EditorGUIUtility.TrIconContent("forward").image;
+        public static readonly Texture LockIconOff = EditorGUIUtility.TrIconContent("LockIcon").image;
+        public static readonly Texture LockIconOn = EditorGUIUtility.TrIconContent("LockIcon-On").image;
+        public static readonly Texture MoreOptions = EditorGUIUtility.TrIconContent("Toolbar Plus").image;
 
         public static void DrawTypeChainHeader(GUIContent label)
         {
@@ -112,6 +112,17 @@ namespace Sabresaurus.Sidekick
         public static void EndLabelHighlight()
         {
             endLabelHighlight.Invoke(null, null);
+        }
+
+        public static bool DetectClickInRect(Rect rect, int mouseButton = 0)
+        {
+            if (Event.current.type == EventType.MouseDown && Event.current.button == mouseButton && rect.Contains(Event.current.mousePosition))
+            {
+                Event.current.Use();
+                return true;
+            }
+
+            return false;
         }
     }
 }

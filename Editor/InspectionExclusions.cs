@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using UnityEngine;
 
 namespace Sabresaurus.Sidekick
 {
@@ -21,6 +23,17 @@ namespace Sabresaurus.Sidekick
                 typeof(UnityEngine.ScriptableObject),
                 // Add any custom exclusions here
             };
+        }
+
+        public static bool IsPropertyExcluded(Type componentType, PropertyInfo property)
+        {
+            // Will instantiate at edit time
+            if (componentType == typeof(MeshFilter) && property.Name == "mesh") return true;
+			
+            // Will result in assertions if the matrix fails ValidTRS
+            if (componentType == typeof(Matrix4x4) && property.Name == "rotation") return true;
+            if (componentType == typeof(Matrix4x4) && property.Name == "lossyScale") return true;
+            return false;
         }
     }
 }
