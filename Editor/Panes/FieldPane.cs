@@ -20,17 +20,7 @@ namespace Sabresaurus.Sidekick
                 }
 
                 bool isReadonly = false;
-                string metaInformation = "";
-                object[] customAttributes = field.GetCustomAttributes(false);
-                foreach (var customAttribute in customAttributes)
-                {
-                    metaInformation += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
-                }
-                if (!string.IsNullOrEmpty(metaInformation))
-                {
-                    metaInformation += "\n";
-                }
-            
+
                 Type fieldType = field.FieldType;
 
                 VariableAttributes variableAttributes = VariableAttributes.None;
@@ -38,8 +28,6 @@ namespace Sabresaurus.Sidekick
                 // See https://stackoverflow.com/a/10261848
                 if (field.IsLiteral && !field.IsInitOnly)
                 {
-                    metaInformation += $"{TypeUtility.GetVisibilityName(field)} const {TypeUtility.NameForType(fieldType)} {fieldName}";
-                    
                     variableAttributes = VariableAttributes.Constant;
                     
                     // Prevent SetValue as it will result in a FieldAccessException
@@ -47,14 +35,9 @@ namespace Sabresaurus.Sidekick
                 }
                 else if (field.IsStatic)
                 {
-                    metaInformation += $"{TypeUtility.GetVisibilityName(field)} static {TypeUtility.NameForType(fieldType)} {fieldName}";
-
                     variableAttributes = VariableAttributes.Static;
                 }
-                else
-                {
-                    metaInformation += $"{TypeUtility.GetVisibilityName(field)} {TypeUtility.NameForType(fieldType)} {fieldName}";    
-                }
+                string tooltip = TypeUtility.GetTooltip(field, variableAttributes);
 
                 if (isReadonly)
                 {
@@ -62,7 +45,7 @@ namespace Sabresaurus.Sidekick
                 }
                 
                 EditorGUI.BeginChangeCheck();
-                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, metaInformation, variableAttributes, true, componentType);
+                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType);
                 if (EditorGUI.EndChangeCheck() && !isReadonly)
                 {
                     field.SetValue(component, newValue);

@@ -48,7 +48,7 @@ namespace Sabresaurus.Sidekick
 
 			return visibility;
 		}
-
+		
 		public static string NameForType(Type type)
 		{
 			// See https://msdn.microsoft.com/en-us/library/ya5y69ds.aspx
@@ -56,47 +56,47 @@ namespace Sabresaurus.Sidekick
 			{
 				return "void";
 			}
-			else if(type == typeof(System.Boolean))
+			else if(type == typeof(Boolean))
 			{
 				return "bool";
 			}
-			else if(type == typeof(System.Byte))
+			else if(type == typeof(Byte))
 			{
 				return "byte";
 			}
-			else if(type == typeof(System.SByte))
+			else if(type == typeof(SByte))
 			{
 				return "sbyte";
 			}
-			else if(type == typeof(System.Char))
+			else if(type == typeof(Char))
 			{
 				return "char";
 			}
-			else if(type == typeof(System.Decimal))
+			else if(type == typeof(Decimal))
 			{
 				return "decimal";
 			}
-			else if(type == typeof(System.Double))
+			else if(type == typeof(Double))
 			{
 				return "double";
 			}
-			else if(type == typeof(System.Single))
+			else if(type == typeof(Single))
 			{
 				return "float";
 			}
-			else if(type == typeof(System.Int32))
+			else if(type == typeof(Int32))
 			{
 				return "int";
 			}
-			else if(type == typeof(System.UInt32))
+			else if(type == typeof(UInt32))
 			{
 				return "uint";
 			}
-			else if(type == typeof(System.Int64))
+			else if(type == typeof(Int64))
 			{
 				return "long";
 			}
-			else if(type == typeof(System.UInt64))
+			else if(type == typeof(UInt64))
 			{
 				return "ulong";
 			}
@@ -104,15 +104,15 @@ namespace Sabresaurus.Sidekick
 			{
 				return "object";
 			}
-			else if(type == typeof(System.Int16))
+			else if(type == typeof(Int16))
 			{
 				return "short";
 			}
-			else if(type == typeof(System.UInt16))
+			else if(type == typeof(UInt16))
 			{
 				return "ushort";
 			}
-			else if(type == typeof(System.String))
+			else if(type == typeof(String))
 			{
 				return "string";
 			}
@@ -246,6 +246,54 @@ namespace Sabresaurus.Sidekick
             {
                 return Convert.ChangeType(objectOrCollection, newElementType);
             }
+        }
+
+        public static string GetTooltip(FieldInfo field, VariablePane.VariableAttributes variableAttributes)
+        {
+	        string tooltip = "";
+	        object[] customAttributes = field.GetCustomAttributes(false);
+	        foreach (var customAttribute in customAttributes)
+	        {
+		        tooltip += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
+	        }
+
+	        if (!string.IsNullOrEmpty(tooltip))
+	        {
+		        tooltip += "\n";
+	        }
+
+	        if (variableAttributes == VariablePane.VariableAttributes.Constant)
+	        {
+		        tooltip += $"{GetVisibilityName(field)} const {NameForType(field.FieldType)} {field.Name}";
+	        }
+	        else if (variableAttributes == VariablePane.VariableAttributes.Static)
+	        {
+		        tooltip += $"{GetVisibilityName(field)} static {NameForType(field.FieldType)} {field.Name}";
+	        }
+	        else
+	        {
+		        tooltip += $"{GetVisibilityName(field)} {NameForType(field.FieldType)} {field.Name}";    
+	        }
+	        
+	        return tooltip;
+        }
+
+        public static string GetTooltip(PropertyInfo propertyInfo)
+        {
+	        string tooltip = "";
+	        object[] customAttributes = propertyInfo.GetCustomAttributes(false);
+	        foreach (var customAttribute in customAttributes)
+	        {
+		        tooltip += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
+	        }
+
+	        if (!string.IsNullOrEmpty(tooltip))
+	        {
+		        tooltip += "\n";
+	        }
+	        tooltip += $"{NameForType(propertyInfo.PropertyType)} {propertyInfo.Name}";    
+	        
+	        return tooltip;
         }
 	}
 }

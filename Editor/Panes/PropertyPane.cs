@@ -33,7 +33,7 @@ namespace Sabresaurus.Sidekick
 				MethodInfo getMethod = property.GetGetMethod(true);
 				MethodInfo setMethod = property.GetSetMethod(true);
 
-				string metaInformation = "";
+				string tooltip = TypeUtility.GetTooltip(property);
 				if(setMethod == null)
 				{
 					GUI.enabled = false;
@@ -41,26 +41,25 @@ namespace Sabresaurus.Sidekick
 
 				object[] attributes = property.GetCustomAttributes(false);
 
-				if(getMethod != null 
-				   && component != null)
+				if(getMethod != null && component != null)
 				{
 					if (InspectionExclusions.IsPropertyExcluded(componentType, property))
 					{
-						GUILayout.Label(property.Name + " excluded due to rule");
+						GUILayout.Label(new GUIContent(property.Name + " excluded due to rule", tooltip));
 					}
 					else if (AttributeHelper.IsObsoleteWithError(attributes))
 					{
 						// Don't try to get the value of properties that error on access
-						GUILayout.Label(property.Name + " obsolete with error");
+						GUILayout.Label(new GUIContent(property.Name + " obsolete with error", tooltip));
 					}
 					else
 					{
 						object oldValue = getMethod.Invoke(component, null);
 						EditorGUI.BeginChangeCheck();
-						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, metaInformation, VariableAttributes.None, true, componentType);
+						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, VariableAttributes.None, true, componentType);
 						if (EditorGUI.EndChangeCheck() && setMethod != null)
 						{
-							setMethod.Invoke(component, new object[] {newValue});
+							setMethod.Invoke(component, new[] {newValue});
 						}
 					}
 				}
