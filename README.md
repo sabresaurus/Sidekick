@@ -21,6 +21,46 @@ Fire arbitrary methods on components with support for parameters and return type
 
 Sidekick is licensed under MIT, see **LICENSE** for details.
 
+# Installation
+
+<details>
+<summary>Add from OpenUPM <em>| via scoped registry, recommended</em></summary>
+
+This package is available on OpenUPM: https://openupm.com/packages/com.sabresaurus.sidekick
+
+To add it the package to your project:
+
+- open `Edit/Project Settings/Package Manager`
+- add a new Scoped Registry:
+  ```
+  Name: OpenUPM
+  URL:  https://package.openupm.com/
+  Scope(s): com.sabresaurus
+  ```
+- click <kbd>Save</kbd>
+- open Package Manager
+- click <kbd>+</kbd>
+- select <kbd>Add from Git URL</kbd>
+- paste `com.sabresaurus.sidekick`
+- click <kbd>Add</kbd>
+</details>
+
+<details>
+<summary>Add from GitHub | <em>not recommended, no updates through UPM</em></summary>
+
+You can also add it directly from GitHub on Unity 2020.3+. Note that you won't be able to receive updates through Package Manager this way, you'll have to update manually.
+
+- open Package Manager
+- click <kbd>+</kbd>
+- select <kbd>Add from Git URL</kbd>
+- paste `https://github.com/sabresaurus/Sidekick.git`
+- click <kbd>Add</kbd>  
+**or**  
+- Edit your `Packages/manifest.json` file to contain `"com.sabresaurus.sidekick": "https://github.com/sabresaurus/Sidekick.git"`,
+  
+To update the package with new changes, remove the lock from the `Packages/packages-lock.json` file.
+</details>
+
 # Remote Actions
 
 [Previously](https://github.com/sabresaurus/Sidekick/tree/pre-remote-removal) we were hoping to include to make Sidekick work with remote builds, this however massively complicated the simplicity of Sidekick and the project has been abandoned. The network code has been split out into [Remote Actions](https://github.com/sabresaurus/Remote-Actions)
