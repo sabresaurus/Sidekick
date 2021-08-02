@@ -447,7 +447,7 @@ namespace Sabresaurus.Sidekick
             if (GUILayout.Button(activeLockContent, EditorStyles.toolbarButton))
             {
                 selectionLocked = !selectionLocked;
-                if (selectionLocked == false && Selection.activeObject != null)
+                if (selectionLocked == false && Selection.activeObject != null && !activeSelection.Equals(new SelectionInfo(Selection.activeObject)))
                 {
                     SetSelection(Selection.activeObject);
                 }
