@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -51,6 +52,22 @@ namespace Sabresaurus.Sidekick
             }
 
             public bool IsEmpty => Type == null && Object == null;
+            
+            public string GetDisplayName()
+            {
+                if (Type != null)
+                {
+                    return Type.Name;
+                }
+
+                if (Object != null)
+                {
+                    return Object.ToString();
+                }
+
+                return "Unknown";
+            }
+            
 
             public bool Equals(SelectionInfo other)
             {
@@ -388,46 +405,42 @@ namespace Sabresaurus.Sidekick
             SidekickEditorGUI.EndLabelHighlight();
         }
 
+        static void ButtonWithOptions(
+            GUIContent content,
+            GUIStyle toggleButtonStyle,
+            out bool mainPressed,
+            out bool optionsPressed)
+        {
+            mainPressed = false;
+            optionsPressed = false;
+            
+            Rect rect = GUILayoutUtility.GetRect(content, toggleButtonStyle);
+            if (EditorGUI.DropdownButton(new Rect(rect.xMax - toggleButtonStyle.padding.right, rect.y, toggleButtonStyle.padding.right, rect.height), GUIContent.none, FocusType.Passive, GUIStyle.none))
+            {
+                optionsPressed = true;
+            }
+
+            if (GUI.Button(rect, content, toggleButtonStyle))
+            {
+                mainPressed = true;
+            }
+        }
+
         private void DrawToolbar()
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUI.enabled = (backStack.Count > 0);
-            if (GUILayout.Button(new GUIContent(SidekickEditorGUI.BackIcon, "Back"), EditorStyles.toolbarButton)
-                || (Event.current.type == EventType.MouseDown && Event.current.button == 3))
-            {
-                SelectionInfo backStackLast = backStack.Last();
-                backStack.RemoveAt(backStack.Count - 1);
-                forwardStack.Add(activeSelection);
-                activeSelection = backStackLast;
-                
-                
-                if (backStackLast.Object is UnityEngine.Object unityObject)
-                {
-                    suppressNextSelectionDetection = true;
-                    Selection.activeObject = unityObject;
-                }
-            }
-
-            GUI.enabled = (forwardStack.Count > 0);
-            if (GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Forward"), EditorStyles.toolbarButton)
-                || (Event.current.type == EventType.MouseDown && Event.current.button == 4))
-            {
-                SelectionInfo forwardStackLast = forwardStack.Last();
-                forwardStack.RemoveAt(forwardStack.Count - 1);
-                backStack.Add(activeSelection);
-                activeSelection = forwardStackLast;
-                
-                if (forwardStackLast.Object is UnityEngine.Object unityObject)
-                {
-                    suppressNextSelectionDetection = true;
-                    Selection.activeObject = unityObject;
-                }
-            }
-
-            GUI.enabled = true;
-
+            GUIContent backContent = new GUIContent(SidekickEditorGUI.BackIcon, "Back");
+            GUIContent forwardContent = new GUIContent(SidekickEditorGUI.ForwardIcon, "Forward");
             GUIContent onLockContent = new GUIContent(SidekickEditorGUI.LockIconOn, "Selection is locked, click to unlock");
             GUIContent offLockContent = new GUIContent(SidekickEditorGUI.LockIconOff, "Selection is unlocked, click to lock");
+            
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            GUIStyle guiStyle = new GUIStyle(GUI.skin.FindStyle("toolbarDropDownToggleRight")) {alignment = TextAnchor.MiddleCenter};
+
+            HistoryButton(backContent, guiStyle, backStack, forwardStack);
+            HistoryButton(forwardContent, guiStyle, forwardStack, backStack);
+
+            GUI.enabled = true;
             
             GUIContent activeLockContent = selectionLocked ? onLockContent : offLockContent;
             
@@ -447,26 +460,80 @@ namespace Sabresaurus.Sidekick
             {
                 SettingsService.OpenUserPreferences(SidekickSettingsRegister.SETTINGS_PATH);
             }
+            
 
             EditorGUILayout.EndHorizontal();
         }
 
-        
-        public void SetSelection(object newSelection)
+        private void HistoryButton(GUIContent content, GUIStyle guiStyle, List<SelectionInfo> stack, List<SelectionInfo> otherStack)
         {
-            if (!activeSelection.IsEmpty && !backStack.LastOrDefault().Equals(activeSelection))
+            GUI.enabled = (stack.Count > 0);
+            ButtonWithOptions(content, guiStyle, out bool mainPressed, out bool optionsPressed);
+
+            if (mainPressed)
             {
-                backStack.Add(activeSelection);
-                if (backStack.Count > BACK_STACK_LIMIT)
+                SwapStackElements(stack, otherStack);
+            }
+            
+            if (optionsPressed)
+            {
+                GenericMenu genericMenu = new GenericMenu();
+
+                for (var index = 0; index < stack.Count; index++)
                 {
-                    backStack.RemoveAt(0);
+                    SelectionInfo selectionInfo = stack[index];
+                    genericMenu.AddItem(new GUIContent(index + " " + selectionInfo.GetDisplayName()), false, userData =>
+                    {
+                        SwapStackElements(stack, otherStack, 1 + (int) userData);
+                    }, index);
+                    
+                }
+
+                genericMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+            }
+        }
+
+        void SwapStackElements(List<SelectionInfo> stack, List<SelectionInfo> otherStack, int count = 1)
+        {
+            SelectionInfo stackPeek = stack[count - 1];
+
+            otherStack.Insert(0, activeSelection);
+            
+            for (int i = 0; i < count; i++)
+            {
+                var temp = stack[0];
+                stack.RemoveAt(0);
+                if (i < count - 1)
+                {
+                    otherStack.Insert(0, temp);
                 }
             }
+            
+            activeSelection = stackPeek;
+
+            if (stackPeek.Object is Object unityObject)
+            {
+                suppressNextSelectionDetection = true;
+                Selection.activeObject = unityObject;
+            }
+        }
+
+        public void SetSelection(object newSelection)
+        {
+            if (!activeSelection.IsEmpty && !backStack.FirstOrDefault().Equals(activeSelection))
+            {
+                backStack.Insert(0, activeSelection);
+                if (backStack.Count > BACK_STACK_LIMIT)
+                {
+                    backStack.RemoveAt(backStack.Count - 1);
+                }
+            }
+
             forwardStack.Clear();
 
             activeSelection = new SelectionInfo(newSelection);
 
-            if (newSelection is UnityEngine.Object unityObject)
+            if (newSelection is Object unityObject)
             {
                 Selection.activeObject = unityObject;
             }
@@ -474,12 +541,12 @@ namespace Sabresaurus.Sidekick
 
         public void SetSelection(Type newSelection)
         {
-            if (!activeSelection.IsEmpty && !backStack.LastOrDefault().Equals(activeSelection))
+            if (!activeSelection.IsEmpty && !backStack.FirstOrDefault().Equals(activeSelection))
             {
-                backStack.Add(activeSelection);
+                backStack.Insert(0, activeSelection);
                 if (backStack.Count > BACK_STACK_LIMIT)
                 {
-                    backStack.RemoveAt(0);
+                    backStack.RemoveAt(backStack.Count - 1);
                 }
             }
             forwardStack.Clear();

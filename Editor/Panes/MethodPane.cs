@@ -175,7 +175,7 @@ namespace Sabresaurus.Sidekick
                 {
                     using (new EditorGUI.DisabledScope(true))
                     {
-                        GUILayout.Button("Null");
+                        GUILayout.Button("null");
                     }
                 }
             }
