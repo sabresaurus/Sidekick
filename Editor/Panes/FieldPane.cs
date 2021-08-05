@@ -45,7 +45,7 @@ namespace Sabresaurus.Sidekick
                 }
                 
                 EditorGUI.BeginChangeCheck();
-                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType);
+                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType, isReadonly);
                 if (EditorGUI.EndChangeCheck() && !isReadonly)
                 {
                     field.SetValue(component, newValue);

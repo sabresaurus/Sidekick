@@ -14,7 +14,7 @@ namespace Sabresaurus.Sidekick
 			Static,
 			Constant
 		}
-		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType)
+		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType, bool isReadonly)
 		{
 			GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
 			RectOffset padding = expandButtonStyle.padding;
@@ -53,6 +53,8 @@ namespace Sabresaurus.Sidekick
 
 				string expandedID = fieldType.FullName + fieldName;
 				bool expanded = DrawHeader(expandedID, label);
+				
+				EditorGUI.BeginDisabledGroup(isReadonly);
 
 				IList list = null;
 				int previousSize = 0;
@@ -100,6 +102,8 @@ namespace Sabresaurus.Sidekick
 			}
 			else
 			{
+				EditorGUI.BeginDisabledGroup(isReadonly);
+				
 				// Not a collection
 				EditorGUILayout.BeginHorizontal();
 
@@ -144,6 +148,7 @@ namespace Sabresaurus.Sidekick
 				}
 			}
 
+			EditorGUI.EndDisabledGroup();
 
 			return newValue;
 		}
@@ -170,6 +175,7 @@ namespace Sabresaurus.Sidekick
 
 		private static void DrawExtensions(object fieldValue, GUIStyle expandButtonStyle)
 		{
+			bool wasGUIEnabled = GUI.enabled;
 			GUI.enabled = true;
 			if (GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Select This"), expandButtonStyle, GUILayout.Width(18), GUILayout.Height(18)))
 			{
@@ -184,6 +190,8 @@ namespace Sabresaurus.Sidekick
 				
 				menu.DropDown(rect);
 			}
+
+			GUI.enabled = wasGUIEnabled;
 		}
 
 		private static object DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue, out bool handled)

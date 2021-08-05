@@ -34,10 +34,7 @@ namespace Sabresaurus.Sidekick
 				MethodInfo setMethod = property.GetSetMethod(true);
 
 				string tooltip = TypeUtility.GetTooltip(property);
-				if(setMethod == null)
-				{
-					GUI.enabled = false;
-				}
+				bool isReadonly = (setMethod == null);
 
 				object[] attributes = property.GetCustomAttributes(false);
 
@@ -56,7 +53,7 @@ namespace Sabresaurus.Sidekick
 					{
 						object oldValue = getMethod.Invoke(component, null);
 						EditorGUI.BeginChangeCheck();
-						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, VariableAttributes.None, true, componentType);
+						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, VariableAttributes.None, true, componentType, isReadonly);
 						if (EditorGUI.EndChangeCheck() && setMethod != null)
 						{
 							setMethod.Invoke(component, new[] {newValue});
@@ -66,11 +63,6 @@ namespace Sabresaurus.Sidekick
 				else
 				{
 					GUILayout.Label(property.PropertyType + " " + property.Name);
-				}
-
-				if(setMethod == null)
-				{
-					GUI.enabled = true;
 				}
 			}
 		}
