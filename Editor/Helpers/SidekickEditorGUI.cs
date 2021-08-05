@@ -163,7 +163,7 @@ namespace Sabresaurus.Sidekick
             rightRect.width = 1;
             rightRect.height = 12;
             rightRect.y = (rect.height - 12) / 2;
-            GUI.DrawTexture(rightRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, new Color32(50,50,50, 255), Vector4.zero, Vector4.zero);
+            GUI.DrawTexture(rightRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, new Color32(0,0,0,38), Vector4.zero, Vector4.zero);
         }
     }
 }
