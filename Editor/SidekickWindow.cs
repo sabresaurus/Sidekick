@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -24,84 +23,31 @@ namespace Sabresaurus.Sidekick
 
         private string searchTerm = "";
 
-        FieldPane fieldPane = new FieldPane();
-        PropertyPane propertyPane = new PropertyPane();
-        MethodPane methodPane = new MethodPane();
-        EventPane eventPane = new EventPane();
+        readonly FieldPane fieldPane = new FieldPane();
+        readonly PropertyPane propertyPane = new PropertyPane();
+        readonly MethodPane methodPane = new MethodPane();
+        readonly EventPane eventPane = new EventPane();
 
         static SidekickWindow current;
 
         private SearchField searchField;
 
-        private readonly struct SelectionInfo : IEquatable<SelectionInfo>
-        {
-            // Note we need to be able to differentiate selecting a RuntimeType from wanting to see static methods on the type it represents 
-            public readonly Type Type;
-            public readonly object Object;
-
-            public SelectionInfo(Type type)
-            {
-                Type = type;
-                Object = null;
-            }
-
-            public SelectionInfo(object o)
-            {
-                Object = o;
-                Type = null;
-            }
-
-            public bool IsEmpty => Type == null && Object == null;
-            
-            public string GetDisplayName()
-            {
-                if (Type != null)
-                {
-                    return Type.Name;
-                }
-
-                if (Object != null)
-                {
-                    return Object.ToString();
-                }
-
-                return "Unknown";
-            }
-            
-
-            public bool Equals(SelectionInfo other)
-            {
-                return Type == other.Type && Equals(Object, other.Object);
-            }
-
-            public override bool Equals(object obj)
-            {
-                return obj is SelectionInfo other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Object != null ? Object.GetHashCode() : 0);
-                }
-            }
-        }
+        
 
         SelectionInfo activeSelection = new SelectionInfo();
 
         private bool selectionLocked = false;
 
-        List<SelectionInfo> backStack = new List<SelectionInfo>();
-        List<SelectionInfo> forwardStack = new List<SelectionInfo>();
+        readonly List<SelectionInfo> backStack = new List<SelectionInfo>();
+        readonly List<SelectionInfo> forwardStack = new List<SelectionInfo>();
 
-        PersistentData persistentData = new PersistentData();
+        readonly PersistentData persistentData = new PersistentData();
         InspectorMode mode = InspectorMode.Fields;
         Vector2 scrollPosition;
 
         private bool suppressNextSelectionDetection = false;
 
-        List<KeyValuePair<Type, bool>> typesHidden = new List<KeyValuePair<Type, bool>>()
+        readonly List<KeyValuePair<Type, bool>> typesHidden = new List<KeyValuePair<Type, bool>>()
         {
             new KeyValuePair<Type, bool>(typeof(Transform), true),
             new KeyValuePair<Type, bool>(typeof(GameObject), true),
@@ -132,6 +78,8 @@ namespace Sabresaurus.Sidekick
             {
                 SetSelection(Selection.activeObject);
             }
+
+            Selection.selectionChanged += OnSelectionChangeNonMessage;
         }
 
         void UpdateTitleContent()
@@ -149,6 +97,8 @@ namespace Sabresaurus.Sidekick
 
             current = this;
 
+            CleanStacks();
+            
             DrawToolbar();
 
             Type[] inspectedTypes = null;
@@ -405,27 +355,6 @@ namespace Sabresaurus.Sidekick
             SidekickEditorGUI.EndLabelHighlight();
         }
 
-        static void ButtonWithOptions(
-            GUIContent content,
-            GUIStyle toggleButtonStyle,
-            out bool mainPressed,
-            out bool optionsPressed)
-        {
-            mainPressed = false;
-            optionsPressed = false;
-            
-            Rect rect = GUILayoutUtility.GetRect(content, toggleButtonStyle);
-            if (EditorGUI.DropdownButton(new Rect(rect.xMax - toggleButtonStyle.padding.right, rect.y, toggleButtonStyle.padding.right, rect.height), GUIContent.none, FocusType.Passive, GUIStyle.none))
-            {
-                optionsPressed = true;
-            }
-
-            if (GUI.Button(rect, content, toggleButtonStyle))
-            {
-                mainPressed = true;
-            }
-        }
-
         private void DrawToolbar()
         {
             GUIContent backContent = new GUIContent(SidekickEditorGUI.BackIcon, "Back");
@@ -435,10 +364,8 @@ namespace Sabresaurus.Sidekick
             
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            GUIStyle guiStyle = new GUIStyle(GUI.skin.FindStyle("toolbarDropDownToggleRight")) {alignment = TextAnchor.MiddleCenter};
-
-            HistoryButton(backContent, guiStyle, backStack, forwardStack);
-            HistoryButton(forwardContent, guiStyle, forwardStack, backStack);
+            HistoryButton(backContent, backStack, forwardStack);
+            HistoryButton(forwardContent, forwardStack, backStack);
 
             GUI.enabled = true;
             
@@ -465,10 +392,10 @@ namespace Sabresaurus.Sidekick
             EditorGUILayout.EndHorizontal();
         }
 
-        private void HistoryButton(GUIContent content, GUIStyle guiStyle, List<SelectionInfo> stack, List<SelectionInfo> otherStack)
+        private void HistoryButton(GUIContent content, List<SelectionInfo> stack, List<SelectionInfo> otherStack)
         {
             GUI.enabled = (stack.Count > 0);
-            ButtonWithOptions(content, guiStyle, out bool mainPressed, out bool optionsPressed);
+            SidekickEditorGUI.ButtonWithOptions(content, out bool mainPressed, out bool optionsPressed);
 
             if (mainPressed)
             {
@@ -482,11 +409,10 @@ namespace Sabresaurus.Sidekick
                 for (var index = 0; index < stack.Count; index++)
                 {
                     SelectionInfo selectionInfo = stack[index];
-                    genericMenu.AddItem(new GUIContent(index + " " + selectionInfo.GetDisplayName()), false, userData =>
+                    genericMenu.AddItem(new GUIContent($"{index} - {selectionInfo.GetDisplayName()}"), false, userData =>
                     {
                         SwapStackElements(stack, otherStack, 1 + (int) userData);
                     }, index);
-                    
                 }
 
                 genericMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
@@ -554,7 +480,21 @@ namespace Sabresaurus.Sidekick
             activeSelection = new SelectionInfo(newSelection);
         }
 
-        void OnSelectionChange()
+        /// <summary>
+        /// Make sure there's no deleted objects as we wouldn't be able to select them
+        /// </summary>
+        void CleanStacks()
+        {
+            forwardStack.RemoveAll(info => info.IsEmpty);
+            backStack.RemoveAll(info => info.IsEmpty);
+        }
+
+        /// <summary>
+        /// Note this is not the EditorWindow.OnSelectionChange message as that is only called when the window is
+        /// focused. Instead we subscribe to selection changes on enable so that even if the window is not visible we
+        /// can still track changes.
+        /// </summary>
+        void OnSelectionChangeNonMessage()
         {
             if (suppressNextSelectionDetection)
             {

@@ -14,6 +14,8 @@ namespace Sabresaurus.Sidekick
 
         public static readonly Texture BackIcon = EditorGUIUtility.TrIconContent("back").image; 
         public static readonly Texture ForwardIcon = EditorGUIUtility.TrIconContent("forward").image;
+        public static readonly Texture DropdownIcon = EditorGUIUtility.TrIconContent("icon dropdown").image;
+        
         public static readonly Texture LockIconOff = EditorGUIUtility.TrIconContent("LockIcon").image;
         public static readonly Texture LockIconOn = EditorGUIUtility.TrIconContent("LockIcon-On").image;
         public static readonly Texture MoreOptions = EditorGUIUtility.TrIconContent("Toolbar Plus").image;
@@ -123,6 +125,45 @@ namespace Sabresaurus.Sidekick
             }
 
             return false;
+        }
+
+        public static void ButtonWithOptions(
+            GUIContent content,
+            out bool mainPressed,
+            out bool optionsPressed)
+        {
+            mainPressed = false;
+            optionsPressed = false;
+            
+            GUIStyle style = EditorStyles.toolbarDropDown;
+            style.alignment = TextAnchor.MiddleCenter;
+            
+            Rect rect = GUILayoutUtility.GetRect(content, style);
+
+            // Right click
+            if (DetectClickInRect(rect, 1))
+            {
+                optionsPressed = true;
+            }
+            
+            // Left click on the right side drop down icon
+            if (EditorGUI.DropdownButton(new Rect(rect.xMax - style.padding.right, rect.y, style.padding.right, rect.height), GUIContent.none, FocusType.Passive, GUIStyle.none))
+            {
+                optionsPressed = true;
+            }
+
+            // Left click on main button
+            if (GUI.Button(rect, content, style))
+            {
+                mainPressed = true;
+            }
+
+            Rect rightRect = rect;
+            rightRect.xMin = rect.xMax - 18;
+            rightRect.width = 1;
+            rightRect.height = 12;
+            rightRect.y = (rect.height - 12) / 2;
+            GUI.DrawTexture(rightRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, new Color32(50,50,50, 255), Vector4.zero, Vector4.zero);
         }
     }
 }
