@@ -89,6 +89,11 @@ namespace Sabresaurus.Sidekick
 
         void OnGUI()
         {
+            // Flexible width for the label based on overall width
+            EditorGUIUtility.labelWidth = Mathf.Round(EditorGUIUtility.currentViewWidth * 0.4f);
+            // Use inline controls if there is enough horizontal room 
+            EditorGUIUtility.wideMode = EditorGUIUtility.currentViewWidth > 400;
+            
             // Frame rate tracking
             if (Event.current.type == EventType.Repaint)
             {
@@ -208,7 +213,7 @@ namespace Sabresaurus.Sidekick
                     _ => null
                 };
                 
-                Rect foldoutRect = GUILayoutUtility.GetRect(content, EditorStyles.foldoutHeader);
+                Rect foldoutRect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.foldoutHeader);
                 
                 Rect headerRect = foldoutRect;
                 headerRect.xMin += 34;
