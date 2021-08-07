@@ -14,11 +14,10 @@ namespace Sabresaurus.Sidekick
 
         public static readonly Texture BackIcon = EditorGUIUtility.TrIconContent("back").image; 
         public static readonly Texture ForwardIcon = EditorGUIUtility.TrIconContent("forward").image;
-        public static readonly Texture DropdownIcon = EditorGUIUtility.TrIconContent("icon dropdown").image;
-        
-        public static readonly Texture LockIconOff = EditorGUIUtility.TrIconContent("IN LockButton").image;
-        public static readonly Texture LockIconOn = EditorGUIUtility.TrIconContent("IN LockButton on").image;
         public static readonly Texture MoreOptions = EditorGUIUtility.TrIconContent("Toolbar Plus").image;
+
+        public static Texture LockIconOff => new GUIStyle("IN LockButton").normal.scaledBackgrounds[0];
+        public static Texture LockIconOn => new GUIStyle("IN LockButton").onNormal.scaledBackgrounds[0];
 
         public static void DrawTypeChainHeader(GUIContent label)
         {

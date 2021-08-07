@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +11,7 @@ namespace Sabresaurus.Sidekick
         public static GenericMenu GetMenu(object o)
         {
             var menu = new GenericMenu();
-            
+
             if (o is MonoScript monoScript)
             {
                 Type classType = monoScript.GetClass();
@@ -22,14 +24,30 @@ namespace Sabresaurus.Sidekick
             {
                 menu.AddItem(new GUIContent("Set Name From First Script"), false, SetNameFromFirstScript, gameObject);
             }
-            else if (o is Texture2D)
+            else if (o is Texture2D _)
             {
                 menu.AddItem(new GUIContent("Export Texture"), false, ExportTexture, o);
+            }
+            else
+            {
+                MonoScript targetMonoScript = GetMonoScriptForType(o.GetType());
+                if (targetMonoScript != null)
+                {
+                    menu.AddItem(new GUIContent("Select Script"), false, _ => Selection.activeObject = targetMonoScript, targetMonoScript);
+                    menu.AddItem(new GUIContent("Edit Script"), false, _ => AssetDatabase.OpenAsset(targetMonoScript), targetMonoScript);
+                }
             }
 
             menu.AddItem(new GUIContent("Copy As JSON (Unity JsonUtility)"), false, CopyAsJSON, o);
 
             return menu;
+        }
+
+        static MonoScript GetMonoScriptForType(Type type)
+        {
+            var monoScripts = Resources.FindObjectsOfTypeAll<MonoScript>();
+
+            return monoScripts.FirstOrDefault(monoScript => monoScript.GetClass() == type);
         }
 
         private static void InstantiateScriptableObject(object userData)
