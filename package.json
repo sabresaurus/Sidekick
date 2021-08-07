@@ -4,8 +4,10 @@
   "displayName": "Sidekick",
   "description": "Inspect private fields, properties, fire methods and more",
   "unity": "2020.3",
+  "documentationUrl": "https://github.com/sabresaurus/Sidekick",
+  "changelogUrl": "https://github.com/sabresaurus/Sidekick/commits/main",
   "author": {
     "name": "sabresaurus",
-    "url": "https://github.com/sabresaurus/Sidekick"
+    "url": "https://github.com/sabresaurus"
   }
 }
