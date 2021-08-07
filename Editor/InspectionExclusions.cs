@@ -24,11 +24,13 @@ namespace Sabresaurus.Sidekick
                 // Add any custom exclusions here
             };
         }
-
+        
         public static bool IsPropertyExcluded(Type componentType, PropertyInfo property)
         {
             // Will instantiate at edit time
             if (componentType == typeof(MeshFilter) && property.Name == "mesh") return true;
+            if ((componentType == typeof(Renderer) || componentType.IsSubclassOf(typeof(Renderer))) && property.Name == "material") return true;
+            if ((componentType == typeof(Renderer) || componentType.IsSubclassOf(typeof(Renderer))) && property.Name == "materials") return true;
 			
             // Will result in assertions if the matrix fails ValidTRS
             if (componentType == typeof(Matrix4x4) && property.Name == "rotation") return true;

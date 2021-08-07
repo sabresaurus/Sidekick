@@ -15,7 +15,15 @@ namespace Sabresaurus.Sidekick
         public static readonly Texture BackIcon = EditorGUIUtility.TrIconContent("back").image; 
         public static readonly Texture ForwardIcon = EditorGUIUtility.TrIconContent("forward").image;
         public static readonly Texture MoreOptions = EditorGUIUtility.TrIconContent("Toolbar Plus").image;
-
+        
+        public static readonly Texture ErrorIcon = EditorGUIUtility.TrIconContent("console.erroricon").image;
+        public static readonly Texture WarningIcon = EditorGUIUtility.TrIconContent("console.warnicon").image;
+        public static readonly Texture InfoIcon = EditorGUIUtility.TrIconContent("console.infoicon").image;
+        
+        public static readonly Texture ErrorIconSmall = EditorGUIUtility.TrIconContent("console.erroricon.sml").image;
+        public static readonly Texture WarningIconSmall = EditorGUIUtility.TrIconContent("console.warnicon.sml").image;
+        public static readonly Texture InfoIconSmall = EditorGUIUtility.TrIconContent("console.infoicon.sml").image;
+        
         public static Texture LockIconOff => new GUIStyle("IN LockButton").normal.scaledBackgrounds[0];
         public static Texture LockIconOn => new GUIStyle("IN LockButton").onNormal.scaledBackgrounds[0];
 

@@ -34,35 +34,58 @@ namespace Sabresaurus.Sidekick
 				MethodInfo setMethod = property.GetSetMethod(true);
 
 				object[] attributes = property.GetCustomAttributes(false);
+				
+				VariableAttributes variableAttributes = VariableAttributes.None;
 
-				if(getMethod != null && component != null)
+				if (getMethod != null && getMethod.IsStatic || setMethod != null && setMethod.IsStatic)
 				{
-					VariableAttributes variableAttributes = VariableAttributes.None;
-
-					if (getMethod.IsStatic)
-					{
-						variableAttributes |= VariableAttributes.Static;
-					}
+					variableAttributes |= VariableAttributes.Static;
+				}
 						
-					if (setMethod == null)
-					{
-						variableAttributes |= VariableAttributes.ReadOnly;
-					}
+				if (setMethod == null)
+				{
+					variableAttributes |= VariableAttributes.ReadOnly;
+				}
+				
+				if (getMethod == null)
+				{
+					variableAttributes |= VariableAttributes.WriteOnly;
+				}
 					
-					string tooltip = TypeUtility.GetTooltip(property, variableAttributes);
-					
-					if (InspectionExclusions.IsPropertyExcluded(componentType, property))
+				string tooltip = TypeUtility.GetTooltip(property, variableAttributes);
+
+				if (getMethod == null)
+				{
+					EditorGUILayout.LabelField(new GUIContent(property.Name, tooltip), new GUIContent("No get method", SidekickEditorGUI.ErrorIconSmall));
+				}
+				else if (InspectionExclusions.IsPropertyExcluded(componentType, property))
+				{
+					EditorGUILayout.LabelField(new GUIContent(property.Name, tooltip), new GUIContent("Excluded due to rule", SidekickEditorGUI.ErrorIconSmall, "See InspectionExclusions.cs"));
+				}
+				else if (AttributeHelper.IsObsoleteWithError(attributes))
+				{
+					// Don't try to get the value of properties that error on access
+					EditorGUILayout.LabelField(new GUIContent(property.Name, tooltip), new GUIContent("[Obsolete] error", SidekickEditorGUI.ErrorIconSmall));
+				}
+				else
+				{
+					object oldValue = null;
+					Exception error = null;
+					try
 					{
-						GUILayout.Label(new GUIContent(property.Name + " excluded due to rule", tooltip));
+						oldValue = getMethod.Invoke(component, null);
 					}
-					else if (AttributeHelper.IsObsoleteWithError(attributes))
+					catch (Exception e)
 					{
-						// Don't try to get the value of properties that error on access
-						GUILayout.Label(new GUIContent(property.Name + " obsolete with error", tooltip));
+						error = e;
+					}
+
+					if (error != null)
+					{
+						EditorGUILayout.LabelField(new GUIContent(property.Name, tooltip), new GUIContent(error.GetType().Name, SidekickEditorGUI.ErrorIconSmall));
 					}
 					else
 					{
-						object oldValue = getMethod.Invoke(component, null);
 						EditorGUI.BeginChangeCheck();
 						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, variableAttributes, true, componentType);
 						if (EditorGUI.EndChangeCheck() && setMethod != null)
@@ -70,10 +93,6 @@ namespace Sabresaurus.Sidekick
 							setMethod.Invoke(component, new[] {newValue});
 						}
 					}
-				}
-				else
-				{
-					GUILayout.Label(property.PropertyType + " " + property.Name);
 				}
 			}
 		}

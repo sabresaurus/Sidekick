@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
@@ -11,6 +12,11 @@ namespace Sabresaurus.Sidekick
         public static GenericMenu GetMenu(object o)
         {
             var menu = new GenericMenu();
+
+            if (o == null || (o is Object unityObject && unityObject == null))
+            {
+                return menu;
+            }
 
             if (o is MonoScript monoScript)
             {

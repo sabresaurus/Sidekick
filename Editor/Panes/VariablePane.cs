@@ -3,6 +3,7 @@ using System.Collections;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
@@ -15,6 +16,7 @@ namespace Sabresaurus.Sidekick
 			Static = 1 << 0,
 			Constant = 1 << 1,
 			ReadOnly = 1 << 2,
+			WriteOnly = 1 << 3,
 		}
 		
 		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType)
@@ -179,7 +181,15 @@ namespace Sabresaurus.Sidekick
 		private static void DrawExtensions(object fieldValue, GUIStyle expandButtonStyle)
 		{
 			bool wasGUIEnabled = GUI.enabled;
-			GUI.enabled = true;
+			if (fieldValue == null || (fieldValue is Object unityObject && unityObject == null))
+			{
+				GUI.enabled = false;
+			}
+			else
+			{
+				GUI.enabled = true;
+			}
+
 			if (GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Select This"), expandButtonStyle, GUILayout.Width(18), GUILayout.Height(18)))
 			{
 				SidekickWindow.Current.SetSelection(fieldValue);

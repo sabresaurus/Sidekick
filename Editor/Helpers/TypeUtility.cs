@@ -302,6 +302,10 @@ namespace Sabresaurus.Sidekick
 	        {
 		        methodsSuffix = "{ get; }";
 	        }
+	        else if ((variableAttributes & VariablePane.VariableAttributes.WriteOnly) != 0)
+	        {
+		        methodsSuffix = "{ set; }";
+	        }
 	        else
 	        {
 		        methodsSuffix = "{ get; set; }";
