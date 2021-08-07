@@ -30,6 +30,24 @@ namespace Sabresaurus.Sidekick
         private static Texture2D staticBackgroundLightSkin;
         private static Texture2D staticBackgroundDarkSkin;
 
+        private static readonly Color staticBackgroundDarkTintColor = new Color32(227, 227, 227, 255);
+        private static readonly Color staticBackgroundLightTintColor = new Color32(240, 240, 240, 255);
+        
+        public static Color StaticBackgroundTintColor
+        {
+            get
+            {
+                if (EditorGUIUtility.isProSkin)
+                {
+                    return staticBackgroundDarkTintColor;
+                }
+                else
+                {
+                    return staticBackgroundLightTintColor;
+                }
+            }
+        }
+
         public static Texture2D StaticBackground
         {
             get
@@ -39,7 +57,7 @@ namespace Sabresaurus.Sidekick
                     if (staticBackgroundDarkSkin == null)
                     {
                         staticBackgroundDarkSkin = new Texture2D(1, 1);
-                        staticBackgroundDarkSkin.SetPixel(0,0, new Color32(50,50,50,255));
+                        staticBackgroundDarkSkin.SetPixel(0,0, new Color32(50, 50, 50, 255));
                         staticBackgroundDarkSkin.Apply();
                     }
 

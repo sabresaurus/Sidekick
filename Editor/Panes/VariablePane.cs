@@ -50,7 +50,7 @@ namespace Sabresaurus.Sidekick
 				EditorGUILayout.BeginHorizontal();
 
 				string expandedID = fieldType.FullName + fieldName;
-				bool expanded = DrawHeader(expandedID, label);
+				bool expanded = DrawHeader(expandedID, label, (variableAttributes & VariableAttributes.Static) != 0);
 				
 				EditorGUI.BeginDisabledGroup((variableAttributes & VariableAttributes.ReadOnly) != 0);
 
@@ -116,15 +116,19 @@ namespace Sabresaurus.Sidekick
 				
 				if (!handled)
 				{
+					EditorGUI.EndDisabledGroup();
+
 					string expandedID = fieldType.FullName + fieldName;
 					EditorGUILayout.BeginHorizontal();
-					bool expanded = DrawHeader(expandedID, label);
+					bool expanded = DrawHeader(expandedID, label, (variableAttributes & VariableAttributes.Static) != 0);
 					
 					if(allowExtensions)
 					{
 						DrawExtensions(fieldValue, expandButtonStyle);
 					}
 					EditorGUILayout.EndHorizontal();
+				
+					EditorGUI.BeginDisabledGroup((variableAttributes & VariableAttributes.ReadOnly) != 0);
 					
 					if(expanded)
 					{
@@ -158,11 +162,20 @@ namespace Sabresaurus.Sidekick
 			return newValue;
 		}
 
-		private static bool DrawHeader(string expandedID, GUIContent label)
+		private static bool DrawHeader(string expandedID, GUIContent label, bool isStatic)
 		{
 			bool expanded = SidekickWindow.Current.PersistentData.ExpandedFields.Contains(expandedID);
 			EditorGUI.BeginChangeCheck();
-			expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, label);
+
+			GUIStyle style = new GUIStyle(EditorStyles.foldoutHeader);
+
+			Color oldColor = GUI.backgroundColor;
+			if (isStatic)
+			{
+				GUI.backgroundColor = SidekickEditorGUI.StaticBackgroundTintColor;
+			}
+			
+			expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, label, style);
 			if (EditorGUI.EndChangeCheck())
 			{
 				if (expanded)
@@ -174,7 +187,14 @@ namespace Sabresaurus.Sidekick
 					SidekickWindow.Current.PersistentData.ExpandedFields.Remove(expandedID);
 				}
 			}
+			
+			if (isStatic)
+			{
+				
+				style.normal.background = SidekickEditorGUI.StaticBackground;
+			}
 
+			GUI.backgroundColor = oldColor;
 			return expanded;
 		}
 
