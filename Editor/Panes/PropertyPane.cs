@@ -33,13 +33,24 @@ namespace Sabresaurus.Sidekick
 				MethodInfo getMethod = property.GetGetMethod(true);
 				MethodInfo setMethod = property.GetSetMethod(true);
 
-				string tooltip = TypeUtility.GetTooltip(property);
-				bool isReadonly = (setMethod == null);
-
 				object[] attributes = property.GetCustomAttributes(false);
 
 				if(getMethod != null && component != null)
 				{
+					VariableAttributes variableAttributes = VariableAttributes.None;
+
+					if (getMethod.IsStatic)
+					{
+						variableAttributes |= VariableAttributes.Static;
+					}
+						
+					if (setMethod == null)
+					{
+						variableAttributes |= VariableAttributes.ReadOnly;
+					}
+					
+					string tooltip = TypeUtility.GetTooltip(property, variableAttributes);
+					
 					if (InspectionExclusions.IsPropertyExcluded(componentType, property))
 					{
 						GUILayout.Label(new GUIContent(property.Name + " excluded due to rule", tooltip));
@@ -53,7 +64,7 @@ namespace Sabresaurus.Sidekick
 					{
 						object oldValue = getMethod.Invoke(component, null);
 						EditorGUI.BeginChangeCheck();
-						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, VariableAttributes.None, true, componentType, isReadonly);
+						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, variableAttributes, true, componentType);
 						if (EditorGUI.EndChangeCheck() && setMethod != null)
 						{
 							setMethod.Invoke(component, new[] {newValue});

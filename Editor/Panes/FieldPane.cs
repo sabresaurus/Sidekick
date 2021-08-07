@@ -19,8 +19,6 @@ namespace Sabresaurus.Sidekick
                     continue;
                 }
 
-                bool isReadonly = false;
-
                 Type fieldType = field.FieldType;
 
                 VariableAttributes variableAttributes = VariableAttributes.None;
@@ -31,27 +29,27 @@ namespace Sabresaurus.Sidekick
                     variableAttributes = VariableAttributes.Constant;
                     
                     // Prevent SetValue as it will result in a FieldAccessException
-                    isReadonly = true;
+                    variableAttributes |= VariableAttributes.ReadOnly;
                 }
-                else if (field.IsStatic)
+                if (field.IsStatic)
                 {
-                    variableAttributes = VariableAttributes.Static;
+                    variableAttributes |= VariableAttributes.Static;
                 }
                 string tooltip = TypeUtility.GetTooltip(field, variableAttributes);
 
-                if (isReadonly)
+                if ((variableAttributes & VariableAttributes.ReadOnly) != 0)
                 {
                     GUI.enabled = false;
                 }
                 
                 EditorGUI.BeginChangeCheck();
-                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType, isReadonly);
-                if (EditorGUI.EndChangeCheck() && !isReadonly)
+                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType);
+                if (EditorGUI.EndChangeCheck() && (variableAttributes & VariableAttributes.ReadOnly) == 0)
                 {
                     field.SetValue(component, newValue);
                 }
-                
-                if (isReadonly)
+
+                if ((variableAttributes & VariableAttributes.ReadOnly) != 0)
                 {
                     GUI.enabled = true;
                 }

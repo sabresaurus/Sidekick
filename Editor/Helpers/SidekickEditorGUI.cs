@@ -19,6 +19,40 @@ namespace Sabresaurus.Sidekick
         public static Texture LockIconOff => new GUIStyle("IN LockButton").normal.scaledBackgrounds[0];
         public static Texture LockIconOn => new GUIStyle("IN LockButton").onNormal.scaledBackgrounds[0];
 
+        private static Texture2D staticBackgroundLightSkin;
+        private static Texture2D staticBackgroundDarkSkin;
+
+        public static Texture2D StaticBackground
+        {
+            get
+            {
+                if (EditorGUIUtility.isProSkin)
+                {
+                    if (staticBackgroundDarkSkin == null)
+                    {
+                        staticBackgroundDarkSkin = new Texture2D(1, 1);
+                        staticBackgroundDarkSkin.SetPixel(0,0, new Color32(50,50,50,255));
+                        staticBackgroundDarkSkin.Apply();
+                    }
+
+                    return staticBackgroundDarkSkin;
+                }
+                else
+                {
+                    if (staticBackgroundLightSkin == null)
+                    {
+                        staticBackgroundLightSkin = new Texture2D(1, 1);
+                        staticBackgroundLightSkin.SetPixel(0,0, new Color32(186, 186, 186, 255));
+                        staticBackgroundLightSkin.Apply();
+                    }
+
+                    return staticBackgroundLightSkin;
+                }
+            }
+        }
+        
+        
+
         public static void DrawTypeChainHeader(GUIContent label)
         {
             Rect contentRect = GUILayoutUtility.GetRect(1f, 17f);

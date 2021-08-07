@@ -8,14 +8,22 @@ namespace Sabresaurus.Sidekick
 {
 	public abstract class VariablePane : BasePane
 	{
+		[Flags]
 		public enum VariableAttributes
 		{
-			None,
-			Static,
-			Constant
+			None = 0,
+			Static = 1 << 0,
+			Constant = 1 << 1,
+			ReadOnly = 1 << 2,
 		}
-		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType, bool isReadonly)
+		
+		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType)
 		{
+			if ((variableAttributes & VariableAttributes.Static) != 0)
+			{
+				var style = new GUIStyle {normal = {background = SidekickEditorGUI.StaticBackground}};
+				EditorGUILayout.BeginVertical(style);
+			}
 			GUIStyle expandButtonStyle = new GUIStyle(GUI.skin.button);
 			RectOffset padding = expandButtonStyle.padding;
 			padding.left = 0;
@@ -25,10 +33,7 @@ namespace Sabresaurus.Sidekick
 			fieldValue ??= TypeUtility.GetDefaultValue(fieldType);
 
 			string displayName = SidekickUtility.NicifyIdentifier(fieldName);
-			if (variableAttributes == VariableAttributes.Static)
-			{
-				displayName += " [S]";
-			}
+			
 			GUIContent label = new GUIContent(displayName, tooltip);
 
 			object newValue = fieldValue;
@@ -39,22 +44,13 @@ namespace Sabresaurus.Sidekick
 			if(isArray || isGenericList)
 			{
 				Type elementType = TypeUtility.GetElementType(fieldType);
-
-				string elementTypeName = TypeUtility.NameForType(elementType);
-				if(isGenericList)
-				{
-					label.tooltip += " List<" + elementTypeName + "> ";
-				}
-				else
-				{
-					label.tooltip += " []";
-				}
+				
 				EditorGUILayout.BeginHorizontal();
 
 				string expandedID = fieldType.FullName + fieldName;
 				bool expanded = DrawHeader(expandedID, label);
 				
-				EditorGUI.BeginDisabledGroup(isReadonly);
+				EditorGUI.BeginDisabledGroup((variableAttributes & VariableAttributes.ReadOnly) != 0);
 
 				IList list = null;
 				int previousSize = 0;
@@ -102,7 +98,7 @@ namespace Sabresaurus.Sidekick
 			}
 			else
 			{
-				EditorGUI.BeginDisabledGroup(isReadonly);
+				EditorGUI.BeginDisabledGroup((variableAttributes & VariableAttributes.ReadOnly) != 0);
 				
 				// Not a collection
 				EditorGUILayout.BeginHorizontal();
@@ -130,6 +126,7 @@ namespace Sabresaurus.Sidekick
 					
 					if(expanded)
 					{
+						EditorGUI.indentLevel++;
 						var fields = fieldType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
 						foreach (var fieldInfo in fields)
@@ -142,6 +139,7 @@ namespace Sabresaurus.Sidekick
 								fieldInfo.SetValue(fieldValue, newSubValue);
 							}
 						}
+						EditorGUI.indentLevel--;
 					}
 
 					EditorGUILayout.EndFoldoutHeaderGroup();
@@ -150,6 +148,11 @@ namespace Sabresaurus.Sidekick
 
 			EditorGUI.EndDisabledGroup();
 
+			if ((variableAttributes & VariableAttributes.Static) != 0)
+			{
+				EditorGUILayout.EndVertical();
+			}
+			
 			return newValue;
 		}
 

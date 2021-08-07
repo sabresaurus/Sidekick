@@ -108,9 +108,8 @@ namespace Sabresaurus.Sidekick
                         EditorGUI.indentLevel++;
                         for (int i = 0; i < parameters.Length; i++)
                         {
-//							VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, GetDefaultValue(parameters[i].ParameterType), "", false);
                             EditorGUI.BeginChangeCheck();
-                            object newValue = VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, false, null, false);
+                            object newValue = VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, false, null);
                             if (EditorGUI.EndChangeCheck())
                             {
                                 methodSetup.Values[i] = newValue;

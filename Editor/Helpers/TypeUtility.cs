@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Sabresaurus.Sidekick
@@ -118,6 +117,22 @@ namespace Sabresaurus.Sidekick
 			}
 			else
 			{
+				bool isArray = type.IsArray;
+				bool isGenericList = IsGenericList(type);
+				if (isArray || isGenericList)
+				{
+					Type elementType = GetElementType(type);
+					string elementTypeName = TypeUtility.NameForType(elementType);
+					if (isGenericList)
+					{
+						return "List<" + elementTypeName + ">";
+					}
+					else
+					{
+						return elementTypeName + "[]";
+					}
+				}
+
 				return type.Name;
 			}
 		}
@@ -254,19 +269,14 @@ namespace Sabresaurus.Sidekick
 	        object[] customAttributes = field.GetCustomAttributes(false);
 	        foreach (var customAttribute in customAttributes)
 	        {
-		        tooltip += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
+		        tooltip += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]\n";
 	        }
 
-	        if (!string.IsNullOrEmpty(tooltip))
-	        {
-		        tooltip += "\n";
-	        }
-
-	        if (variableAttributes == VariablePane.VariableAttributes.Constant)
+	        if ((variableAttributes & VariablePane.VariableAttributes.Constant) != 0)
 	        {
 		        tooltip += $"{GetVisibilityName(field)} const {NameForType(field.FieldType)} {field.Name}";
 	        }
-	        else if (variableAttributes == VariablePane.VariableAttributes.Static)
+	        else if ((variableAttributes & VariablePane.VariableAttributes.Static) != 0)
 	        {
 		        tooltip += $"{GetVisibilityName(field)} static {NameForType(field.FieldType)} {field.Name}";
 	        }
@@ -278,20 +288,33 @@ namespace Sabresaurus.Sidekick
 	        return tooltip;
         }
 
-        public static string GetTooltip(PropertyInfo propertyInfo)
+        public static string GetTooltip(PropertyInfo propertyInfo, VariablePane.VariableAttributes variableAttributes)
         {
 	        string tooltip = "";
 	        object[] customAttributes = propertyInfo.GetCustomAttributes(false);
 	        foreach (var customAttribute in customAttributes)
 	        {
-		        tooltip += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]";
+		        tooltip += $"[{customAttribute.GetType().Name.RemoveEnd("Attribute")}]\n";
 	        }
 
-	        if (!string.IsNullOrEmpty(tooltip))
+	        string methodsSuffix;
+	        if ((variableAttributes & VariablePane.VariableAttributes.ReadOnly) != 0)
 	        {
-		        tooltip += "\n";
+		        methodsSuffix = "{ get; }";
 	        }
-	        tooltip += $"{NameForType(propertyInfo.PropertyType)} {propertyInfo.Name}";    
+	        else
+	        {
+		        methodsSuffix = "{ get; set; }";
+	        }
+
+	        if ((variableAttributes & VariablePane.VariableAttributes.Static) != 0)
+	        {
+		        tooltip += $"static {NameForType(propertyInfo.PropertyType)} {propertyInfo.Name} {methodsSuffix}";
+	        }
+	        else
+	        {
+		        tooltip += $"{NameForType(propertyInfo.PropertyType)} {propertyInfo.Name} {methodsSuffix}";
+	        }
 	        
 	        return tooltip;
         }
