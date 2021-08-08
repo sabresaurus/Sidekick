@@ -61,6 +61,8 @@ You can also add it directly from GitHub on Unity 2020.3+. Note that you won't b
 To update the package with new changes, remove the lock from the `Packages/packages-lock.json` file.
 </details>
 
+To open Sidekick go to `Window → Sidekick`
+
 # Remote Actions
 
 [Previously](https://github.com/sabresaurus/Sidekick/tree/pre-remote-removal) we were hoping to include to make Sidekick work with remote builds, this however massively complicated the simplicity of Sidekick and the project has been abandoned. The network code has been split out into [Remote Actions](https://github.com/sabresaurus/Remote-Actions)
