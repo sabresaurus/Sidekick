@@ -111,25 +111,38 @@ namespace Sabresaurus.Sidekick
 
             GUILayout.Space(9);
 
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Selection Helpers");
+            string buttonPrefix = "";
+            if (EditorGUIUtility.currentViewWidth > 400)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label("Selection Helpers");
+            }
+            else
+            {
+                buttonPrefix = "Select ";
+            }
+
             var popupRect = GUILayoutUtility.GetLastRect();
             popupRect.width = EditorGUIUtility.currentViewWidth;
-            
-            var selectTypeButtonLabel = new GUIContent("Type From Assembly");
+
+            var selectTypeButtonLabel = new GUIContent(buttonPrefix + "Type From Assembly");
             if (GUILayout.Button(selectTypeButtonLabel, EditorStyles.miniButton))
             {
                 TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), SetSelection);
                 dropdown.Show(popupRect);
             }
 
-            var selectObjectButtonLabel = new GUIContent("Loaded Unity Object");
+            var selectObjectButtonLabel = new GUIContent(buttonPrefix + "Loaded Unity Object");
             if (GUILayout.Button(selectObjectButtonLabel, EditorStyles.miniButton))
             {
                 UnityObjectSelectDropdown dropdown = new UnityObjectSelectDropdown(new AdvancedDropdownState(), SetSelection);
                 dropdown.Show(popupRect);
             }
-            EditorGUILayout.EndHorizontal();
+
+            if (EditorGUIUtility.currentViewWidth > 400)
+            {
+                EditorGUILayout.EndHorizontal();
+            }
 
             if (activeSelection.IsEmpty)
             {
