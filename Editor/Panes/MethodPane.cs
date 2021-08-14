@@ -42,7 +42,6 @@ namespace Sabresaurus.Sidekick
                 EditorGUILayout.BeginHorizontal();
                 ParameterInfo[] parameters = method.GetParameters();
 
-
                 if (method.ReturnType == typeof(void))
                     labelStyle.normal.textColor = Color.grey;
                 else if (method.ReturnType.IsValueType)
@@ -50,8 +49,21 @@ namespace Sabresaurus.Sidekick
                 else
                     labelStyle.normal.textColor = new Color32(255, 130, 0, 255);
 
+                labelStyle.fontSize = 10;
 
-                bool buttonClicked = GUILayout.Button(method.Name + " " + parameters.Length, normalButtonStyle);
+                var genericArguments = method.GetGenericArguments();
+                
+                string buttonLabel;
+                if (genericArguments.Length != 0)
+                {
+                    string genericArgumentsDisplay = string.Join(", ", genericArguments.Select(item => item.Name));
+                    buttonLabel = $"{method.Name} <{genericArgumentsDisplay}> {parameters.Length}";
+                }
+                else
+                {
+                    buttonLabel = $"{method.Name} {parameters.Length}";
+                }
+                bool buttonClicked = GUILayout.Button(buttonLabel, normalButtonStyle);
                 Rect lastRect = GUILayoutUtility.GetLastRect();
                 lastRect.xMax = normalButtonStyle.padding.left;
                 GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
@@ -72,12 +84,13 @@ namespace Sabresaurus.Sidekick
                     opacity = 1f;
                 }
 
-                if (parameters.Length > 0)
+                if (parameters.Length > 0 || genericArguments.Length > 0)
                 {
                     string methodIdentifier = componentType.FullName + "." + method.Name;
 
                     bool wasExpanded = expandedMethods.Any(item => item.MethodName == methodIdentifier);
-                    bool expanded = GUILayout.Toggle(wasExpanded, "▼", expandButtonStyle, GUILayout.Width(20));
+                    string label = wasExpanded ? "▲" : "▼";
+                    bool expanded = GUILayout.Toggle(wasExpanded, label, expandButtonStyle, GUILayout.Width(20));
                     if (expanded != wasExpanded)
                     {
                         if (expanded)
@@ -106,6 +119,12 @@ namespace Sabresaurus.Sidekick
                         }
 
                         EditorGUI.indentLevel++;
+                        
+                        foreach (Type genericArgument in genericArguments)
+                        {
+                            EditorGUILayout.LabelField(genericArgument.Name, string.Join(", ", genericArgument.GetGenericParameterConstraints().Select(item => item.Name)));
+                        }
+                        
                         for (int i = 0; i < parameters.Length; i++)
                         {
                             EditorGUI.BeginChangeCheck();
@@ -145,6 +164,11 @@ namespace Sabresaurus.Sidekick
             if (method.ReturnType == typeof(IEnumerator) && component is MonoBehaviour monoBehaviour)
             {
                 return monoBehaviour.StartCoroutine(method.Name);
+            }
+            
+            if(method.IsGenericMethod)
+            {
+                method = method.MakeGenericMethod(typeof(AudioSource));
             }
 
             return method.Invoke(component, parameters);
