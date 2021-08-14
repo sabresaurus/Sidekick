@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using UnityEditor;
 using System;
 using UnityEngine;
 
@@ -7,7 +6,7 @@ namespace Sabresaurus.Sidekick
 {
     public class FieldPane : VariablePane
     {
-        public void DrawFields(Type componentType, object component, string searchTerm, FieldInfo[] fields)
+        public void DrawFields(Type componentType, object component, ECSContext ecsContext, string searchTerm, FieldInfo[] fields)
         {
             foreach (FieldInfo field in fields)
             {
@@ -47,6 +46,13 @@ namespace Sabresaurus.Sidekick
                     if ((variableAttributes & VariableAttributes.ReadOnly) == 0)
                     {
                         field.SetValue(component, newValue);
+                        
+#if ECS_EXISTS
+                        if(ecsContext != null)
+                        {
+                            ECSAccess.SetComponentData(ecsContext.EntityManager, ecsContext.Entity, ecsContext.ComponentType, component);
+                        }
+#endif                        
                     }
                 });
 

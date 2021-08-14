@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+#if ECS_EXISTS
+using Unity.Entities;
+#endif
 using UnityEngine;
 
 namespace Sabresaurus.Sidekick
@@ -21,6 +24,9 @@ namespace Sabresaurus.Sidekick
                 typeof(UnityEngine.Behaviour),
                 typeof(UnityEngine.MonoBehaviour),
                 typeof(UnityEngine.ScriptableObject),
+#if ECS_EXISTS                
+                typeof(ValueType),
+#endif                
                 // Add any custom exclusions here
             };
         }

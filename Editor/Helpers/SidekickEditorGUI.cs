@@ -1,7 +1,13 @@
 using System;
+using System.Linq;
 using System.Reflection;
+using Unity.Transforms;
+#if ECS_EXISTS
+using Unity.Entities;
+#endif
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
@@ -23,6 +29,9 @@ namespace Sabresaurus.Sidekick
         public static readonly Texture ErrorIconSmall = EditorGUIUtility.TrIconContent("console.erroricon.sml").image;
         public static readonly Texture WarningIconSmall = EditorGUIUtility.TrIconContent("console.warnicon.sml").image;
         public static readonly Texture InfoIconSmall = EditorGUIUtility.TrIconContent("console.infoicon.sml").image;
+        
+        public static readonly Texture BlueDotIcon = EditorGUIUtility.TrIconContent("sv_icon_dot1_pix16_gizmo").image;
+        public static readonly Texture TransformIcon = EditorGUIUtility.TrIconContent("Transform Icon").image;
         
         public static Texture LockIconOff => new GUIStyle("IN LockButton").normal.scaledBackgrounds[0];
         public static Texture LockIconOn => new GUIStyle("IN LockButton").onNormal.scaledBackgrounds[0];
@@ -223,6 +232,29 @@ namespace Sabresaurus.Sidekick
             rightRect.height = 12;
             rightRect.y = (rect.height - 12) / 2;
             GUI.DrawTexture(rightRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0, new Color32(0,0,0,38), Vector4.zero, Vector4.zero);
+        }
+
+        public static Texture GetIcon(object o, Type type)
+        {
+            GUIContent objectContent = EditorGUIUtility.ObjectContent(o as Object, type);
+            if (objectContent.image != null)
+            {
+                return objectContent.image;
+            }
+#if ECS_EXISTS
+            if (type == typeof(Translation)
+            || type == typeof(Rotation)
+            || type == typeof(Scale)
+            || type == typeof(LocalToWorld))
+            {
+                return TransformIcon;
+            }
+            else if (type.GetInterfaces().Contains(typeof(IComponentData)))
+            {
+                return BlueDotIcon;
+            }
+#endif
+            return null;
         }
     }
 }

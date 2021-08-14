@@ -1,6 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+#if ECS_EXISTS
+using Unity.Transforms;
+#endif
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -34,21 +36,47 @@ namespace Sabresaurus.Sidekick
 
             if (o is Object unityObject)
             {
-                menu.AddItem(new GUIContent("Set Name From Type"), false, data => unityObject.name = (string) data, o.GetType().Name);
+                menu.AddItem(new GUIContent("Set Name From Type"), false, () => unityObject.name = o.GetType().Name);
             }
 
-            if (o is Texture2D _)
+            if (o is Texture2D)
             {
                 menu.AddItem(new GUIContent("Export Texture"), false, ExportTexture, o);
             }
-
+            
+#if ECS_EXISTS
+            if (o is Translation translation)
+            {
+                menu.AddItem(new GUIContent("Focus In Scene View"), false, () =>
+                {
+                    SceneView sceneView = SceneView.lastActiveSceneView;
+                    if (sceneView == null)
+                        sceneView = EditorWindow.GetWindow<SceneView>();
+                    
+                    sceneView.pivot = translation.Value;
+                    sceneView.Show();
+                });
+            }
+            if (o is LocalToWorld localToWorld)
+            {
+                menu.AddItem(new GUIContent("Focus In Scene View"), false, () =>
+                {
+                    SceneView sceneView = SceneView.lastActiveSceneView;
+                    if (sceneView == null)
+                        sceneView = EditorWindow.GetWindow<SceneView>();
+                    
+                    sceneView.pivot = localToWorld.Position;
+                    sceneView.Show();
+                });
+            }
+#endif
             MonoScript targetMonoScript = GetMonoScriptForType(o.GetType());
             if (targetMonoScript != null)
             {
                 menu.AddItem(new GUIContent("Select Script"), false, _ => Selection.activeObject = targetMonoScript, targetMonoScript);
                 menu.AddItem(new GUIContent("Edit Script"), false, _ => AssetDatabase.OpenAsset(targetMonoScript), targetMonoScript);
             }
-
+            
             menu.AddItem(new GUIContent("Copy As JSON (Unity JsonUtility)"), false, CopyAsJSON, o);
 
             return menu;

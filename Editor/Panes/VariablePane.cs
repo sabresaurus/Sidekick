@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
+#if UNITY_MATH_EXISTS
+using Unity.Mathematics;
+#endif
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
@@ -334,6 +336,20 @@ namespace Sabresaurus.Sidekick
 				vector = EditorGUILayout.Vector4Field(label, vector);
 				newValue = new Quaternion(vector.x,vector.y,vector.z,vector.z);
 			}
+#if UNITY_MATH_EXISTS
+			else if (fieldType == typeof(float2))
+			{
+				newValue = (float2)EditorGUILayout.Vector2Field(label, (float2)fieldValue);
+			}
+			else if (fieldType == typeof(float3))
+			{
+				newValue = (float3)EditorGUILayout.Vector3Field(label, (float3)fieldValue);
+			}
+			else if (fieldType == typeof(float4))
+			{
+				newValue = (float4)EditorGUILayout.Vector4Field(label, (float4)fieldValue);
+			}
+#endif
 			else if (fieldType == typeof(Bounds))
 			{
 				newValue = EditorGUILayout.BoundsField(label, (Bounds)fieldValue);

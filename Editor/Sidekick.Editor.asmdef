@@ -2,7 +2,11 @@
     "name": "Sidekick.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:d442c42f779284647ade94a5568b6139"
+        "GUID:d442c42f779284647ade94a5568b6139",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:c38fb62397af04c51b143415e1db6d90",
+        "GUID:a5baed0c9693541a5bd947d336ec7659",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
     ],
     "includePlatforms": [
         "Editor"
@@ -13,6 +17,17 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.entities",
+            "expression": "",
+            "define": "ECS_EXISTS"
+        },
+        {
+            "name": "com.unity.mathematics",
+            "expression": "",
+            "define": "UNITY_MATH_EXISTS"
+        }
+    ],
     "noEngineReferences": false
 }

@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Collections;
+using Unity.Entities;
+#if ECS_EXISTS
+using Unity.Entities.Editor;
+#endif
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -108,6 +113,7 @@ namespace Sabresaurus.Sidekick
 
             Type[] inspectedTypes = null;
             object[] inspectedContexts = null;
+            ECSContext[] inspectedECSContext = null;
 
             GUILayout.Space(9);
 
@@ -162,6 +168,34 @@ namespace Sabresaurus.Sidekick
                     components.Insert(0, selectedGameObject);
                     inspectedContexts = components.ToArray();
                 }
+#if ECS_EXISTS
+                else if (activeSelection.Object is EntitySelectionProxy entitySelectionProxy)
+                {
+                    EntityManager currentEntityManager = entitySelectionProxy.World.EntityManager;
+                    string name = currentEntityManager.GetName(entitySelectionProxy.Entity);
+
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        name = "Entity " + entitySelectionProxy.Entity.Index;
+                    }
+
+                    inspectedContexts = new object [1 + currentEntityManager.GetComponentCount(entitySelectionProxy.Entity)];
+                    inspectedContexts[0] = activeSelection.Object;
+                    inspectedECSContext = new ECSContext[1 + currentEntityManager.GetComponentCount(entitySelectionProxy.Entity)];
+                    inspectedECSContext[0] = new ECSContext {EntityManager = currentEntityManager, Entity = entitySelectionProxy.Entity};
+
+                    NativeArray<ComponentType> types = currentEntityManager.GetComponentTypes(entitySelectionProxy.Entity);
+                    for (var index = 0; index < types.Length; index++)
+                    {
+                        object componentData = ECSAccess.GetComponentData(currentEntityManager, entitySelectionProxy.Entity, types[index]);
+
+                        inspectedContexts[1 + index] = componentData;
+                        inspectedECSContext[1 + index] = new ECSContext {EntityManager = currentEntityManager, Entity = entitySelectionProxy.Entity, ComponentType = types[index]};
+                    }
+                    
+                    types.Dispose();
+                }
+#endif                
                 else
                 {
                     inspectedContexts = new[] {activeSelection.Object};
@@ -174,6 +208,11 @@ namespace Sabresaurus.Sidekick
                 inspectedTypes = new[] {activeSelection.Type};
 
                 inspectedContexts = new Type[] {null};
+            }
+
+            if (inspectedECSContext == null)
+            {
+                inspectedECSContext = new ECSContext[inspectedContexts.Length];
             }
 
             GUILayout.Space(5);
@@ -189,6 +228,16 @@ namespace Sabresaurus.Sidekick
             for (int i = 0; i < inspectedTypes.Length; i++)
             {
                 Type type = inspectedTypes[i];
+                
+                var inspectedContext = inspectedContexts[i];
+
+                bool? activeOrEnabled = inspectedContext switch
+                {
+                    GameObject gameObject => gameObject.activeSelf,
+                    Behaviour behaviour => behaviour.enabled,
+                    _ => null
+                };
+                
                 if (typesHidden.All(row => row.Key != type))
                 {
                     typesHidden.Add(new KeyValuePair<Type, bool>(type, false));
@@ -196,13 +245,17 @@ namespace Sabresaurus.Sidekick
 
                 int index = typesHidden.FindIndex(row => row.Key == type);
 
-                GUIContent objectContent = EditorGUIUtility.ObjectContent(inspectedContexts[i] as Object, type);
-                
                 string name;
                 if (inspectedContexts[0] != null)
                 {
-                    const string TOGGLE_SPACER = "              ";
-                    name = TOGGLE_SPACER + type.Name;
+                    if (activeOrEnabled.HasValue)
+                    {
+                        name = "              " + type.Name;
+                    }
+                    else
+                    {
+                        name = "       " + type.Name;
+                    }
 
                     if (i == 0 && inspectedContexts[i] is Object unityObject)
                     {
@@ -215,15 +268,6 @@ namespace Sabresaurus.Sidekick
                 }
 
                 GUIContent content = new GUIContent(name, $"{type.FullName}, {type.Assembly.FullName}");
-
-                var inspectedContext = inspectedContexts[i];
-
-                bool? activeOrEnabled = inspectedContexts[i] switch
-                {
-                    GameObject gameObject => gameObject.activeSelf,
-                    Behaviour behaviour => behaviour.enabled,
-                    _ => null
-                };
                 
                 Rect foldoutRect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.foldoutHeader);
                 
@@ -251,9 +295,13 @@ namespace Sabresaurus.Sidekick
                 }
 
                 bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content, EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
-                
-                GUI.DrawTexture(iconRect, objectContent.image);
-                
+
+                Texture icon = SidekickEditorGUI.GetIcon(inspectedContexts[i], type);
+                if (icon != null)
+                {
+                    GUI.DrawTexture(iconRect, icon);
+                }
+
                 // Right click context menu
                 if (SidekickEditorGUI.DetectClickInRect(foldoutRect, 1))
                 {
@@ -333,7 +381,7 @@ namespace Sabresaurus.Sidekick
 
                         if (mode == InspectorMode.Fields)
                         {
-                            fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], searchTerm, fields);
+                            fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], inspectedECSContext[i], searchTerm, fields);
                         }
                         else if (mode == InspectorMode.Properties)
                         {
@@ -357,6 +405,46 @@ namespace Sabresaurus.Sidekick
 
                 SidekickEditorGUI.DrawSplitter();
             }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            
+            if(inspectedTypes[0] == typeof(GameObject)
+#if ECS_EXISTS
+               || inspectedTypes[0] == typeof(EntitySelectionProxy)
+#endif
+               )
+            {
+                bool pressed = GUILayout.Button("Add Component", GUILayout.Width(230), GUILayout.Height(24));
+                var popupRect2 = GUILayoutUtility.GetLastRect();
+                popupRect2.width = EditorGUIUtility.currentViewWidth;
+                if (pressed)
+                {
+                    if (inspectedTypes[0] == typeof(GameObject))
+                    {
+                        TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type =>
+                        {
+                            
+                            ((GameObject) inspectedContexts[0]).AddComponent(type);
+                        }, new[] {typeof(Component)});
+                        dropdown.Show(popupRect2);
+                    }
+#if ECS_EXISTS
+                    else if (inspectedTypes[0] == typeof(EntitySelectionProxy))
+                    {
+                        TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type =>
+                        {
+                            inspectedECSContext[0].EntityManager.AddComponent(inspectedECSContext[0].Entity, ComponentType.ReadWrite(type));
+                        });
+                        dropdown.Show(popupRect2);
+                    }
+#endif                    
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndScrollView();
 
