@@ -194,15 +194,14 @@ namespace Sabresaurus.Sidekick
                     typesHidden.Add(new KeyValuePair<Type, bool>(type, false));
                 }
 
-
                 int index = typesHidden.FindIndex(row => row.Key == type);
 
-                GUIContent objectContent = EditorGUIUtility.ObjectContent(inspectedContexts[i] as UnityEngine.Object, type);
+                GUIContent objectContent = EditorGUIUtility.ObjectContent(inspectedContexts[i] as Object, type);
                 
                 string name;
                 if (inspectedContexts[0] != null)
                 {
-                    const string TOGGLE_SPACER = "      ";
+                    const string TOGGLE_SPACER = "              ";
                     name = TOGGLE_SPACER + type.Name;
 
                     if (i == 0 && inspectedContexts[i] is Object unityObject)
@@ -215,7 +214,7 @@ namespace Sabresaurus.Sidekick
                     name = type.Name + " (Class)";
                 }
 
-                GUIContent content = new GUIContent(name, objectContent.image);
+                GUIContent content = new GUIContent(name, $"{type.FullName}, {type.Assembly.FullName}");
 
                 var inspectedContext = inspectedContexts[i];
 
@@ -228,12 +227,17 @@ namespace Sabresaurus.Sidekick
                 
                 Rect foldoutRect = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.foldoutHeader);
                 
-                Rect headerRect = foldoutRect;
-                headerRect.xMin += 34;
-                headerRect.width = 20;
+                Rect toggleRect = foldoutRect;
+                toggleRect.xMin += 36;
+                toggleRect.width = 20;
+                
+                Rect iconRect = foldoutRect;
+                iconRect.xMin += 16;
+                iconRect.yMin += 1;
+                iconRect.height = iconRect.width = 16;
                 
                 // Have to do this before BeginFoldoutHeaderGroup otherwise it'll consume the mouse down event
-                if (activeOrEnabled.HasValue && SidekickEditorGUI.DetectClickInRect(headerRect))
+                if (activeOrEnabled.HasValue && SidekickEditorGUI.DetectClickInRect(toggleRect))
                 {
                     switch (inspectedContexts[i])
                     {
@@ -245,18 +249,20 @@ namespace Sabresaurus.Sidekick
                             break;
                     }
                 }
-                
-                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content, EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
 
+                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content, EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
+                
+                GUI.DrawTexture(iconRect, objectContent.image);
+                
+                // Right click context menu
                 if (SidekickEditorGUI.DetectClickInRect(foldoutRect, 1))
                 {
-                    // Right click context menu
                     ClassUtilities.GetMenu(inspectedContext).DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                 }
 
                 if (activeOrEnabled.HasValue)
                 {
-                    EditorGUI.Toggle(headerRect, activeOrEnabled.Value);
+                    EditorGUI.Toggle(toggleRect, activeOrEnabled.Value);
                 }
 
                 EditorGUILayout.EndFoldoutHeaderGroup();

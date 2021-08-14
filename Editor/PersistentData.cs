@@ -24,7 +24,7 @@ namespace Sabresaurus.Sidekick
             {
                 if (GenericArguments[i] != null)
                 {
-                    GenericArgumentsString[i] = GenericArguments[i].FullName + ", " + GenericArguments[i].Assembly.FullName;
+                    GenericArgumentsString[i] = GenericArguments[i].AssemblyQualifiedName;
                 }
             }
         }
