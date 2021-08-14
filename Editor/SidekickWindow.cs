@@ -41,7 +41,7 @@ namespace Sabresaurus.Sidekick
         readonly List<SelectionInfo> backStack = new List<SelectionInfo>();
         readonly List<SelectionInfo> forwardStack = new List<SelectionInfo>();
 
-        readonly PersistentData persistentData = new PersistentData();
+        PersistentData persistentData = new PersistentData();
         InspectorMode mode = InspectorMode.Fields;
         Vector2 scrollPosition;
 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -19,7 +20,7 @@ namespace Sabresaurus.Sidekick
 			WriteOnly = 1 << 3,
 		}
 		
-		public static object DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType)
+		public static void DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType, Action<object> changeCallback)
 		{
 			if ((variableAttributes & VariableAttributes.Static) != 0)
 			{
@@ -37,8 +38,6 @@ namespace Sabresaurus.Sidekick
 			string displayName = SidekickUtility.NicifyIdentifier(fieldName);
 			
 			GUIContent label = new GUIContent(displayName, tooltip);
-
-			object newValue = fieldValue;
 
 			bool isArray = fieldType.IsArray;
 			bool isGenericList = TypeUtility.IsGenericList(fieldType);
@@ -67,7 +66,8 @@ namespace Sabresaurus.Sidekick
 				int newSize = Mathf.Max(0, EditorGUILayout.IntField(previousSize, GUILayout.Width(80)));
 				if (newSize != previousSize)
 				{
-					newValue = CollectionUtility.Resize(list, isArray, fieldType, elementType, newSize);;
+					var newValue = CollectionUtility.Resize(list, isArray, fieldType, elementType, newSize);;
+					changeCallback(newValue);
 				}
 				
 				EditorGUILayout.EndHorizontal();
@@ -82,7 +82,11 @@ namespace Sabresaurus.Sidekick
 						{
 							EditorGUILayout.BeginHorizontal();
 
-							list[i] = DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i], out var handled);
+							int index = i;
+							DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i], out var handled, newValue =>
+							{
+								list[index] = newValue;
+							});
 
 							if (allowExtensions)
 							{
@@ -105,7 +109,7 @@ namespace Sabresaurus.Sidekick
 				// Not a collection
 				EditorGUILayout.BeginHorizontal();
 
-				newValue = DrawIndividualVariable(label, fieldType, fieldValue, out var handled);
+				DrawIndividualVariable(label, fieldType, fieldValue, out var handled, changeCallback);
 
 				if(handled && allowExtensions)
 				{
@@ -138,12 +142,10 @@ namespace Sabresaurus.Sidekick
 						foreach (var fieldInfo in fields)
 						{
 							GUIContent subLabel = new GUIContent(fieldInfo.Name);
-							EditorGUI.BeginChangeCheck();
-							object newSubValue = DrawIndividualVariable(subLabel, fieldInfo.FieldType, fieldInfo.GetValue(fieldValue), out _);
-							if (EditorGUI.EndChangeCheck())
+							DrawIndividualVariable(subLabel, fieldInfo.FieldType, fieldInfo.GetValue(fieldValue), out _, newValue =>
 							{
-								fieldInfo.SetValue(fieldValue, newSubValue);
-							}
+								fieldInfo.SetValue(fieldValue, newValue);
+							});
 						}
 						EditorGUI.indentLevel--;
 					}
@@ -158,8 +160,6 @@ namespace Sabresaurus.Sidekick
 			{
 				EditorGUILayout.EndVertical();
 			}
-			
-			return newValue;
 		}
 
 		private static bool DrawHeader(string expandedID, GUIContent label, bool isStatic)
@@ -201,14 +201,7 @@ namespace Sabresaurus.Sidekick
 		private static void DrawExtensions(object fieldValue, GUIStyle expandButtonStyle)
 		{
 			bool wasGUIEnabled = GUI.enabled;
-			if (fieldValue == null || (fieldValue is Object unityObject && unityObject == null))
-			{
-				GUI.enabled = false;
-			}
-			else
-			{
-				GUI.enabled = true;
-			}
+			GUI.enabled = TypeUtility.IsNotNull(fieldValue);
 
 			if (GUILayout.Button(new GUIContent(SidekickEditorGUI.ForwardIcon, "Select This"), expandButtonStyle, GUILayout.Width(18), GUILayout.Height(18)))
 			{
@@ -227,8 +220,9 @@ namespace Sabresaurus.Sidekick
 			GUI.enabled = wasGUIEnabled;
 		}
 
-		private static object DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue, out bool handled)
+		private static void DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue, out bool handled, Action<object> changeCallback)
 		{
+			EditorGUI.BeginChangeCheck();
 			handled = true;
 			object newValue;
 			if (fieldType == typeof(int)
@@ -380,13 +374,36 @@ namespace Sabresaurus.Sidekick
 			{
 				newValue = EditorGUILayout.ObjectField(label, (UnityEngine.Object)fieldValue, fieldType, true);
 			}
+			else if (fieldType == typeof(Type))
+			{
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.LabelField(label, new GUIContent(TypeUtility.NameForType((Type) fieldValue)));
+				var popupRect = GUILayoutUtility.GetLastRect();
+				popupRect.width = EditorGUIUtility.currentViewWidth;
+
+				var selectTypeButtonLabel = new GUIContent("Select");
+				if (GUILayout.Button(selectTypeButtonLabel, EditorStyles.miniButton))
+				{
+					TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type =>
+					{
+						// Async apply
+						changeCallback?.Invoke(type);
+					});
+					dropdown.Show(popupRect);
+				}
+				EditorGUILayout.EndHorizontal();
+				newValue = fieldValue;
+			}
 			else
 			{
 				handled = false;
 				newValue = fieldValue;
 			}
-			
-			return newValue;
+
+			if (EditorGUI.EndChangeCheck())
+			{
+				changeCallback?.Invoke(newValue);
+			}
 		}
 	}
 }

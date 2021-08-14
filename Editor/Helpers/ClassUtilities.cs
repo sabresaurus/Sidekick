@@ -13,7 +13,7 @@ namespace Sabresaurus.Sidekick
         {
             var menu = new GenericMenu();
 
-            if (o == null || (o is Object unityObject && unityObject == null))
+            if (TypeUtility.IsNull(o))
             {
                 return menu;
             }
@@ -26,22 +26,27 @@ namespace Sabresaurus.Sidekick
                     menu.AddItem(new GUIContent("Instantiate Asset"), false, InstantiateScriptableObject, classType);
                 }
             }
-            else if (o is GameObject gameObject)
+
+            if (o is GameObject gameObject)
             {
                 menu.AddItem(new GUIContent("Set Name From First Script"), false, SetNameFromFirstScript, gameObject);
             }
-            else if (o is Texture2D _)
+
+            if (o is Object unityObject)
+            {
+                menu.AddItem(new GUIContent("Set Name From Type"), false, data => unityObject.name = (string) data, o.GetType().Name);
+            }
+
+            if (o is Texture2D _)
             {
                 menu.AddItem(new GUIContent("Export Texture"), false, ExportTexture, o);
             }
-            else
+
+            MonoScript targetMonoScript = GetMonoScriptForType(o.GetType());
+            if (targetMonoScript != null)
             {
-                MonoScript targetMonoScript = GetMonoScriptForType(o.GetType());
-                if (targetMonoScript != null)
-                {
-                    menu.AddItem(new GUIContent("Select Script"), false, _ => Selection.activeObject = targetMonoScript, targetMonoScript);
-                    menu.AddItem(new GUIContent("Edit Script"), false, _ => AssetDatabase.OpenAsset(targetMonoScript), targetMonoScript);
-                }
+                menu.AddItem(new GUIContent("Select Script"), false, _ => Selection.activeObject = targetMonoScript, targetMonoScript);
+                menu.AddItem(new GUIContent("Edit Script"), false, _ => AssetDatabase.OpenAsset(targetMonoScript), targetMonoScript);
             }
 
             menu.AddItem(new GUIContent("Copy As JSON (Unity JsonUtility)"), false, CopyAsJSON, o);
@@ -92,13 +97,13 @@ namespace Sabresaurus.Sidekick
             string json = JsonUtility.ToJson(userData, true);
             EditorGUIUtility.systemCopyBuffer = json;
         }
-        
+
         private static void ExportTexture(object texture)
         {
-            if(texture is Texture2D texture2D)
+            if (texture is Texture2D texture2D)
             {
                 string path = EditorUtility.SaveFilePanel("Save Texture", "Assets", texture2D.name + ".png", "png");
-                if(!string.IsNullOrEmpty(path))
+                if (!string.IsNullOrEmpty(path))
                 {
                     byte[] bytes = texture2D.EncodeToPNG();
                     System.IO.File.WriteAllBytes(path, bytes);

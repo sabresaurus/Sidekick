@@ -86,12 +86,10 @@ namespace Sabresaurus.Sidekick
 					}
 					else
 					{
-						EditorGUI.BeginChangeCheck();
-						object newValue = DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, variableAttributes, true, componentType);
-						if (EditorGUI.EndChangeCheck() && setMethod != null)
+						DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, variableAttributes, true, componentType, newValue =>
 						{
-							setMethod.Invoke(component, new[] {newValue});
-						}
+							setMethod?.Invoke(component, new[] {newValue});
+						});
 					}
 				}
 			}

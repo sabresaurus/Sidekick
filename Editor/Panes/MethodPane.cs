@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -53,42 +54,46 @@ namespace Sabresaurus.Sidekick
 
                 var genericArguments = method.GetGenericArguments();
                 
-                string buttonLabel;
+                GUIContent buttonLabel = new GUIContent("", "Click to fire with defaults");
                 if (genericArguments.Length != 0)
                 {
                     string genericArgumentsDisplay = string.Join(", ", genericArguments.Select(item => item.Name));
-                    buttonLabel = $"{method.Name} <{genericArgumentsDisplay}> {parameters.Length}";
+                    buttonLabel.text = $"{method.Name} <{genericArgumentsDisplay}> {parameters.Length}";
                 }
                 else
                 {
-                    buttonLabel = $"{method.Name} {parameters.Length}";
+                    buttonLabel.text = $"{method.Name} {parameters.Length}";
                 }
-                bool buttonClicked = GUILayout.Button(buttonLabel, normalButtonStyle);
-                Rect lastRect = GUILayoutUtility.GetLastRect();
-                lastRect.xMax = normalButtonStyle.padding.left;
-                GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
 
-                if (buttonClicked)
+                using (new EditorGUI.DisabledScope(method.IsGenericMethod))
                 {
-                    object[] arguments = null;
-                    if (parameters.Length > 0)
+                    bool buttonClicked = GUILayout.Button(buttonLabel, normalButtonStyle);
+                    Rect lastRect = GUILayoutUtility.GetLastRect();
+                    lastRect.xMax = normalButtonStyle.padding.left;
+                    GUI.Label(lastRect, TypeUtility.NameForType(method.ReturnType), labelStyle);
+
+                    if (buttonClicked)
                     {
-                        arguments = new object[parameters.Length];
-                        for (int i = 0; i < parameters.Length; i++)
+                        object[] arguments = null;
+                        if (parameters.Length > 0)
                         {
-                            arguments[i] = TypeUtility.GetDefaultValue(parameters[i].ParameterType);
+                            arguments = new object[parameters.Length];
+                            for (int i = 0; i < parameters.Length; i++)
+                            {
+                                arguments[i] = TypeUtility.GetDefaultValue(parameters[i].ParameterType);
+                            }
                         }
+                        object output = FireMethod(method, component, arguments, null);
+                        outputObjects.Add(output);
+                        opacity = 1f;
                     }
-                    object output = FireMethod(method, component, arguments);
-                    outputObjects.Add(output);
-                    opacity = 1f;
                 }
 
                 if (parameters.Length > 0 || genericArguments.Length > 0)
                 {
-                    string methodIdentifier = componentType.FullName + "." + method.Name;
-
-                    bool wasExpanded = expandedMethods.Any(item => item.MethodName == methodIdentifier);
+                    string methodIdentifier = TypeUtility.GetMethodIdentifier(method);
+                    
+                    bool wasExpanded = expandedMethods.Any(item => item.MethodIdentifier == methodIdentifier);
                     string label = wasExpanded ? "▲" : "▼";
                     bool expanded = GUILayout.Toggle(wasExpanded, label, expandButtonStyle, GUILayout.Width(20));
                     if (expanded != wasExpanded)
@@ -97,21 +102,22 @@ namespace Sabresaurus.Sidekick
                         {
                             MethodSetup methodSetup = new MethodSetup()
                             {
-                                MethodName = methodIdentifier,
+                                MethodIdentifier = methodIdentifier,
                                 Values = new object[parameters.Length],
+                                GenericArguments = new Type[genericArguments.Length],
                             };
                             expandedMethods.Add(methodSetup);
                         }
                         else
                         {
-                            expandedMethods.RemoveAll(item => item.MethodName == methodIdentifier);
+                            expandedMethods.RemoveAll(item => item.MethodIdentifier == methodIdentifier);
                         }
                     }
 
                     EditorGUILayout.EndHorizontal();
                     if (expanded)
                     {
-                        MethodSetup methodSetup = expandedMethods.FirstOrDefault(item => item.MethodName == methodIdentifier);
+                        MethodSetup methodSetup = expandedMethods.FirstOrDefault(item => item.MethodIdentifier == methodIdentifier);
 
                         if (methodSetup.Values.Length != parameters.Length)
                         {
@@ -119,20 +125,41 @@ namespace Sabresaurus.Sidekick
                         }
 
                         EditorGUI.indentLevel++;
-                        
-                        foreach (Type genericArgument in genericArguments)
+
+                        for (var i = 0; i < genericArguments.Length; i++)
                         {
-                            EditorGUILayout.LabelField(genericArgument.Name, string.Join(", ", genericArgument.GetGenericParameterConstraints().Select(item => item.Name)));
+                            Type genericArgument = genericArguments[i];
+                            string displayLabel = genericArgument.Name;
+
+                            Type[] constraints = genericArgument.GetGenericParameterConstraints();
+                            if (constraints.Length != 0)
+                            {
+                                displayLabel += $" ({string.Join(", ", constraints.Select(item => item.Name))})";
+                            }
+
+                            EditorGUILayout.BeginHorizontal();
+                            EditorGUILayout.LabelField(displayLabel, TypeUtility.NameForType(methodSetup.GenericArguments[i]));
+                            var popupRect = GUILayoutUtility.GetLastRect();
+                            popupRect.width = EditorGUIUtility.currentViewWidth;
+
+                            var selectTypeButtonLabel = new GUIContent("Select");
+                            if (GUILayout.Button(selectTypeButtonLabel, EditorStyles.miniButton))
+                            {
+                                int index = i;
+                                TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type => methodSetup.GenericArguments[index] = type, constraints);
+                                dropdown.Show(popupRect);
+                            }
+
+                            EditorGUILayout.EndHorizontal();
                         }
-                        
+
                         for (int i = 0; i < parameters.Length; i++)
                         {
-                            EditorGUI.BeginChangeCheck();
-                            object newValue = VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, false, null);
-                            if (EditorGUI.EndChangeCheck())
+                            int index = i;
+                            VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, false, null, newValue =>
                             {
-                                methodSetup.Values[i] = newValue;
-                            }
+                                methodSetup.Values[index] = newValue;
+                            });
                         }
 
                         EditorGUI.indentLevel--;
@@ -140,11 +167,16 @@ namespace Sabresaurus.Sidekick
                         EditorGUILayout.BeginHorizontal();
                         GUILayout.Space(30);
 
-                        if (GUILayout.Button("Fire"))
+                        bool anyGenericArgumentsMissing = methodSetup.GenericArguments.Any(item => item == null);
+
+                        using (new EditorGUI.DisabledScope(anyGenericArgumentsMissing))
                         {
-                            object output = FireMethod(method, component, methodSetup.Values);
-                            outputObjects.Add(output);
-                            opacity = 1f;
+                            if (GUILayout.Button("Fire"))
+                            {
+                                object output = FireMethod(method, component, methodSetup.Values, methodSetup.GenericArguments);
+                                outputObjects.Add(output);
+                                opacity = 1f;
+                            }
                         }
 
                         EditorGUILayout.EndHorizontal();
@@ -159,7 +191,7 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        object FireMethod(MethodInfo method, object component, object[] parameters)
+        object FireMethod(MethodInfo method, object component, object[] parameters, Type[] genericTypes)
         {
             if (method.ReturnType == typeof(IEnumerator) && component is MonoBehaviour monoBehaviour)
             {
@@ -168,7 +200,7 @@ namespace Sabresaurus.Sidekick
             
             if(method.IsGenericMethod)
             {
-                method = method.MakeGenericMethod(typeof(AudioSource));
+                method = method.MakeGenericMethod(genericTypes);
             }
 
             return method.Invoke(component, parameters);
@@ -181,7 +213,7 @@ namespace Sabresaurus.Sidekick
             outputScrollPosition = EditorGUILayout.BeginScrollView(outputScrollPosition, GUILayout.MaxHeight(100));
             foreach (var outputObject in outputObjects)
             {
-                if (outputObject != null)
+                if(TypeUtility.IsNotNull(outputObject))
                 {
                     string name = outputObject switch
                     {

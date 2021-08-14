@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine.Assertions;
+using Object = UnityEngine.Object;
 
 namespace Sabresaurus.Sidekick
 {
@@ -47,11 +48,15 @@ namespace Sabresaurus.Sidekick
 
 			return visibility;
 		}
-		
+
 		public static string NameForType(Type type)
 		{
 			// See https://msdn.microsoft.com/en-us/library/ya5y69ds.aspx
-			if(type == typeof(void))
+			if (type == null)
+			{
+				return "null";
+			}
+			else if(type == typeof(void))
 			{
 				return "void";
 			}
@@ -321,6 +326,32 @@ namespace Sabresaurus.Sidekick
 	        }
 	        
 	        return tooltip;
+        }
+
+        public static string GetMethodIdentifier(MethodInfo methodInfo)
+        {
+	        return methodInfo.DeclaringType.FullName + "." 
+	                                                 + methodInfo.Name 
+	                                                 + string.Join(",",methodInfo.GetParameters().Select(item => item.Name)) 
+	                                                 + string.Join(",",methodInfo.GetGenericArguments().Select(item => item.Name));
+        }
+
+        public static bool IsNull(object o)
+        {
+	        if (o == null)
+		        return true;
+
+	        // UnityEngine.Object overrides the == operator so we need to cast those objects to see if the backing
+	        // native object has been destroyed 
+	        if (o is Object unityObject && unityObject == null)
+		        return true;
+	        
+	        return false;
+        }
+        
+        public static bool IsNotNull(object o)
+        {
+	        return !IsNull(o);
         }
 	}
 }

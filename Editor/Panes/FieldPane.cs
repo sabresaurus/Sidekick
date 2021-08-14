@@ -42,12 +42,13 @@ namespace Sabresaurus.Sidekick
                     GUI.enabled = false;
                 }
                 
-                EditorGUI.BeginChangeCheck();
-                object newValue = DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType);
-                if (EditorGUI.EndChangeCheck() && (variableAttributes & VariableAttributes.ReadOnly) == 0)
+                DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType, newValue =>
                 {
-                    field.SetValue(component, newValue);
-                }
+                    if ((variableAttributes & VariableAttributes.ReadOnly) == 0)
+                    {
+                        field.SetValue(component, newValue);
+                    }
+                });
 
                 if ((variableAttributes & VariableAttributes.ReadOnly) != 0)
                 {

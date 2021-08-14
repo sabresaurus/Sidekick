@@ -16,7 +16,8 @@ namespace Sabresaurus.Sidekick
     public class TypeSelectDropdown : AdvancedDropdown
     {
         private readonly Action<Type> onTypeSelected;
-        
+        private readonly Type[] constraints;
+
         class TypeDropdownItem : AdvancedDropdownItem
         {
             public Type Type { get; }
@@ -28,8 +29,10 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public TypeSelectDropdown(AdvancedDropdownState state, Action<Type> onTypeSelectedCallback) : base(state)
+        public TypeSelectDropdown(AdvancedDropdownState state, Action<Type> onTypeSelectedCallback, Type[] constraints = null) : base(state)
         {
+            this.constraints = constraints ?? new Type[0];
+            
             Vector2 customMinimumSize = minimumSize;
             customMinimumSize.y = 250;
             minimumSize = customMinimumSize;
@@ -171,22 +174,43 @@ namespace Sabresaurus.Sidekick
             
             foreach (Assembly assembly in allAssemblies)
             {
-                var group = GetGroup(assembly, nameToAssembly);
-
-                if (!groupDropdowns.TryGetValue(group, out AdvancedDropdownItem groupRoot))
-                {
-                    groupDropdowns.Add(group, groupRoot = new AdvancedDropdownItem(group.Context));
-                    groupDropdowns[new Group(group.Location)].AddChild(groupRoot);
-                }
-
-                string assemblyName = assembly.GetName().Name;
-                var assemblyDropdownItem = new AdvancedDropdownItem(assemblyName);
-                groupRoot.AddChild(assemblyDropdownItem);
+                Group group = GetGroup(assembly, nameToAssembly);
 
                 Type[] types = assembly.GetTypes();
+                List<Type> filteredTypes = new List<Type>();
                 foreach (Type type in types)
                 {
-                    assemblyDropdownItem.AddChild(new TypeDropdownItem(type));
+                    bool constraintsMet = true;
+                    foreach (var constraint in constraints)
+                    {
+                        if (!type.IsSubclassOf(constraint) && type != constraint)
+                        {
+                            constraintsMet = false;
+                        }
+                    }
+
+                    if (constraintsMet)
+                    {
+                        filteredTypes.Add(type);
+                    }
+                }
+
+                if(filteredTypes.Count != 0)
+                {
+                    if (!groupDropdowns.TryGetValue(group, out AdvancedDropdownItem groupRoot))
+                    {
+                        groupDropdowns.Add(group, groupRoot = new AdvancedDropdownItem(group.Context));
+                        groupDropdowns[new Group(group.Location)].AddChild(groupRoot);
+                    }
+                    
+                    string assemblyName = assembly.GetName().Name;
+                    var assemblyDropdownItem = new AdvancedDropdownItem(assemblyName);
+                    groupRoot.AddChild(assemblyDropdownItem);
+
+                    foreach (Type type in filteredTypes)
+                    {
+                        assemblyDropdownItem.AddChild(new TypeDropdownItem(type));
+                    }
                 }
             }
 
