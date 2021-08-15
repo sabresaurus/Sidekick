@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Unity.Transforms;
 #if ECS_EXISTS
+using Unity.Transforms;
 using Unity.Entities;
 #endif
 using UnityEditor;
