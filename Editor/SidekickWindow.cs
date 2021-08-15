@@ -437,7 +437,7 @@ namespace Sabresaurus.Sidekick
                         TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type =>
                         {
                             inspectedECSContexts[0].EntityManager.AddComponent(inspectedECSContexts[0].Entity, ComponentType.ReadWrite(type));
-                        });
+                        }, null, new []{typeof(IComponentData)});
                         dropdown.Show(popupRect2);
                     }
 #endif                    

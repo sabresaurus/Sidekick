@@ -4,8 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEditor.IMGUI.Controls;
-using UnityEditor.PackageManager;
-using UnityEditorInternal;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
@@ -17,6 +15,7 @@ namespace Sabresaurus.Sidekick
     {
         private readonly Action<Type> onTypeSelected;
         private readonly Type[] constraints;
+        private readonly Type[] requiredInterfaces;
 
         class TypeDropdownItem : AdvancedDropdownItem
         {
@@ -29,9 +28,10 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        public TypeSelectDropdown(AdvancedDropdownState state, Action<Type> onTypeSelectedCallback, Type[] constraints = null) : base(state)
+        public TypeSelectDropdown(AdvancedDropdownState state, Action<Type> onTypeSelectedCallback, Type[] constraints = null, Type[] requiredInterfaces = null) : base(state)
         {
             this.constraints = constraints ?? new Type[0];
+            this.requiredInterfaces = requiredInterfaces ?? new Type[0];
             
             Vector2 customMinimumSize = minimumSize;
             customMinimumSize.y = 250;
@@ -180,16 +180,24 @@ namespace Sabresaurus.Sidekick
                 List<Type> filteredTypes = new List<Type>();
                 foreach (Type type in types)
                 {
-                    bool constraintsMet = true;
-                    foreach (var constraint in constraints)
+                    bool requirementsMet = true;
+                    foreach (Type constraint in constraints)
                     {
                         if (!type.IsSubclassOf(constraint) && type != constraint)
                         {
-                            constraintsMet = false;
+                            requirementsMet = false;
+                        }
+                    }
+                    
+                    foreach (Type requiredInterface in requiredInterfaces)
+                    {
+                        if (!type.GetInterfaces().Contains(requiredInterface))
+                        {
+                            requirementsMet = false;
                         }
                     }
 
-                    if (constraintsMet)
+                    if (requirementsMet)
                     {
                         filteredTypes.Add(type);
                     }
