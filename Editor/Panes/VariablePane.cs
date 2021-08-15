@@ -214,7 +214,7 @@ namespace Sabresaurus.Sidekick
 
 			if(GUI.Button(rect, new GUIContent(SidekickEditorGUI.MoreOptions, "More Options"), expandButtonStyle))
 			{
-				var menu = ClassUtilities.GetMenu(fieldValue);
+				var menu = ClassUtilities.GetMenu(fieldValue, null);
 				
 				menu.DropDown(rect);
 			}

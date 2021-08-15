@@ -1,0 +1,16 @@
+{
+    "name": "Sidekick.ECSAccess.MissingFallback",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "ECS_EXISTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

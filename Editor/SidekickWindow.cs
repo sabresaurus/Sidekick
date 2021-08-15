@@ -113,7 +113,7 @@ namespace Sabresaurus.Sidekick
 
             Type[] inspectedTypes = null;
             object[] inspectedContexts = null;
-            ECSContext[] inspectedECSContext = null;
+            ECSContext[] inspectedECSContexts = null;
 
             GUILayout.Space(9);
 
@@ -181,8 +181,8 @@ namespace Sabresaurus.Sidekick
 
                     inspectedContexts = new object [1 + currentEntityManager.GetComponentCount(entitySelectionProxy.Entity)];
                     inspectedContexts[0] = activeSelection.Object;
-                    inspectedECSContext = new ECSContext[1 + currentEntityManager.GetComponentCount(entitySelectionProxy.Entity)];
-                    inspectedECSContext[0] = new ECSContext {EntityManager = currentEntityManager, Entity = entitySelectionProxy.Entity};
+                    inspectedECSContexts = new ECSContext[1 + currentEntityManager.GetComponentCount(entitySelectionProxy.Entity)];
+                    inspectedECSContexts[0] = new ECSContext {EntityManager = currentEntityManager, Entity = entitySelectionProxy.Entity};
 
                     NativeArray<ComponentType> types = currentEntityManager.GetComponentTypes(entitySelectionProxy.Entity);
                     for (var index = 0; index < types.Length; index++)
@@ -190,7 +190,7 @@ namespace Sabresaurus.Sidekick
                         object componentData = ECSAccess.GetComponentData(currentEntityManager, entitySelectionProxy.Entity, types[index]);
 
                         inspectedContexts[1 + index] = componentData;
-                        inspectedECSContext[1 + index] = new ECSContext {EntityManager = currentEntityManager, Entity = entitySelectionProxy.Entity, ComponentType = types[index]};
+                        inspectedECSContexts[1 + index] = new ECSContext {EntityManager = currentEntityManager, Entity = entitySelectionProxy.Entity, ComponentType = types[index]};
                     }
                     
                     types.Dispose();
@@ -210,9 +210,9 @@ namespace Sabresaurus.Sidekick
                 inspectedContexts = new Type[] {null};
             }
 
-            if (inspectedECSContext == null)
+            if (inspectedECSContexts == null)
             {
-                inspectedECSContext = new ECSContext[inspectedContexts.Length];
+                inspectedECSContexts = new ECSContext[inspectedContexts.Length];
             }
 
             GUILayout.Space(5);
@@ -230,6 +230,7 @@ namespace Sabresaurus.Sidekick
                 Type type = inspectedTypes[i];
                 
                 var inspectedContext = inspectedContexts[i];
+                var inspectedECSContext = inspectedECSContexts[i];
 
                 bool? activeOrEnabled = inspectedContext switch
                 {
@@ -294,7 +295,7 @@ namespace Sabresaurus.Sidekick
                     }
                 }
 
-                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content, EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext).DropDown(rect));
+                bool foldout = EditorGUI.BeginFoldoutHeaderGroup(foldoutRect, !typesHidden[index].Value, content, EditorStyles.foldoutHeader, rect => ClassUtilities.GetMenu(inspectedContext, inspectedECSContext).DropDown(rect));
 
                 Texture icon = SidekickEditorGUI.GetIcon(inspectedContexts[i], type);
                 if (icon != null)
@@ -305,7 +306,7 @@ namespace Sabresaurus.Sidekick
                 // Right click context menu
                 if (SidekickEditorGUI.DetectClickInRect(foldoutRect, 1))
                 {
-                    ClassUtilities.GetMenu(inspectedContext).DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+                    ClassUtilities.GetMenu(inspectedContext, inspectedECSContext).DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                 }
 
                 if (activeOrEnabled.HasValue)
@@ -381,7 +382,7 @@ namespace Sabresaurus.Sidekick
 
                         if (mode == InspectorMode.Fields)
                         {
-                            fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], inspectedECSContext[i], searchTerm, fields);
+                            fieldPane.DrawFields(inspectedTypes[i], inspectedContexts[i], inspectedECSContext, searchTerm, fields);
                         }
                         else if (mode == InspectorMode.Properties)
                         {
@@ -435,7 +436,7 @@ namespace Sabresaurus.Sidekick
                     {
                         TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), type =>
                         {
-                            inspectedECSContext[0].EntityManager.AddComponent(inspectedECSContext[0].Entity, ComponentType.ReadWrite(type));
+                            inspectedECSContexts[0].EntityManager.AddComponent(inspectedECSContexts[0].Entity, ComponentType.ReadWrite(type));
                         });
                         dropdown.Show(popupRect2);
                     }

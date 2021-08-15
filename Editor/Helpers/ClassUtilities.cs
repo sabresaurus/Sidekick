@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 #if ECS_EXISTS
+using Unity.Entities;
 using Unity.Transforms;
 #endif
 using UnityEditor;
@@ -11,7 +12,7 @@ namespace Sabresaurus.Sidekick
 {
     public static class ClassUtilities
     {
-        public static GenericMenu GetMenu(object o)
+        public static GenericMenu GetMenu(object o, ECSContext inspectedECSContext)
         {
             var menu = new GenericMenu();
 
@@ -23,9 +24,16 @@ namespace Sabresaurus.Sidekick
             if (o is MonoScript monoScript)
             {
                 Type classType = monoScript.GetClass();
-                if (classType != null && classType.IsSubclassOf(typeof(ScriptableObject)))
+                if (classType != null)
                 {
-                    menu.AddItem(new GUIContent("Instantiate Asset"), false, InstantiateScriptableObject, classType);
+                    if (classType.IsSubclassOf(typeof(ScriptableObject)))
+                    {
+                        menu.AddItem(new GUIContent("Instantiate Asset"), false, InstantiateScript, classType);
+                    }
+                    else if (classType.IsSubclassOf(typeof(Component)))
+                    {
+                        menu.AddItem(new GUIContent("Instantiate In Scene"), false, InstantiateScript, classType);
+                    }
                 }
             }
 
@@ -43,8 +51,24 @@ namespace Sabresaurus.Sidekick
             {
                 menu.AddItem(new GUIContent("Export Texture"), false, ExportTexture, o);
             }
+
+            if (o is Component component)
+            {
+                menu.AddItem(new GUIContent("Remove Component"), false, () =>
+                {
+                    Undo.DestroyObjectImmediate(component);
+                });
+            }
             
 #if ECS_EXISTS
+            if (inspectedECSContext != null && o.GetType().GetInterfaces().Contains(typeof(IComponentData)))
+            {
+                menu.AddItem(new GUIContent("Remove Component"), false, () =>
+                {
+                    inspectedECSContext.EntityManager.RemoveComponent(inspectedECSContext.Entity, new ComponentType(o.GetType()));
+                });
+            }
+            
             if (o is Translation translation)
             {
                 menu.AddItem(new GUIContent("Focus In Scene View"), false, () =>
@@ -89,15 +113,22 @@ namespace Sabresaurus.Sidekick
             return monoScripts.FirstOrDefault(monoScript => monoScript.GetClass() == type);
         }
 
-        private static void InstantiateScriptableObject(object userData)
+        private static void InstantiateScript(object userData)
         {
             Type classType = (Type) userData;
-            ScriptableObject asset = ScriptableObject.CreateInstance(classType);
-
-            string fullPath = AssetDatabase.GenerateUniqueAssetPath("Assets/" + classType + ".asset");
-
-            AssetDatabase.CreateAsset(asset, fullPath);
-            AssetDatabase.SaveAssets();
+            if(classType.IsSubclassOf(typeof(ScriptableObject)))
+            {
+                ScriptableObject asset = ScriptableObject.CreateInstance(classType);
+                
+                string fullPath = AssetDatabase.GenerateUniqueAssetPath("Assets/" + classType + ".asset");
+    
+                AssetDatabase.CreateAsset(asset, fullPath);
+                AssetDatabase.SaveAssets();
+            }
+            else if (classType.IsSubclassOf(typeof(Component)))
+            {
+                new GameObject(classType.Name, classType);
+            }
         }
 
         private static void SetNameFromFirstScript(object userData)

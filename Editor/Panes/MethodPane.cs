@@ -83,8 +83,8 @@ namespace Sabresaurus.Sidekick
                                 arguments[i] = TypeUtility.GetDefaultValue(parameters[i].ParameterType);
                             }
                         }
-                        object output = FireMethod(method, component, arguments, null);
-                        outputObjects.Add(output);
+                        var output = FireMethod(method, component, arguments, null);
+                        outputObjects.AddRange(output);
                         opacity = 1f;
                     }
                 }
@@ -173,8 +173,8 @@ namespace Sabresaurus.Sidekick
                         {
                             if (GUILayout.Button("Fire"))
                             {
-                                object output = FireMethod(method, component, methodSetup.Values, methodSetup.GenericArguments);
-                                outputObjects.Add(output);
+                                var output = FireMethod(method, component, methodSetup.Values, methodSetup.GenericArguments);
+                                outputObjects.AddRange(output);
                                 opacity = 1f;
                             }
                         }
@@ -191,19 +191,29 @@ namespace Sabresaurus.Sidekick
             }
         }
 
-        object FireMethod(MethodInfo method, object component, object[] parameters, Type[] genericTypes)
+        List<object> FireMethod(MethodInfo method, object component, object[] parameters, Type[] genericTypes)
         {
             if (method.ReturnType == typeof(IEnumerator) && component is MonoBehaviour monoBehaviour)
             {
-                return monoBehaviour.StartCoroutine(method.Name);
+                return new List<object> {monoBehaviour.StartCoroutine(method.Name)};
             }
             
             if(method.IsGenericMethod)
             {
                 method = method.MakeGenericMethod(genericTypes);
             }
+            object result = method.Invoke(component, parameters);
+            List<object> outputObjects = new List<object> {result};
 
-            return method.Invoke(component, parameters);
+            for (int i = 0; i < method.GetParameters().Length; i++)
+            {
+                if (method.GetParameters()[i].IsOut)
+                {
+                    outputObjects.Add(parameters[i]);
+                }
+            }
+
+            return outputObjects;
         }
 
         public void PostDraw()
