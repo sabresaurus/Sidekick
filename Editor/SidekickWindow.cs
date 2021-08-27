@@ -79,12 +79,10 @@ namespace Sabresaurus.Sidekick
 
             minSize = new Vector2(260, 100);
             
-            if (selectionLocked == false && Selection.activeObject != null)
-            {
-                SetSelection(Selection.activeObject);
-            }
+            OnSelectionChangeNonMessage();
 
             Selection.selectionChanged += OnSelectionChangeNonMessage;
+            EditorApplication.playModeStateChanged += _ => OnSelectionChangeNonMessage(); 
         }
 
         void UpdateTitleContent()
