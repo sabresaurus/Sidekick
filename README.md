@@ -11,7 +11,11 @@ Inspect and edit fields and properties on components, including statics and many
 
 ## Inspect hidden objects
 
-Selection helpers allow you to select hidden assets that can't be selected in the Project window as well as runtime objects (such as Editor Windows, Scene Views, custom Editors etc) allowing you to debug and inspect all sorts of editor nuances.
+Selection helpers allow you to select hidden assets that can't be selected in the Project window as well as runtime objects (such as Editor Windows, Scene Views, custom Editors, ECS Systems, etc) allowing you to debug and inspect all sorts of editor nuances.
+
+## Modify Entities (ECS)
+
+Sidekick supports writing to the fields on ECS Entities, simply select an entity in the Entity Debugger with Sidekick open and the fields will be displayed and change be dynamically changed.
 
 ## Fire methods and events
 
