@@ -116,7 +116,13 @@ namespace Sabresaurus.Sidekick
             GUILayout.Space(9);
 
             string buttonPrefix = "";
-            if (EditorGUIUtility.currentViewWidth > 400)
+
+#if ECS_EXISTS
+            int selectionWrapWidth = 465;
+#else
+            int selectionWrapWidth = 400;
+#endif
+            if (EditorGUIUtility.currentViewWidth > selectionWrapWidth)
             {
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Label("Selection Helpers");
@@ -129,21 +135,27 @@ namespace Sabresaurus.Sidekick
             var popupRect = GUILayoutUtility.GetLastRect();
             popupRect.width = EditorGUIUtility.currentViewWidth;
 
-            var selectTypeButtonLabel = new GUIContent(buttonPrefix + "Type From Assembly");
-            if (GUILayout.Button(selectTypeButtonLabel, EditorStyles.miniButton))
+            if (GUILayout.Button(new GUIContent(buttonPrefix + "Type From Assembly"), EditorStyles.miniButton))
             {
                 TypeSelectDropdown dropdown = new TypeSelectDropdown(new AdvancedDropdownState(), SetSelection);
                 dropdown.Show(popupRect);
             }
 
-            var selectObjectButtonLabel = new GUIContent(buttonPrefix + "Loaded Unity Object");
-            if (GUILayout.Button(selectObjectButtonLabel, EditorStyles.miniButton))
+            if (GUILayout.Button(new GUIContent(buttonPrefix + "Loaded Unity Object"), EditorStyles.miniButton))
             {
                 UnityObjectSelectDropdown dropdown = new UnityObjectSelectDropdown(new AdvancedDropdownState(), SetSelection);
                 dropdown.Show(popupRect);
             }
 
-            if (EditorGUIUtility.currentViewWidth > 400)
+#if ECS_EXISTS
+            if (GUILayout.Button(new GUIContent(buttonPrefix + "ECS System"), EditorStyles.miniButton))
+            {
+                ECSSystemSelectDropdown dropdown = new ECSSystemSelectDropdown(new AdvancedDropdownState(), SetSelection);
+                dropdown.Show(popupRect);
+            }
+#endif
+
+            if (EditorGUIUtility.currentViewWidth > selectionWrapWidth)
             {
                 EditorGUILayout.EndHorizontal();
             }
