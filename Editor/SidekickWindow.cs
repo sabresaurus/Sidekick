@@ -85,6 +85,18 @@ namespace Sabresaurus.Sidekick
             EditorApplication.playModeStateChanged += _ => OnSelectionChangeNonMessage(); 
         }
 
+        private void ShowButton(Rect rect)
+        {
+            if (EditorGUI.Toggle(rect, selectionLocked, (GUIStyle)"IN LockButton") != selectionLocked)
+            {
+                selectionLocked = !selectionLocked;
+                if (selectionLocked == false && Selection.activeObject != null && !activeSelection.Equals(new SelectionInfo(Selection.activeObject)))
+                {
+                    SetSelection(Selection.activeObject);
+                }
+            }
+        }
+        
         void UpdateTitleContent()
         {
             titleContent = EditorGUIUtility.TrTextContentWithIcon("Sidekick", "Packages/com.sabresaurus.sidekick/Editor/SidekickIcon.png");
@@ -482,8 +494,6 @@ namespace Sabresaurus.Sidekick
         {
             GUIContent backContent = new GUIContent(SidekickEditorGUI.BackIcon, "Back");
             GUIContent forwardContent = new GUIContent(SidekickEditorGUI.ForwardIcon, "Forward");
-            GUIContent onLockContent = new GUIContent(SidekickEditorGUI.LockIconOn, "Selection is locked, click to unlock");
-            GUIContent offLockContent = new GUIContent(SidekickEditorGUI.LockIconOff, "Selection is unlocked, click to lock");
             
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
@@ -492,17 +502,6 @@ namespace Sabresaurus.Sidekick
 
             GUI.enabled = true;
             
-            GUIContent activeLockContent = selectionLocked ? onLockContent : offLockContent;
-            
-            if (GUILayout.Button(activeLockContent, EditorStyles.toolbarButton))
-            {
-                selectionLocked = !selectionLocked;
-                if (selectionLocked == false && Selection.activeObject != null && !activeSelection.Equals(new SelectionInfo(Selection.activeObject)))
-                {
-                    SetSelection(Selection.activeObject);
-                }
-            }
-
             // Spacer
             GUILayout.Label("", EditorStyles.toolbarButton, GUILayout.Width(6));
 

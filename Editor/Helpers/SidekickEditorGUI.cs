@@ -33,9 +33,6 @@ namespace Sabresaurus.Sidekick
         public static readonly Texture BlueDotIcon = EditorGUIUtility.TrIconContent("sv_icon_dot1_pix16_gizmo").image;
         public static readonly Texture TransformIcon = EditorGUIUtility.TrIconContent("Transform Icon").image;
         
-        public static Texture LockIconOff => new GUIStyle("IN LockButton").normal.scaledBackgrounds[0];
-        public static Texture LockIconOn => new GUIStyle("IN LockButton").onNormal.scaledBackgrounds[0];
-
         private static Texture2D staticBackgroundLightSkin;
         private static Texture2D staticBackgroundDarkSkin;
 
