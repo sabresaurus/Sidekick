@@ -227,8 +227,7 @@ namespace Sabresaurus.Sidekick
 			EditorGUI.BeginChangeCheck();
 			handled = true;
 			object newValue;
-			if (fieldType == typeof(int)
-                || (fieldType.IsSubclassOf(typeof(Enum)) && SidekickSettings.TreatEnumsAsInts))
+			if (fieldType == typeof(int))
 			{
 				newValue = EditorGUILayout.IntField(label, (int)fieldValue);
 			}
@@ -376,7 +375,13 @@ namespace Sabresaurus.Sidekick
 			}
 			else if (fieldType.IsSubclassOf(typeof(Enum)))
 			{
-				newValue = EditorGUILayout.EnumPopup(label, (Enum)fieldValue);
+				newValue = EditorGUILayout.EnumPopup(label, (Enum) fieldValue);
+				Type underlyingType = Enum.GetUnderlyingType(fieldValue.GetType());
+				// Cast from the enum to the underlying type (e.g. byte) then to int
+				object cast = Convert.ChangeType(newValue, underlyingType);
+				cast = Convert.ChangeType(cast, typeof(int));
+				// Allow them to edit as an int then cast back
+				newValue = Convert.ChangeType(EditorGUILayout.IntField((int) cast), underlyingType);
 			}
 			else if (fieldType == typeof(Rect))
 			{
