@@ -124,10 +124,18 @@ namespace Sabresaurus.Sidekick
 			{
 				bool isArray = type.IsArray;
 				bool isGenericList = IsGenericList(type);
+				bool isGenericDictionary  = IsGenericDictionary(type);
+				if (isGenericDictionary)
+				{
+					Type[] elementTypes = GetElementTypes(type);
+					string[] elementTypeNames = elementTypes.Select(type => NameForType(type)).ToArray();
+					return $"Dictionary<{elementTypeNames[0]},{elementTypeNames[1]}>";
+				}
+
 				if (isArray || isGenericList)
 				{
-					Type elementType = GetElementType(type);
-					string elementTypeName = TypeUtility.NameForType(elementType);
+					Type elementType = GetFirstElementType(type);
+					string elementTypeName = NameForType(elementType);
 					if (isGenericList)
 					{
 						return "List<" + elementTypeName + ">";
@@ -156,7 +164,22 @@ namespace Sabresaurus.Sidekick
 			return false;
 		}
 
-		public static Type GetElementType(Type type)
+		public static bool IsGenericDictionary(Type type)
+		{
+			// Check if it's a List<T>
+			if(type.IsGenericType)
+			{
+				Type genericDefinition = type.GetGenericTypeDefinition();
+				if(genericDefinition == typeof(Dictionary<,>))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+		
+		public static Type GetFirstElementType(Type type)
 		{
 			if(type.IsArray)
 			{
@@ -174,6 +197,23 @@ namespace Sabresaurus.Sidekick
                 // Not array or list
                 return type;
 			}
+		}
+
+		public static Type[] GetElementTypes(Type type)
+		{
+			if(type.IsArray)
+			{
+				return new[] {type.GetElementType()};
+			}
+
+			Type[] genericArguments = type.GetGenericArguments();
+
+			if(genericArguments != null)
+			{
+				return genericArguments;
+			}
+
+			return null;
 		}
 
 		public static bool IsBackingField(FieldInfo fieldInfo, Type parentType)
