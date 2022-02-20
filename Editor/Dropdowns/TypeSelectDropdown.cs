@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEditor.IMGUI.Controls;
@@ -32,11 +33,11 @@ namespace Sabresaurus.Sidekick
         {
             this.constraints = constraints ?? new Type[0];
             this.requiredInterfaces = requiredInterfaces ?? new Type[0];
-            
+
             Vector2 customMinimumSize = minimumSize;
             customMinimumSize.y = 250;
             minimumSize = customMinimumSize;
-            
+
             onTypeSelected = onTypeSelectedCallback;
         }
 
@@ -58,7 +59,7 @@ namespace Sabresaurus.Sidekick
                 Location = location;
                 Context = context;
             }
-            
+
             public class Comparer : IEqualityComparer<Group>
             {
                 public bool Equals(Group x, Group y)
@@ -70,7 +71,7 @@ namespace Sabresaurus.Sidekick
                 {
                     unchecked
                     {
-                        return ((int)obj.Location * 397) ^ (obj.Context != null ? obj.Context.GetHashCode() : 0);
+                        return ((int) obj.Location * 397) ^ (obj.Context != null ? obj.Context.GetHashCode() : 0);
                     }
                 }
             }
@@ -80,7 +81,7 @@ namespace Sabresaurus.Sidekick
         {
             if (assembly.IsDynamic)
                 return new Group(Location.Dynamic);
-            
+
             string assemblyName = assembly.GetName().Name;
 
             // Compiled
@@ -88,15 +89,15 @@ namespace Sabresaurus.Sidekick
             {
                 // Package Group
                 string asmDefPath = CompilationPipeline.GetAssemblyDefinitionFilePathFromAssemblyName(uAssembly.name);
-                
-                if(!string.IsNullOrEmpty(asmDefPath))
+
+                if (!string.IsNullOrEmpty(asmDefPath))
                 {
                     PackageInfo packageInfo = PackageInfo.FindForAssetPath(asmDefPath);
 
                     if (packageInfo != null)
                         return new Group(Location.Packages, GetPackageAuthor(packageInfo));
                 }
-                
+
                 return new Group(Location.Assets);
             }
 
@@ -113,10 +114,10 @@ namespace Sabresaurus.Sidekick
                     {
                         substring = substring.Substring(0, substring.IndexOf("@"));
                     }
-                    
+
                     location = "Packages/" + substring;
                 }
-                
+
                 PackageInfo packageInfo = PackageInfo.FindForAssetPath(location);
 
                 if (packageInfo != null)
@@ -129,7 +130,7 @@ namespace Sabresaurus.Sidekick
 
                 if (location.Contains("/Library/ScriptAssemblies"))
                     return new Group(Location.Assets);
-                
+
                 return new Group(Location.Precompiled, "Unity");
             }
 
@@ -137,7 +138,7 @@ namespace Sabresaurus.Sidekick
 
             string GetPackageAuthor(PackageInfo packageInfo)
             {
-                if(!string.IsNullOrEmpty(packageInfo.author.name))
+                if (!string.IsNullOrEmpty(packageInfo.author.name))
                 {
                     return packageInfo.author.name;
                 }
@@ -171,7 +172,7 @@ namespace Sabresaurus.Sidekick
                 root.AddChild(locationRoot);
                 groupDropdowns.Add(new Group(location), locationRoot);
             }
-            
+
             foreach (Assembly assembly in allAssemblies)
             {
                 Group group = GetGroup(assembly, nameToAssembly);
@@ -188,7 +189,7 @@ namespace Sabresaurus.Sidekick
                             requirementsMet = false;
                         }
                     }
-                    
+
                     foreach (Type requiredInterface in requiredInterfaces)
                     {
                         if (!type.GetInterfaces().Contains(requiredInterface))
@@ -203,14 +204,14 @@ namespace Sabresaurus.Sidekick
                     }
                 }
 
-                if(filteredTypes.Count != 0)
+                if (filteredTypes.Count != 0)
                 {
                     if (!groupDropdowns.TryGetValue(group, out AdvancedDropdownItem groupRoot))
                     {
                         groupDropdowns.Add(group, groupRoot = new AdvancedDropdownItem(group.Context));
                         groupDropdowns[new Group(group.Location)].AddChild(groupRoot);
                     }
-                    
+
                     string assemblyName = assembly.GetName().Name;
                     var assemblyDropdownItem = new AdvancedDropdownItem(assemblyName);
                     groupRoot.AddChild(assemblyDropdownItem);
@@ -221,6 +222,29 @@ namespace Sabresaurus.Sidekick
                     }
                 }
             }
+
+            root.AddSeparator();
+
+            AdvancedDropdownItem initializeOnLoad = new AdvancedDropdownItem("Initialize On Load");
+            foreach (Type type in TypeCache.GetTypesWithAttribute<InitializeOnLoadAttribute>())
+            {
+                initializeOnLoad.AddChild(new TypeDropdownItem(type));
+            }
+
+            foreach (MethodInfo method in TypeCache.GetMethodsWithAttribute<InitializeOnLoadMethodAttribute>())
+            {
+                initializeOnLoad.AddChild(new TypeDropdownItem(method.DeclaringType));
+            }
+
+            root.AddChild(initializeOnLoad);
+
+            AdvancedDropdownItem runtimeInitializeOnLoad = new AdvancedDropdownItem("Runtime Initialize On Load");
+            foreach (MethodInfo method in TypeCache.GetMethodsWithAttribute<RuntimeInitializeOnLoadMethodAttribute>())
+            {
+                runtimeInitializeOnLoad.AddChild(new TypeDropdownItem(method.DeclaringType));
+            }
+
+            root.AddChild(runtimeInitializeOnLoad);
 
             return root;
         }
