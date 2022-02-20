@@ -1,6 +1,6 @@
 {
   "name": "com.sabresaurus.sidekick",
-  "version": "1.0.0-preview.9",
+  "version": "1.0.0-preview.10",
   "displayName": "Sidekick",
   "description": "Inspect private fields, properties, fire methods and more",
   "unity": "2020.3",
