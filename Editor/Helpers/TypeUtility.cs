@@ -178,6 +178,8 @@ namespace Sabresaurus.Sidekick
 
 		public static bool IsBackingField(FieldInfo fieldInfo, Type parentType)
 		{
+			BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
 			string fieldName = fieldInfo.Name;
 			// Backing fields typically are of the format <PROP_NAME>k__BackingField
 			if(fieldName.StartsWith("<") && fieldName.EndsWith(">k__BackingField"))
@@ -185,7 +187,7 @@ namespace Sabresaurus.Sidekick
 				string strippedName = fieldName.Remove(fieldName.Length - ">k__BackingField".Length).Remove(0,1);
 
 				// Make sure there's actually a property with the property name
-				if(parentType.GetProperty(strippedName) != null)
+				if(parentType.GetProperty(strippedName, bindingFlags) != null)
 				{
 					return true;
 				}
@@ -210,8 +212,27 @@ namespace Sabresaurus.Sidekick
 			{
 				// Check that no property exists with the name after the prefix
 				// Don't use SpecialName here as compilers aren't required to populate it
-				Type[] parameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
-				PropertyInfo propertyInfo = parentType.GetProperty(methodName.Substring(4), bindingFlags, null, methodInfo.ReturnType, parameterTypes, null);
+
+				ParameterInfo[] parameterInfos = methodInfo.GetParameters();
+
+				Type propertyType;
+				if (methodName.StartsWith("get_"))
+				{
+					if (parameterInfos.Length != 0)
+					{
+						return false;
+					}
+					propertyType = methodInfo.ReturnType;
+				}
+				else
+				{
+					if (parameterInfos.Length != 1)
+					{
+						return false;
+					}
+					propertyType = parameterInfos[0].ParameterType;
+				}
+				PropertyInfo propertyInfo = parentType.GetProperty(methodName.Substring(4), bindingFlags, null, propertyType, Type.EmptyTypes, null);
 				if (propertyInfo == null)
 				{
 					return false;
