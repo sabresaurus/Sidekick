@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 #if UNITY_MATH_EXISTS
 using Unity.Mathematics;
@@ -82,7 +83,7 @@ namespace Sabresaurus.Sidekick
                         FieldInfo entriesArrayField = fieldType.GetField("entries", BindingFlags.NonPublic | BindingFlags.Instance);
                         IList entriesArray = (IList) entriesArrayField.GetValue(fieldValue);
                         Type elementType = TypeUtility.GetFirstElementType(entriesArrayField.FieldType);
-                        FieldInfo elementKeyFieldInfo = elementType.GetField("key", BindingFlags.Public | BindingFlags.Instance); 
+                        FieldInfo elementKeyFieldInfo = elementType.GetField("key", BindingFlags.Public | BindingFlags.Instance);
                         FieldInfo elementValueFieldInfo = elementType.GetField("value", BindingFlags.Public | BindingFlags.Instance);
                         int oldIndent = EditorGUI.indentLevel;
                         EditorGUI.indentLevel = 0;
@@ -94,9 +95,19 @@ namespace Sabresaurus.Sidekick
 
                             object key = elementKeyFieldInfo.GetValue(entry);
                             object value = elementValueFieldInfo.GetValue(entry);
-                            
-                            DrawIndividualVariable(GUIContent.none, key.GetType(), key, out var handled, newValue => { /*list[index] = newValue;*/ });
-                            DrawIndividualVariable(GUIContent.none, value.GetType(), value, out handled, newValue => { /*list[index] = newValue;*/ });
+
+                            using(new EditorGUI.DisabledScope(true))
+                            {
+                                DrawIndividualVariable(GUIContent.none, key.GetType(), key, out _, newValue =>
+                                {
+                                    /*list[index] = newValue;*/
+                                });
+                            }
+                            DrawIndividualVariable(GUIContent.none, value.GetType(), value, out var handled, newValue =>
+                            {
+                                PropertyInfo indexer = fieldType.GetProperties().First(x => x.GetIndexParameters().Length > 0);
+                                indexer.SetValue(fieldValue, newValue, new[] {key});
+                            });
 
                             EditorGUILayout.EndHorizontal();
                         }
