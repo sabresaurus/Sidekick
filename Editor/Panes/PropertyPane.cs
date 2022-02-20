@@ -86,7 +86,7 @@ namespace Sabresaurus.Sidekick
 					}
 					else
 					{
-						DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, variableAttributes, true, componentType, newValue =>
+						DrawVariable(property.PropertyType, property.Name, oldValue, tooltip, variableAttributes, property.GetCustomAttributes(), true, componentType, newValue =>
 						{
 							setMethod?.Invoke(component, new[] {newValue});
 						});

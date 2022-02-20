@@ -24,7 +24,7 @@ namespace Sabresaurus.Sidekick
             WriteOnly = 1 << 3,
         }
 
-        public static void DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, bool allowExtensions, Type contextType, Action<object> changeCallback)
+        public static void DrawVariable(Type fieldType, string fieldName, object fieldValue, string tooltip, VariableAttributes variableAttributes, IEnumerable<Attribute> customAttributes, bool allowExtensions, Type contextType, Action<object> changeCallback)
         {
             if ((variableAttributes & VariableAttributes.Static) != 0)
             {
@@ -50,7 +50,6 @@ namespace Sabresaurus.Sidekick
 
             if (isGenericDictionary)
             {
-                Type[] elementTypes = TypeUtility.GetElementTypes(fieldType);
                 EditorGUILayout.BeginHorizontal();
 
                 string expandedID = fieldType.FullName + fieldName;
@@ -96,14 +95,15 @@ namespace Sabresaurus.Sidekick
                             object key = elementKeyFieldInfo.GetValue(entry);
                             object value = elementValueFieldInfo.GetValue(entry);
 
-                            using(new EditorGUI.DisabledScope(true))
+                            using (new EditorGUI.DisabledScope(true))
                             {
-                                DrawIndividualVariable(GUIContent.none, key.GetType(), key, out _, newValue =>
+                                DrawIndividualVariable(GUIContent.none, key.GetType(), key, null, out _, newValue =>
                                 {
                                     /*list[index] = newValue;*/
                                 });
                             }
-                            DrawIndividualVariable(GUIContent.none, value.GetType(), value, out var handled, newValue =>
+
+                            DrawIndividualVariable(GUIContent.none, value.GetType(), value, null, out var handled, newValue =>
                             {
                                 PropertyInfo indexer = fieldType.GetProperties().First(x => x.GetIndexParameters().Length > 0);
                                 indexer.SetValue(fieldValue, newValue, new[] {key});
@@ -166,7 +166,7 @@ namespace Sabresaurus.Sidekick
                             EditorGUILayout.BeginHorizontal();
 
                             int index = i;
-                            DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i], out var handled, newValue => { list[index] = newValue; });
+                            DrawIndividualVariable(new GUIContent("Element " + i), elementType, list[i], null, out var handled, newValue => { list[index] = newValue; });
 
                             if (allowExtensions)
                             {
@@ -189,7 +189,7 @@ namespace Sabresaurus.Sidekick
                 // Not a collection
                 EditorGUILayout.BeginHorizontal();
 
-                DrawIndividualVariable(label, fieldType, fieldValue, out var handled, changeCallback);
+                DrawIndividualVariable(label, fieldType, fieldValue, customAttributes, out var handled, changeCallback);
 
                 if (handled && allowExtensions)
                 {
@@ -225,7 +225,7 @@ namespace Sabresaurus.Sidekick
                             foreach (var fieldInfo in fields)
                             {
                                 GUIContent subLabel = new GUIContent(fieldInfo.Name);
-                                DrawIndividualVariable(subLabel, fieldInfo.FieldType, fieldInfo.GetValue(fieldValue), out _, newValue => { fieldInfo.SetValue(fieldValue, newValue); });
+                                DrawIndividualVariable(subLabel, fieldInfo.FieldType, fieldInfo.GetValue(fieldValue), null, out _, newValue => { fieldInfo.SetValue(fieldValue, newValue); });
                             }
                         }
                         else
@@ -305,14 +305,35 @@ namespace Sabresaurus.Sidekick
             GUI.enabled = wasGUIEnabled;
         }
 
-        private static void DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue, out bool handled, Action<object> changeCallback)
+        private static void DrawIndividualVariable(GUIContent label, Type fieldType, object fieldValue, IEnumerable<Attribute> customAttributes, out bool handled, Action<object> changeCallback)
         {
             EditorGUI.BeginChangeCheck();
             handled = true;
             object newValue;
+
+            RangeAttribute rangeAttribute = null;
+
+            if (customAttributes != null)
+            {
+                foreach (var customAttribute in customAttributes)
+                {
+                    if (customAttribute is RangeAttribute attribute)
+                    {
+                        rangeAttribute = attribute;
+                    }
+                }
+            }
+
             if (fieldType == typeof(int))
             {
-                newValue = EditorGUILayout.IntField(label, (int) fieldValue);
+                if (SidekickSettings.PreferUnityAttributes && rangeAttribute != null)
+                {
+                    newValue = EditorGUILayout.IntSlider(label, (int) fieldValue, (int) rangeAttribute.min, (int) rangeAttribute.max);
+                }
+                else
+                {
+                    newValue = EditorGUILayout.IntField(label, (int) fieldValue);
+                }
             }
             else if (fieldType == typeof(uint))
             {
@@ -381,7 +402,14 @@ namespace Sabresaurus.Sidekick
             }
             else if (fieldType == typeof(float))
             {
-                newValue = EditorGUILayout.FloatField(label, (float) fieldValue);
+                if (SidekickSettings.PreferUnityAttributes && rangeAttribute != null)
+                {
+                    newValue = EditorGUILayout.Slider(label, (float) fieldValue, rangeAttribute.min, rangeAttribute.max);
+                }
+                else
+                {
+                    newValue = EditorGUILayout.FloatField(label, (float) fieldValue);
+                }
             }
             else if (fieldType == typeof(double))
             {

@@ -156,7 +156,7 @@ namespace Sabresaurus.Sidekick
                         for (int i = 0; i < parameters.Length; i++)
                         {
                             int index = i;
-                            VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, false, null, newValue =>
+                            VariablePane.DrawVariable(parameters[i].ParameterType, parameters[i].Name, methodSetup.Values[i], "", VariablePane.VariableAttributes.None, null, false, null, newValue =>
                             {
                                 methodSetup.Values[index] = newValue;
                             });

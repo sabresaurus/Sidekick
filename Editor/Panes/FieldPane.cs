@@ -34,6 +34,7 @@ namespace Sabresaurus.Sidekick
                 {
                     variableAttributes |= VariableAttributes.Static;
                 }
+                
                 string tooltip = TypeUtility.GetTooltip(field, variableAttributes);
 
                 if ((variableAttributes & VariableAttributes.ReadOnly) != 0)
@@ -41,7 +42,7 @@ namespace Sabresaurus.Sidekick
                     GUI.enabled = false;
                 }
                 
-                DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, true, componentType, newValue =>
+                DrawVariable(fieldType, fieldName, component != null ? field.GetValue(component) : null, tooltip, variableAttributes, field.GetCustomAttributes(), true, componentType, newValue =>
                 {
                     if ((variableAttributes & VariableAttributes.ReadOnly) == 0)
                     {
